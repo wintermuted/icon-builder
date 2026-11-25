@@ -7,8 +7,8 @@ Standalone repo for SVG-first logo/glyph authoring, markdown-driven diagrams, de
 | Layer | Tool |
 |-------|------|
 | Monorepo orchestration | Nx, npm workspaces |
-| Preview/orchestration | TypeScript, Node.js 20.19+, ESM |
-| Image generation | Python 3.10+, Pillow |
+| Preview/orchestration | TypeScript 7 CLI / TypeScript 6 API, Node.js 26.13.1+, ESM |
+| Image generation | Python 3.11+, Pillow 13+ |
 | Screenshot capture | Playwright (Chromium headless) |
 | Preview server | `node:http` (zero-dependency) |
 | Icon paths | `lucide` (declared dependency) |
@@ -17,7 +17,7 @@ Standalone repo for SVG-first logo/glyph authoring, markdown-driven diagrams, de
 
 ```bash
 npm run install:deps           # Install Node deps, using the environment registry when configured
-pip install -r requirements.txt  # Install Python deps (first time)
+python3 -m pip install -r requirements.txt  # Install Python deps (first time)
 npx playwright install chromium  # Install browser for capture (first time)
 
 npm run build:specs            # Parse specs/ markdown -> preview/spec-index.json

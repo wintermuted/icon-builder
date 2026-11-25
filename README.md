@@ -30,13 +30,13 @@ outputs/screenshots/ Browser capture outputs (git-ignored except .gitkeep)
 
 ## Prerequisites
 
-- Node.js 20.19+
-- Python 3.10+
+- Node.js 26.13.1+ (Node 26 LTS)
+- Python 3.11+ (available as `python3` on `PATH`)
 - Playwright Chromium (one-time install)
 
 ```bash
 npm run install:deps              # Uses the environment's internal registry when configured
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 npx playwright install chromium   # one-time browser install
 ```
 
@@ -50,7 +50,33 @@ npm run capture         # Capture light/dark screenshots using Playwright
 npm run workflow:logo   # Run build:specs + generate:png + capture in sequence
 npm run graph           # Explore the Nx project and task graph
 npm run build           # Build every package through Nx
+npm run typecheck       # Check Node packages with native TypeScript 7
+npm run test:toolchain  # Verify native CLI and Nx compiler API compatibility
 ```
+
+### Dependency and Compiler Upgrades
+
+Nx and `@nx/js` are kept at the same stable version. If `nx migrate` cannot
+retrieve provenance metadata from the configured registry, update the package
+versions together and regenerate the lockfile, then perform a clean install:
+
+```bash
+npm run install:deps -- --package-lock-only --ignore-scripts --include=dev
+npm ci
+```
+
+Review the intervening Nx migration requirements manually; do not disable
+provenance or TLS checks. CI runs compiler checks and builds.
+
+TypeScript uses the documented dual-compiler layout: `@typescript/native`
+aliases TypeScript 7 and provides `tsc` for typechecking, while `typescript`
+aliases `@typescript/typescript6` and supplies the compiler API required by
+`@nx/js:tsc` builds. Its fallback CLI is `tsc6`.
+
+The theme is updated to `0.21.5`, the latest version currently available from
+the configured registry. The producer's `1.0.3` release is not available there;
+adopting it remains pending registry availability. Browser Lucide is pinned to
+the same version as the npm dependency, and Mermaid is pinned to a stable version.
 
 ## GitHub Copilot App
 

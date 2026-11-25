@@ -11,6 +11,13 @@ on:
       - "assets/svg/**"
       - "manifests/**"
       - "specs/**"
+      - "packages/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "nx.json"
+      - "tsconfig.base.json"
+      - "requirements.txt"
       - ".github/workflows/deploy-preview-pages.yml"
   pull_request:
     branches:
@@ -20,6 +27,13 @@ on:
       - "assets/svg/**"
       - "manifests/**"
       - "specs/**"
+      - "packages/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "nx.json"
+      - "tsconfig.base.json"
+      - "requirements.txt"
       - ".github/workflows/deploy-preview-pages.yml"
   workflow_dispatch:
 
@@ -48,11 +62,23 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "26.13.1"
 
       - name: Install dependencies
         working-directory: wm-asset-workflows
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify compiler toolchain
+        working-directory: wm-asset-workflows
+        run: npm run test:toolchain
+
+      - name: Typecheck with TypeScript 7
+        working-directory: wm-asset-workflows
+        run: npm run typecheck
+
+      - name: Build packages with the TypeScript 6 API
+        working-directory: wm-asset-workflows
+        run: npm run build
 
       - name: Build spec index
         working-directory: wm-asset-workflows

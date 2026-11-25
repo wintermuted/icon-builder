@@ -4,6 +4,12 @@
   "projectType": "application",
   "sourceRoot": "packages/image-generation/src",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/image-generation/tsconfig.json"
+      }
+    },
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": [

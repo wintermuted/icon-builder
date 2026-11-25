@@ -6,6 +6,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noUncheckedIndexedAccess": false,
+    "noUncheckedSideEffectImports": false,
     "skipLibCheck": true,
     "strict": false,
     "target": "ES2022"
