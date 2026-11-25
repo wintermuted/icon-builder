@@ -52,6 +52,24 @@ npm run graph           # Explore the Nx project and task graph
 npm run build           # Build every package through Nx
 ```
 
+## GitHub Copilot App
+
+The app configuration lives in `.github/github-app.yml`. Review and accept it
+in the app before using the repository scripts.
+
+- **Setup** runs on session creation and can also be rerun manually. It installs
+  npm dependencies using the existing registry-aware installer, Pillow using
+  `python3 -m pip`, and Playwright Chromium. Node.js and Python must already be
+  installed, with Python available as `python3` on `PATH` to match PNG generation.
+- **Preview** starts the existing preview workflow. The app detects its ready
+  message and opens `/preview/index.html` in the integrated browser.
+- **Generate PNGs**, **Capture screenshots**, and **Full logo workflow** run the
+  existing export commands on demand.
+
+The preview uses port 4178 by default; stop another session's preview before
+starting this one on the same port. No archive cleanup script is configured,
+so archiving does not run any repository-defined file deletion.
+
 ## Prompt-Driven Authoring
 
 Logos and glyphs are designed to be created primarily through VS Code Copilot Chat. Use the provided prompt file to start an interactive session:

@@ -1,0 +1,16 @@
+scripts:
+  - name: Setup
+    command: npm run install:deps && python3 -m pip install -r requirements.txt && npx playwright install chromium
+    triggers:
+      - session.create
+  - name: Preview
+    command: npm run preview
+  - name: Generate PNGs
+    command: npm run generate:png
+  - name: Capture screenshots
+    command: npm run capture
+  - name: Full logo workflow
+    command: npm run workflow:logo
+
+server_ready_pattern: 'Preview server running at (http://localhost:\d+/preview/index\.html)'
+auto_open_in_browser: true
