@@ -59,8 +59,8 @@ in the app before using the repository scripts.
 
 - **Setup** runs on session creation and can also be rerun manually. It installs
   npm dependencies using the existing registry-aware installer, Pillow using
-  `python -m pip`, and Playwright Chromium. Node.js and Python must already be
-  installed and available on `PATH`.
+  `python3 -m pip`, and Playwright Chromium. Node.js and Python must already be
+  installed, with Python available as `python3` on `PATH` to match PNG generation.
 - **Preview** starts the existing preview workflow. The app detects its ready
   message and opens `/preview/index.html` in the integrated browser.
 - **Generate PNGs**, **Capture screenshots**, and **Full logo workflow** run the

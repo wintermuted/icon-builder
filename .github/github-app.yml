@@ -1,6 +1,6 @@
 scripts:
   - name: Setup
-    command: npm run install:deps && python -m pip install -r requirements.txt && npx playwright install chromium
+    command: npm run install:deps && python3 -m pip install -r requirements.txt && npx playwright install chromium
     triggers:
       - session.create
   - name: Preview
