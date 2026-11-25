@@ -1,6 +1,9 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "main",
+  "affected": {
+    "legacy": true
+  },
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -16,6 +19,13 @@
     ]
   },
   "targetDefaults": {
+    "typecheck": {
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
     "build": {
       "cache": true,
       "inputs": [
