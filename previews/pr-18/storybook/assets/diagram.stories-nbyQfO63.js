@@ -1,0 +1,6 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t}from"./iframe-9GxATJBz.js";import{n,t as r}from"./mermaid.core-C8ULgD4O.js";import{ct as i,t as a}from"./src-DsyK_ZYA.js";var o,s,c,l,u;function d(){return(d=e((()=>{r(),a(),o=t(),s={id:`shared-diagram`,title:`Shared/Display/Diagram`,component:i,args:{id:`storybook-diagram`,code:`flowchart LR
+  SVG[SVG source] --> Preview --> Export[PNG export]`,theme:`light`,renderer:n},argTypes:{renderer:{control:!1},id:{control:!1},theme:{control:!1}},render:(e,t)=>(0,o.jsx)(i,{...e,id:`diagram-${t.id}`,theme:t.globals.theme})},c={},l={args:{code:`not valid Mermaid syntax`}},u=[`Workflow`,`InvalidSource`],c.parameters={...c.parameters,docs:{...c.parameters?.docs,source:{originalSource:`{}`,...c.parameters?.docs?.source}}},l.parameters={...l.parameters,docs:{...l.parameters?.docs,source:{originalSource:`{
+  args: {
+    code: "not valid Mermaid syntax"
+  }
+}`,...l.parameters?.docs?.source}}}})))()}d();export{l as InvalidSource,c as Workflow,u as __namedExportsOrder,s as default};
