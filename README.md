@@ -19,6 +19,7 @@ manifests/assets.json  Asset catalog consumed by preview and generator scripts
 packages/            Nx-managed TypeScript package boundaries
 packages/preview-app/ TypeScript browser application source
 packages/ui-components/ Reusable React components consumed by the preview app
+packages/storybook/  Shared component catalog published alongside the app
 packages/preview-server/ TypeScript preview HTTP server
 packages/workflows/  TypeScript workflow CLIs and shared paths
 packages/image-generation/ TypeScript CLI around deterministic Pillow generators
@@ -46,6 +47,8 @@ npx playwright install chromium   # one-time browser install
 ```bash
 npm run build:specs     # Parse specs/*.md Mermaid blocks → preview/spec-index.json
 npm run preview         # Start Vite with React Fast Refresh and the existing preview APIs
+npm run storybook       # Open the shared component catalog at http://localhost:6006
+npm run build:storybook # Build the static catalog (CI) to dist/storybook/
 npm run generate:png    # Generate deterministic PNG assets via Pillow
 npm run capture         # Capture light/dark screenshots using Playwright
 npm run workflow:logo   # Run build:specs + generate:png + capture in sequence
@@ -125,6 +128,28 @@ Pages artifacts are named per workflow run attempt, and deployment waits for API
 visibility so reruns cannot collide with an earlier attempt's artifact.
 Project color analysis retains valid SVG colors when another asset fails and
 reports the unavailable assets instead of hiding all results.
+
+### Storybook publishing
+
+The catalog covers all five shared React components with controls, generated
+API docs, and a Light/Dark toolbar. Stories reuse the app theme and stylesheet,
+not its entrypoint or backend. Mermaid is bundled so diagram examples work
+without a CDN. Sidebar stories use separate storage keys to avoid changing
+the app's persisted sidebar preferences.
+
+Storybook is published at `https://wintermuted.github.io/icon-builder/storybook/`
+alongside the app at `/icon-builder/preview/`. PR deployments include both at
+`/icon-builder/previews/pr-<number>/preview/` and
+`/icon-builder/previews/pr-<number>/storybook/`; preview comments link to both.
+The existing Pages workflow builds and typechecks the workspace, stages
+`dist/storybook/` into the same artifact, and health-checks both surfaces.
+CI also renders the staged catalog at production and nested PR prefixes before
+deployment, including all 11 stories and generated Docs.
+Closing a PR removes its entire preview directory, including Storybook.
+
+Vite uses relative asset URLs and an isolated Storybook configuration, so the
+same static catalog works at production and nested PR paths. Add stories under
+`packages/storybook/src/`; source output stays ignored under `dist/`.
 
 ### Dependency and Compiler Upgrades
 

@@ -93,8 +93,20 @@ jobs:
           cp wm-asset-workflows/preview/spec-index.json _site/preview/
           cp wm-asset-workflows/manifests/assets.json _site/manifests/
           cp -R wm-asset-workflows/assets/svg/. _site/assets/svg/
+          mkdir -p _site/storybook
+          cp -R wm-asset-workflows/dist/storybook/. _site/storybook/
           touch _site/.nojekyll
           printf '%s\n' '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Redirecting…</title><meta http-equiv="refresh" content="0; url=./preview/"><link rel="canonical" href="./preview/"></head><body><p>Redirecting to <a href="./preview/">the preview</a>…</p></body></html>' > _site/index.html
+
+      - name: Install Chromium for catalog checks
+        working-directory: wm-asset-workflows
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify Storybook at production and PR paths
+        working-directory: wm-asset-workflows
+        run: npm run test:storybook-pages
+        env:
+          STORYBOOK_SITE_DIR: ../_site/storybook
 
       - name: Configure git identity
         working-directory: wm-asset-workflows
@@ -155,9 +167,10 @@ jobs:
           script: |
             const base = 'https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}';
             const previewUrl = `${base}/previews/pr-${{ github.event.pull_request.number }}/preview/`;
+            const storybookUrl = `${base}/previews/pr-${{ github.event.pull_request.number }}/storybook/`;
             const sha = '${{ github.sha }}'.substring(0, 7);
 
-            const body = `🚀 **PR Preview deployed!**\n\n📖 [Open preview](${previewUrl})\n\n> ℹ️ Production remains at root Pages URL. This preview is isolated to PR #${{ github.event.pull_request.number }}.\n\n_Run \`${{ github.run_id }}\` — commit \`${sha}\`_`;
+            const body = `🚀 **PR Preview deployed!**\n\n📖 [Open preview](${previewUrl}) · [Open Storybook](${storybookUrl})\n\n> ℹ️ Production remains at root Pages URL. This preview is isolated to PR #${{ github.event.pull_request.number }}.\n\n_Run \`${{ github.run_id }}\` — commit \`${sha}\`_`;
 
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -210,22 +223,27 @@ jobs:
       - name: Health check
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ github.event.pull_request.number }}/preview/"
+            base="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/pr-${{ github.event.pull_request.number }}"
           else
-            url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+            base="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
           fi
-          echo "Health check URL: $url"
-          for i in 1 2 3 4 5; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" -L "$url")
-            echo "Attempt $i: HTTP $status"
-            if [ "$status" = "200" ]; then
-              echo "Health check passed."
-              exit 0
+          for path in preview/ storybook/ storybook/iframe.html storybook/index.json; do
+            url="$base/$path"
+            echo "Health check URL: $url"
+            for i in 1 2 3 4 5; do
+              status=$(curl -s -o /dev/null -w "%{http_code}" -L "$url")
+              echo "Attempt $i: HTTP $status"
+              if [ "$status" = "200" ]; then
+                echo "Health check passed."
+                break
+              fi
+              sleep 10
+            done
+            if [ "$status" != "200" ]; then
+              echo "Health check failed: $url did not return 200 after 5 attempts."
+              exit 1
             fi
-            sleep 10
           done
-          echo "Health check failed: $url did not return 200 after 5 attempts."
-          exit 1
 
       - name: Mark PR deployment success
         if: github.event_name == 'pull_request' && success()
