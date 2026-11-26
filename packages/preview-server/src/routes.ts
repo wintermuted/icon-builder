@@ -14,7 +14,7 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-export function createRequestHandler({ root, reload }) {
+export function createRequestHandler({ root, reload, built = false }) {
   return async (req, res) => {
     if (req.url === "/~reload") {
       reload.connect(req, res);
@@ -174,7 +174,7 @@ export function createRequestHandler({ root, reload }) {
       return;
     }
     try {
-      await serveStaticFile(req, res, { root });
+      await serveStaticFile(req, res, { root, built });
     } catch {
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
       res.end("Not found");

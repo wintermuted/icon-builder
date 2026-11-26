@@ -89,16 +89,10 @@ jobs:
           mkdir -p _site/preview
           mkdir -p _site/manifests
           mkdir -p _site/assets/svg
-          cp wm-asset-workflows/preview/index.html _site/preview/
-          cp wm-asset-workflows/preview/app.js _site/preview/
-          cp wm-asset-workflows/preview/styles.css _site/preview/
+          cp -R wm-asset-workflows/dist/preview-app/. _site/
           cp wm-asset-workflows/preview/spec-index.json _site/preview/
           cp wm-asset-workflows/manifests/assets.json _site/manifests/
           cp -R wm-asset-workflows/assets/svg/. _site/assets/svg/
-          sed -i 's|href="/node_modules/@wintermuted/ui-theme/index.css"|href="./ui-theme/index.css"|g' _site/preview/index.html
-          mkdir -p _site/preview/ui-theme
-          cp wm-asset-workflows/node_modules/@wintermuted/ui-theme/index.css _site/preview/ui-theme/
-          cp -R wm-asset-workflows/node_modules/@wintermuted/ui-theme/styles _site/preview/ui-theme/
           touch _site/.nojekyll
           printf '%s\n' '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Redirecting…</title><meta http-equiv="refresh" content="0; url=./preview/"><link rel="canonical" href="./preview/"></head><body><p>Redirecting to <a href="./preview/">the preview</a>…</p></body></html>' > _site/index.html
 
@@ -178,11 +172,40 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          name: github-pages-${{ github.run_attempt }}
           path: gh-pages-out
+
+      - name: Wait for Pages artifact visibility
+        uses: actions/github-script@v7
+        env:
+          PAGES_ARTIFACT_NAME: github-pages-${{ github.run_attempt }}
+        with:
+          script: |
+            const name = process.env.PAGES_ARTIFACT_NAME;
+            for (let attempt = 1; attempt <= 12; attempt++) {
+              const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId,
+              });
+              const matches = artifacts.filter((artifact) => artifact.name === name && !artifact.expired);
+              if (matches.length === 1) {
+                core.info(`Pages artifact ${name} is visible.`);
+                return;
+              }
+              if (matches.length > 1) {
+                throw new Error(`Expected one Pages artifact ${name}, found ${matches.length}.`);
+              }
+              core.info(`Pages artifact ${name} is not visible yet (attempt ${attempt}/12).`);
+              if (attempt < 12) await new Promise((resolve) => setTimeout(resolve, 5000));
+            }
+            throw new Error(`Pages artifact ${name} did not become visible after 12 attempts.`);
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
 
       - name: Health check
         run: |

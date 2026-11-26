@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -16,7 +16,7 @@ function lint(...paths) {
   return result;
 }
 
-for (const extension of ["js", "ts"]) {
+for (const extension of ["js", "ts", "tsx"]) {
   test(`Oxlint accepts 500 lines and rejects 501, counting blanks/comments in ${extension}`, async () => {
     const dir = await mkdtemp(join(tmpdir(), "icon-builder-max-lines-"));
     try {
@@ -38,7 +38,15 @@ for (const extension of ["js", "ts"]) {
   });
 }
 
-test("the generated preview bundle remains excluded from the source line limit", () => {
-  const result = lint(resolve("preview/app.js"), resolve("scripts/node/ensure-deps.mjs"));
-  assert.equal(result.status, 0, result.stdout + result.stderr);
+test("Vite output remains excluded from the source line limit", async () => {
+  await mkdir("dist", { recursive: true });
+  const directory = await mkdtemp(resolve("dist/line-limit-fixture-"));
+  try {
+    const path = join(directory, "bundle.js");
+    await writeFile(path, Array.from({ length: 501 }, () => "void 0;").join("\n"));
+    const result = lint(path, resolve("scripts/node/ensure-deps.mjs"));
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  } finally {
+    await rm(directory, { recursive: true });
+  }
 });

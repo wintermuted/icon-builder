@@ -25,7 +25,7 @@ async function run() {
 
   const server = spawn(
     "node",
-    ["dist/packages/preview-server/src/index.js", "--port", String(port), "--quiet"],
+    ["dist/packages/preview-server/src/index.js", "--built", "--port", String(port), "--quiet"],
     {
       cwd: root,
       stdio: "ignore",

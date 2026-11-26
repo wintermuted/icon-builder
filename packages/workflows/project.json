@@ -21,13 +21,7 @@
     },
     "build-specs": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "build",
-        {
-          "projects": ["preview-app"],
-          "target": "build"
-        }
-      ],
+      "dependsOn": ["build"],
       "outputs": ["{workspaceRoot}/preview/spec-index.json"],
       "options": {
         "command": "node dist/packages/workflows/src/build-spec-index.js"
@@ -38,6 +32,10 @@
       "dependsOn": [
         "build",
         "build-specs",
+        {
+          "projects": ["preview-app"],
+          "target": "build"
+        },
         {
           "projects": ["preview-server"],
           "target": "build"

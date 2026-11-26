@@ -44,7 +44,7 @@ npx playwright install chromium   # one-time browser install
 
 ```bash
 npm run build:specs     # Parse specs/*.md Mermaid blocks → preview/spec-index.json
-npm run preview         # Install deps if needed, build the spec index, then serve the preview
+npm run preview         # Start Vite with React Fast Refresh and the existing preview APIs
 npm run generate:png    # Generate deterministic PNG assets via Pillow
 npm run capture         # Capture light/dark screenshots using Playwright
 npm run workflow:logo   # Run build:specs + generate:png + capture in sequence
@@ -52,7 +52,7 @@ npm run graph           # Explore the Nx project and task graph
 npm run build           # Build every package through Nx
 npm run typecheck       # Check Node packages with native TypeScript 7
 npm run test:toolchain  # Verify native CLI and Nx compiler API compatibility
-npm run test:preview    # Exercise preview editing in Chromium without a local build
+npm run test:preview    # Exercise React editing/navigation and Vite APIs without a build
 npm run test:file-size  # Verify Oxlint's exact boundary (CI; invokes the linter)
 npm run lint            # Lint JavaScript/TypeScript with Oxlint
 npm run lint:fix        # Apply safe Oxlint fixes
@@ -73,25 +73,58 @@ Oxlint enforces **at most 500 lines per authored JavaScript/TypeScript file**,
 including blank lines and comments. Keep modules comfortably below the cap after
 formatting; do not add file overrides or inline disables. This applies to source,
 scripts, declarations, and tests, not CSS, HTML, JSON, Python, SVG, or Markdown.
-The generated `preview/app.js` bundle remains excluded.
+Vite's generated output under `dist/preview-app/` remains excluded.
 
-The preview entrypoint composes modules under `packages/preview-app/src/`:
+The React entrypoint is `packages/preview-app/src/main.tsx`; TSX components under
+`ui/` render the shell, project collection, project/source pages, dialogs, and editor
+scaffold. The SVG editor retains imperative controllers for the mutable SVG
+document and its element controls, mounted and cleaned up by `AssetPage`.
+The entrypoint composes modules under `packages/preview-app/src/`:
 `svg/` owns cached SVG documents and edits, `canvas/` owns gestures and cleanup,
 `editor/` owns layer panels, and `project/` and `views/` own project data and DOM
 rendering. Mutable state has a single owner; collaborators receive explicit
 dependencies and view refresh callbacks rather than importing the entrypoint.
 
-CI verifies the 500/501-line boundary and browser editing against the real bundle.
-Local browser regressions serve the same source modules using Node's type stripping,
-without running a build; generated output is unchanged. They use a deterministic
-SVG/manifest fixture, real Lucide, and a Mermaid stub (diagram rendering is not
-the subject of these editing tests). Chromium must already be installed.
+CI verifies the 500/501-line JS/TS/TSX boundary and browser editing against Vite's
+production output, served under a nested PR-preview prefix. Local browser
+regressions use Vite's dev middleware without running a build. They use a
+deterministic SVG/manifest fixture, real React/Lucide, and a Mermaid stub (diagram
+rendering is not the subject of these editing tests). A separate integration test
+exercises the real Vite configuration, repository data, and backend API.
+Chromium must already be installed.
+
+### React and Vite preview
+
+`npm run preview` serves `http://localhost:4178/preview/index.html`. Vite compiles
+TSX on demand and provides React Fast Refresh; the dev plugin preserves the existing
+`/~asset`, project, and steering-source APIs without a second server or port.
+It builds the diagram index on startup and refreshes it when specs change.
+Canonical SVG/manifest changes refresh the page, while successful API writes
+retain the existing short reload-suppression window.
+
+`preview/index.html` is a thin Vite entry; application CSS and the theme are imported
+by `main.tsx`. `preview/styles.css` remains the authored application stylesheet.
+`preview-app:build` writes HTML and hashed JS/CSS to `dist/preview-app/`.
+Its Nx cache includes the external preview HTML, stylesheet, and favicon source.
+`preview-server:serve` builds that app output and the spec index before serving
+the production bundle. The compatibility `scripts/node/build-spec-index.mjs`
+entrypoint explicitly rebuilds the index using the compiled workflows package.
+Relative asset URLs support both the Pages root and nested PR previews.
+Pages copies that output alongside canonical SVGs, the manifest, and the spec index;
+the capture workflow serves it through the backend's `--built` mode.
+Pages artifacts are named per workflow run attempt, and deployment waits for API
+visibility so reruns cannot collide with an earlier attempt's artifact.
+Project color analysis retains valid SVG colors when another asset fails and
+reports the unavailable assets instead of hiding all results.
 
 ### Dependency and Compiler Upgrades
 
 The preview app owns `@wintermuted/ui-theme` and `lucide` in
-`packages/preview-app/package.json`. Root workspace installs hoist them into
-`node_modules`, preserving the preview's existing stylesheet path and local icon lookup.
+`packages/preview-app/package.json`. React, React DOM, and Lucide React also belong to that workspace, along with Vite,
+its React plugin, and React typings. npm may hoist or nest workspace dependencies;
+the dependency check resolves Vite from the owning package rather than assuming
+a root-level binary. The theme is bundled by Vite and the SVG editor uses the
+existing Lucide DOM adapter.
 
 Nx and `@nx/js` are kept at the same stable version. If `nx migrate` cannot
 retrieve provenance metadata from the configured registry, update the package
@@ -208,14 +241,10 @@ npm run preview
 To use a different port:
 
 ```bash
-npx nx run preview-server:serve -- --port 5000
+npm run dev --workspace @wm-asset-workflows/preview-app -- --port 5000
 ```
 
-To stop the server, kill the process holding the port:
-
-```bash
-lsof -ti :4178 | xargs kill -9
-```
+To stop Vite, press Ctrl+C in the terminal running the preview.
 
 ## Notes
 
@@ -228,7 +257,7 @@ lsof -ti :4178 | xargs kill -9
 
 The npm workspace is orchestrated by Nx. Each package has a `project.json` with independently cacheable targets, while the existing root commands remain stable:
 
-- `packages/preview-app/` bundles TypeScript browser source to `preview/app.js`.
+- `packages/preview-app/` serves React TSX with Vite and builds to `dist/preview-app/`.
 - `packages/preview-server/` compiles the TypeScript preview HTTP server to `dist/packages/preview-server/`.
 - `packages/workflows/` compiles the spec indexing and screenshot capture CLIs.
 - `packages/image-generation/` exposes a TypeScript CLI and keeps Pillow scripts as the rendering implementation.

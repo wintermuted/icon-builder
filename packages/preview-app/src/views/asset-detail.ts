@@ -175,6 +175,7 @@ export function renderAssetDetail(assetId) {
     }
   };
   loadAssetSvgData(asset.source).then((data) => {
+    if (!primarySvg.isConnected || primarySvg.dataset.assetId !== asset.id) return;
     const viewBox = assetViewBoxEdits.get(asset.id) || parseSvgViewBox(data.viewBox);
     if (!viewBox) return;
     assetViewBoxEdits.set(asset.id, viewBox);
@@ -250,7 +251,9 @@ export function renderAssetDetail(assetId) {
     },
     (layerNumber) => primaryInteractionState.updateTooltip(layerNumber),
     (layerNumbers) => setPrimarySvgMultiSelectHighlight(primarySvg, layerNumbers),
-    () => renderAssetDetail(asset.id),
+    () => {
+      if (primarySvg.isConnected) renderAssetDetail(asset.id);
+    },
   );
   const primaryInteraction = enablePrimaryLayerInteraction(
     primarySvg,

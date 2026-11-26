@@ -8,9 +8,10 @@ Standalone repo for SVG-first logo/glyph authoring, markdown-driven diagrams, de
 | ---------------------- | ---------------------------------------------------------- |
 | Monorepo orchestration | Nx, npm workspaces                                         |
 | Preview/orchestration  | TypeScript 7 CLI / TypeScript 6 API, Node.js 26.13.1+, ESM |
+| Browser UI             | React TSX, Vite, React Fast Refresh                        |
 | Image generation       | Python 3.11+, Pillow 13+                                   |
 | Screenshot capture     | Playwright (Chromium headless)                             |
-| Preview server         | `node:http` (zero-dependency)                              |
+| Preview server         | Vite dev middleware; `node:http` backend/static capture    |
 | Icon paths             | `lucide` (declared dependency)                             |
 
 ## Commands
@@ -21,7 +22,7 @@ python3 -m pip install -r requirements.txt  # Install Python deps (first time)
 npx playwright install chromium  # Install browser for capture (first time)
 
 npm run build:specs            # Parse specs/ markdown -> preview/spec-index.json
-npm run preview                # Ensure deps + build specs, then serve at http://localhost:4178/preview/index.html
+npm run preview                # Start Vite + existing APIs at http://localhost:4178/preview/index.html
 npm run generate:png           # Generate PNG assets from Pillow scripts
 npm run capture                # Headless-capture preview-light.png and preview-dark.png
 npm run workflow:logo          # Run build:specs + generate:png + capture in sequence
@@ -48,11 +49,12 @@ assets/svg/          SVG source files — source of truth, never overwritten by 
 specs/               Markdown specs with Mermaid blocks for diagram lane
 manifests/assets.json  Asset catalog consumed by preview and generator scripts
 packages/            Nx-managed TypeScript package boundaries
-packages/preview-app/ TypeScript browser preview application source
+packages/preview-app/ React TSX source, Vite configuration, browser tests
 packages/preview-server/ TypeScript preview HTTP server source
 packages/workflows/  TypeScript workflow source and shared paths
 packages/image-generation/ TypeScript CLI and deterministic Pillow generators
-preview/             Static browser entrypoint and compatibility shell
+preview/             Thin Vite HTML entrypoint, application CSS, generated spec index
+dist/preview-app/    Generated Vite production output (git-ignored)
 scripts/node/        CLI compatibility entrypoints
 scripts/python/      Python compatibility entrypoints
 outputs/png/         Generated PNG assets (git-ignored except .gitkeep)
