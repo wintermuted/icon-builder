@@ -12,9 +12,7 @@
     },
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "main": "packages/workflows/src/build-spec-index.ts",
         "outputPath": "dist/packages/workflows",
@@ -26,15 +24,11 @@
       "dependsOn": [
         "build",
         {
-          "projects": [
-            "preview-app"
-          ],
+          "projects": ["preview-app"],
           "target": "build"
         }
       ],
-      "outputs": [
-        "{workspaceRoot}/preview/spec-index.json"
-      ],
+      "outputs": ["{workspaceRoot}/preview/spec-index.json"],
       "options": {
         "command": "node dist/packages/workflows/src/build-spec-index.js"
       }
@@ -45,15 +39,11 @@
         "build",
         "build-specs",
         {
-          "projects": [
-            "preview-server"
-          ],
+          "projects": ["preview-server"],
           "target": "build"
         }
       ],
-      "outputs": [
-        "{workspaceRoot}/outputs/screenshots"
-      ],
+      "outputs": ["{workspaceRoot}/outputs/screenshots"],
       "options": {
         "command": "node dist/packages/workflows/src/capture-preview.js"
       }
@@ -63,9 +53,7 @@
       "dependsOn": [
         "capture",
         {
-          "projects": [
-            "image-generation"
-          ],
+          "projects": ["image-generation"],
           "target": "generate-png"
         }
       ],
@@ -74,8 +62,5 @@
       }
     }
   },
-  "tags": [
-    "scope:tooling",
-    "type:application"
-  ]
+  "tags": ["scope:tooling", "type:application"]
 }

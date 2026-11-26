@@ -13,9 +13,9 @@ function compilerVersion(binary) {
     cwd: root,
     env: {
       ...process.env,
-      PATH: `${join(root, "node_modules", ".bin")}${delimiter}${process.env.PATH ?? ""}`
+      PATH: `${join(root, "node_modules", ".bin")}${delimiter}${process.env.PATH ?? ""}`,
     },
-    encoding: "utf8"
+    encoding: "utf8",
   }).trim();
 }
 
@@ -33,7 +33,7 @@ test("Nx's TypeScript dependency retains the compiler API", () => {
     "export const message: string = 'compiler API available';",
     ts.ScriptTarget.ES2022,
     true,
-    ts.ScriptKind.TS
+    ts.ScriptKind.TS,
   );
   assert.deepEqual(source.parseDiagnostics, []);
   assert.ok(ts.isVariableStatement(source.statements[0]));

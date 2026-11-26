@@ -52,9 +52,46 @@ npm run graph           # Explore the Nx project and task graph
 npm run build           # Build every package through Nx
 npm run typecheck       # Check Node packages with native TypeScript 7
 npm run test:toolchain  # Verify native CLI and Nx compiler API compatibility
+npm run test:preview    # Exercise preview editing in Chromium without a local build
+npm run test:file-size  # Verify Oxlint's exact boundary (CI; invokes the linter)
+npm run lint            # Lint JavaScript/TypeScript with Oxlint
+npm run lint:fix        # Apply safe Oxlint fixes
+npm run format          # Format supported source/config/docs with Oxfmt
+npm run format:check    # Check formatting without writing files
 ```
 
+Oxlint and Oxfmt are root development tools configured by `.oxlintrc.json`
+and `.oxfmtrc.json`. Generated bundles, build outputs, and captures are excluded;
+Oxfmt also leaves the npm-managed lockfile and `manifests/assets.json` untouched.
+The preview server writes the manifest using two-space `JSON.stringify` formatting.
+The Code quality workflow
+runs both checks on pull requests and pushes to `main`, including docs-only changes.
+
+### Source file length
+
+Oxlint enforces **at most 500 lines per authored JavaScript/TypeScript file**,
+including blank lines and comments. Keep modules comfortably below the cap after
+formatting; do not add file overrides or inline disables. This applies to source,
+scripts, declarations, and tests, not CSS, HTML, JSON, Python, SVG, or Markdown.
+The generated `preview/app.js` bundle remains excluded.
+
+The preview entrypoint composes modules under `packages/preview-app/src/`:
+`svg/` owns cached SVG documents and edits, `canvas/` owns gestures and cleanup,
+`editor/` owns layer panels, and `project/` and `views/` own project data and DOM
+rendering. Mutable state has a single owner; collaborators receive explicit
+dependencies and view refresh callbacks rather than importing the entrypoint.
+
+CI verifies the 500/501-line boundary and browser editing against the real bundle.
+Local browser regressions serve the same source modules using Node's type stripping,
+without running a build; generated output is unchanged. They use a deterministic
+SVG/manifest fixture, real Lucide, and a Mermaid stub (diagram rendering is not
+the subject of these editing tests). Chromium must already be installed.
+
 ### Dependency and Compiler Upgrades
+
+The preview app owns `@wintermuted/ui-theme` and `lucide` in
+`packages/preview-app/package.json`. Root workspace installs hoist them into
+`node_modules`, preserving the preview's existing stylesheet path and local icon lookup.
 
 Nx and `@nx/js` are kept at the same stable version. If `nx migrate` cannot
 retrieve provenance metadata from the configured registry, update the package

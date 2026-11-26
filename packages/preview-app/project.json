@@ -7,20 +7,12 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": [
-        "production",
-        "^production"
-      ],
-      "outputs": [
-        "{workspaceRoot}/preview/app.js"
-      ],
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/preview/app.js"],
       "options": {
         "command": "esbuild packages/preview-app/src/app.ts --bundle --format=esm --platform=browser --target=es2022 --outfile=preview/app.js"
       }
     }
   },
-  "tags": [
-    "scope:preview",
-    "type:application"
-  ]
+  "tags": ["scope:preview", "type:application"]
 }

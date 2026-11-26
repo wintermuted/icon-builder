@@ -4,14 +4,14 @@ Standalone repo for SVG-first logo/glyph authoring, markdown-driven diagrams, de
 
 ## Stack
 
-| Layer | Tool |
-|-------|------|
-| Monorepo orchestration | Nx, npm workspaces |
-| Preview/orchestration | TypeScript 7 CLI / TypeScript 6 API, Node.js 26.13.1+, ESM |
-| Image generation | Python 3.11+, Pillow 13+ |
-| Screenshot capture | Playwright (Chromium headless) |
-| Preview server | `node:http` (zero-dependency) |
-| Icon paths | `lucide` (declared dependency) |
+| Layer                  | Tool                                                       |
+| ---------------------- | ---------------------------------------------------------- |
+| Monorepo orchestration | Nx, npm workspaces                                         |
+| Preview/orchestration  | TypeScript 7 CLI / TypeScript 6 API, Node.js 26.13.1+, ESM |
+| Image generation       | Python 3.11+, Pillow 13+                                   |
+| Screenshot capture     | Playwright (Chromium headless)                             |
+| Preview server         | `node:http` (zero-dependency)                              |
+| Icon paths             | `lucide` (declared dependency)                             |
 
 ## Commands
 
@@ -70,8 +70,8 @@ outputs/screenshots/ Browser capture outputs (git-ignored except .gitkeep)
 
 This repo includes a VS Code Copilot Chat prompt file for the primary authoring workflow:
 
-| Prompt | Location | Use When... |
-|--------|---------|-------------|
+| Prompt               | Location                                     | Use When...                                                      |
+| -------------------- | -------------------------------------------- | ---------------------------------------------------------------- |
 | **Create SVG Asset** | `.github/prompts/create-svg-asset.prompt.md` | Creating a new logo or glyph from scratch via a guided interview |
 
 Use `/create-svg-asset` in Copilot Chat to start an interactive session. The prompt handles: design interview → SVG generation → manifest registration → pipeline run → iteration loop.
@@ -107,6 +107,7 @@ Each file exports a `__iconNode` array of `["path", { d: "..." }]` tuples on a *
 **Embedding in SVG:** scale with a `<g transform="translate(tx, ty) scale(s)">` wrapper. Stroke attributes (`fill="none"`, `stroke`, `stroke-width`, `stroke-linecap`, `stroke-linejoin`) go on the `<g>`, not individual paths.
 
 **Quick lookup command:**
+
 ```bash
 cat node_modules/lucide/dist/esm/icons/refresh-cw.js
 # or fallback:

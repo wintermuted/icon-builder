@@ -23,7 +23,7 @@ export const MIME = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
-  ".md": "text/markdown; charset=utf-8"
+  ".md": "text/markdown; charset=utf-8",
 };
 
 export const RELOAD_SNIPPET = `<script>
@@ -43,5 +43,7 @@ export async function serveStaticFile(req, res, { root, reloadSnippet = RELOAD_S
   const ext = extname(filePath).toLowerCase();
   const contentType = MIME[ext] || "application/octet-stream";
   res.writeHead(200, { "Content-Type": contentType, "Cache-Control": "no-cache" });
-  res.end(ext === ".html" ? body.toString("utf-8").replace("</body>", `${reloadSnippet}</body>`) : body);
+  res.end(
+    ext === ".html" ? body.toString("utf-8").replace("</body>", `${reloadSnippet}</body>`) : body,
+  );
 }

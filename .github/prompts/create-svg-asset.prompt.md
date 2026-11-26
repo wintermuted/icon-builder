@@ -51,14 +51,14 @@ Generate the SVG markup following these rules:
 
 #### Token Palette
 
-| Role | Value |
-|------|-------|
-| Background (dark) | `#101828` |
+| Role                  | Value     |
+| --------------------- | --------- |
+| Background (dark)     | `#101828` |
 | Background alt (dark) | `#0F172A` |
-| Accent teal | `#5EEAD4` |
-| Accent indigo | `#818CF8` |
-| Accent purple | `#C084FC` |
-| Text / neutral | `#F8FAFC` |
+| Accent teal           | `#5EEAD4` |
+| Accent indigo         | `#818CF8` |
+| Accent purple         | `#C084FC` |
+| Text / neutral        | `#F8FAFC` |
 
 #### Files to Create / Update
 

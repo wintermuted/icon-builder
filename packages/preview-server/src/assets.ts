@@ -17,12 +17,12 @@ export async function saveAssetSvg(root, assetId, svg) {
   const source = String(asset.source || "").replaceAll("\\", "/");
   const sourceSegments = source.split("/");
   if (
-    isAbsolute(source)
-    || sourceSegments.includes("..")
-    || sourceSegments.includes(".")
-    || sourceSegments[0] !== "assets"
-    || sourceSegments[1] !== "svg"
-    || !source.toLowerCase().endsWith(".svg")
+    isAbsolute(source) ||
+    sourceSegments.includes("..") ||
+    sourceSegments.includes(".") ||
+    sourceSegments[0] !== "assets" ||
+    sourceSegments[1] !== "svg" ||
+    !source.toLowerCase().endsWith(".svg")
   ) {
     throw new Error("Asset source must be an SVG under assets/svg");
   }

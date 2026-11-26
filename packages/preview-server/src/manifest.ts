@@ -20,7 +20,7 @@ export function findProject(manifest, name) {
 export function pruneFavoriteColors(project) {
   const availableColors = new Set([
     ...(project.agentSteer?.sources || []).flatMap((source) =>
-      (source.palette || []).map((color) => String(color.hex || "").toUpperCase())
+      (source.palette || []).map((color) => String(color.hex || "").toUpperCase()),
     ),
     ...(project.agentSteer?.customColors || []).map((color) => String(color).toUpperCase()),
   ]);

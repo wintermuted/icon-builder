@@ -9,5 +9,5 @@ export const paths = {
   manifests: join(root, "manifests"),
   assetManifest: join(root, "manifests", "assets.json"),
   screenshots: join(root, "outputs", "screenshots"),
-  png: join(root, "outputs", "png")
+  png: join(root, "outputs", "png"),
 };

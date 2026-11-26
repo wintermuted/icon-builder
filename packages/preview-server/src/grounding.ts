@@ -15,8 +15,12 @@ export async function uniqueGroundingPath(root, slug, filename, sources) {
     const relativePath = `assets/svg/${slug}/grounding/${candidate}`;
     const registered = sources.some((source) => source.src === relativePath);
     let exists = false;
-    try { await access(join(root, relativePath)); exists = true; }
-    catch (error) { if (error.code !== "ENOENT") throw error; }
+    try {
+      await access(join(root, relativePath));
+      exists = true;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
     if (!registered && !exists) return { filename: candidate, relativePath };
     sequence += 1;
   }
@@ -24,10 +28,14 @@ export async function uniqueGroundingPath(root, slug, filename, sources) {
 
 export async function analyzeImagePalette(root, imagePath) {
   const scriptPath = join(root, "packages", "image-generation", "src", "analyze_palette.py");
-  const { stdout } = await execFileAsync("python3", [scriptPath, imagePath, "--colors", "10"], { maxBuffer: 1024 * 1024 });
+  const { stdout } = await execFileAsync("python3", [scriptPath, imagePath, "--colors", "10"], {
+    maxBuffer: 1024 * 1024,
+  });
   const palette = JSON.parse(stdout);
   if (!Array.isArray(palette)) throw new Error("Palette analyzer returned an invalid result");
-  return palette.filter((color) => /^#[0-9A-F]{6}$/.test(color.hex) && Number.isFinite(color.percentage)).slice(0, 10);
+  return palette
+    .filter((color) => /^#[0-9A-F]{6}$/.test(color.hex) && Number.isFinite(color.percentage))
+    .slice(0, 10);
 }
 
 export async function uploadGroundingImage(root, projectName, filename, dataUrl) {
@@ -36,7 +44,10 @@ export async function uploadGroundingImage(root, projectName, filename, dataUrl)
   const manifest = await readManifest(root);
   const project = manifest.projects.find((item) => item.name === projectName);
   if (!project) throw new Error(`Unknown project: ${projectName}`);
-  const slug = String(project.slug || projectName).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const slug = String(project.slug || projectName)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   project.slug ||= slug;
   project.agentSteer ||= { notes: [], sources: [] };
   project.agentSteer.sources ||= [];
@@ -45,8 +56,12 @@ export async function uploadGroundingImage(root, projectName, filename, dataUrl)
   const uploadedPath = join(root, upload.relativePath);
   await writeFile(uploadedPath, Buffer.from(match[2], "base64"), { flag: "wx" });
   let palette;
-  try { palette = await analyzeImagePalette(root, uploadedPath); }
-  catch (error) { await unlink(uploadedPath).catch(() => {}); throw new Error(`Could not analyze image colors: ${error.message}`); }
+  try {
+    palette = await analyzeImagePalette(root, uploadedPath);
+  } catch (error) {
+    await unlink(uploadedPath).catch(() => {});
+    throw new Error(`Could not analyze image colors: ${error.message}`);
+  }
   project.agentSteer.sources.push({
     kind: "image",
     title: upload.filename.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " "),
@@ -65,41 +80,70 @@ export async function updateProjectColor(root, projectName, color, selected, cus
   if (!project) throw new Error(`Unknown project: ${projectName}`);
   project.agentSteer ||= { notes: [], sources: [] };
   const availableColors = new Set([
-    ...(project.agentSteer.sources || []).flatMap((source) => (source.palette || []).map((entry) => String(entry.hex || "").toUpperCase())),
+    ...(project.agentSteer.sources || []).flatMap((source) =>
+      (source.palette || []).map((entry) => String(entry.hex || "").toUpperCase()),
+    ),
     ...(project.agentSteer.customColors || []).map((entry) => String(entry).toUpperCase()),
   ]);
   if (custom) {
-    const customColors = new Set((project.agentSteer.customColors || []).map((entry) => String(entry).toUpperCase()));
-    if (selected) customColors.add(color); else customColors.delete(color);
+    const customColors = new Set(
+      (project.agentSteer.customColors || []).map((entry) => String(entry).toUpperCase()),
+    );
+    if (selected) customColors.add(color);
+    else customColors.delete(color);
     project.agentSteer.customColors = [...customColors];
     if (selected) availableColors.add(color);
   }
   if (!availableColors.has(color)) throw new Error("Color is not available to this project");
-  const favorites = new Set((project.agentSteer.favoriteColors || []).map((entry) => String(entry).toUpperCase()));
-  if (selected) favorites.add(color); else favorites.delete(color);
+  const favorites = new Set(
+    (project.agentSteer.favoriteColors || []).map((entry) => String(entry).toUpperCase()),
+  );
+  if (selected) favorites.add(color);
+  else favorites.delete(color);
   project.agentSteer.favoriteColors = [...favorites];
   await writeManifest(root, manifest);
-  return { favoriteColors: project.agentSteer.favoriteColors, customColors: project.agentSteer.customColors || [] };
+  return {
+    favoriteColors: project.agentSteer.favoriteColors,
+    customColors: project.agentSteer.customColors || [],
+  };
 }
 
 export async function updateGroundingSource(root, projectName, sourcePath, action, requestedName) {
   const manifest = await readManifest(root);
   const project = manifest.projects.find((item) => item.name === projectName);
   if (!project) throw new Error(`Unknown project: ${projectName}`);
-  const slug = String(project.slug || projectName).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const slug = String(project.slug || projectName)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   const groundingPrefix = `assets/svg/${slug}/grounding/`;
   const sources = project.agentSteer?.sources || [];
-  const sourceIndex = sources.findIndex((source) => source.kind === "image" && source.src === sourcePath);
-  if (sourceIndex < 0 || !sourcePath.startsWith(groundingPrefix) || basename(sourcePath) !== sourcePath.slice(groundingPrefix.length)) throw new Error("Unknown grounding image");
+  const sourceIndex = sources.findIndex(
+    (source) => source.kind === "image" && source.src === sourcePath,
+  );
+  if (
+    sourceIndex < 0 ||
+    !sourcePath.startsWith(groundingPrefix) ||
+    basename(sourcePath) !== sourcePath.slice(groundingPrefix.length)
+  )
+    throw new Error("Unknown grounding image");
   if (action === "delete") {
     await unlink(join(root, sourcePath));
     sources.splice(sourceIndex, 1);
     pruneFavoriteColors(project);
   } else if (action === "rename") {
     const currentExtension = extname(sourcePath);
-    const requestedStem = String(requestedName || "").replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
+    const requestedStem = String(requestedName || "")
+      .replace(/\.[^.]+$/, "")
+      .replace(/[^a-zA-Z0-9._-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
     if (!requestedStem) throw new Error("A valid image name is required");
-    const next = await uniqueGroundingPath(root, slug, `${requestedStem}${currentExtension}`, sources.filter((_, index) => index !== sourceIndex));
+    const next = await uniqueGroundingPath(
+      root,
+      slug,
+      `${requestedStem}${currentExtension}`,
+      sources.filter((_, index) => index !== sourceIndex),
+    );
     await rename(join(root, sourcePath), join(root, next.relativePath));
     sources[sourceIndex].src = next.relativePath;
     sources[sourceIndex].title = next.filename.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");

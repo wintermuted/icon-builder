@@ -13,6 +13,7 @@ description: >
 ## Asset Manifest (`manifests/assets.json`)
 
 The manifest is the central catalog consumed by:
+
 - The browser preview app (`preview/app.js`) to render logo tiles
 - The PNG generator (`scripts/python/generate_images.py`) to produce output sheets
 
@@ -38,14 +39,14 @@ The manifest is the central catalog consumed by:
 
 ### Field Reference
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Kebab-case identifier, must match the SVG filename (without extension) |
-| `label` | string | Human-readable display name shown in preview tiles and PNG sheets |
-| `source` | string | Relative path to the SVG file from the repo root |
-| `variants` | array | List of output variant descriptors |
-| `variants[].size` | number | Output dimension in px (square) |
-| `variants[].theme` | string | `"light"` or `"dark"` — controls background treatment in PNG output |
+| Field              | Type   | Description                                                            |
+| ------------------ | ------ | ---------------------------------------------------------------------- |
+| `id`               | string | Kebab-case identifier, must match the SVG filename (without extension) |
+| `label`            | string | Human-readable display name shown in preview tiles and PNG sheets      |
+| `source`           | string | Relative path to the SVG file from the repo root                       |
+| `variants`         | array  | List of output variant descriptors                                     |
+| `variants[].size`  | number | Output dimension in px (square)                                        |
+| `variants[].theme` | string | `"light"` or `"dark"` — controls background treatment in PNG output    |
 
 ### Naming Conventions
 
@@ -84,9 +85,7 @@ Uploaded steering images store their analyzed dominant colors on the source reco
       {
         "kind": "image",
         "src": "assets/svg/project/grounding/reference.png",
-        "palette": [
-          { "hex": "#257375", "percentage": 12.11 }
-        ]
+        "palette": [{ "hex": "#257375", "percentage": 12.11 }]
       }
     ],
     "favoriteColors": ["#257375", "#123456"],
@@ -109,7 +108,7 @@ Spec files are plain markdown with Mermaid fenced code blocks. The `build-spec-i
 
 ### Format
 
-```markdown
+````markdown
 # Spec File Title
 
 Optional prose description.
@@ -121,9 +120,9 @@ flowchart LR
   C --> D[PNG Generation]
   D --> E[Screenshot Capture]
 ```
+````
 
 Additional sections and multiple Mermaid blocks are supported in one file.
-```
 
 ### Rules
 

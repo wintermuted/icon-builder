@@ -8,7 +8,11 @@ export function createReloadSupport({ root, quiet }) {
   function broadcast() {
     if (Date.now() < suppressUntil) return;
     for (const res of clients) {
-      try { res.write("data: reload\n\n"); } catch { /* client already gone */ }
+      try {
+        res.write("data: reload\n\n");
+      } catch {
+        /* client already gone */
+      }
     }
   }
 
@@ -25,7 +29,9 @@ export function createReloadSupport({ root, quiet }) {
             if (!quiet) console.log(`[reload] changed: ${dir}/${filename}`);
             broadcast();
           }
-        } catch { /* directory may not exist */ }
+        } catch {
+          /* directory may not exist */
+        }
       })();
     }
   }
@@ -39,7 +45,7 @@ export function createReloadSupport({ root, quiet }) {
       res.writeHead(200, {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
       });
       res.write(": connected\n\n");
       clients.add(res);

@@ -14,9 +14,6 @@ export function environmentRegistryArgs() {
     return [];
   }
 
-  const registry = readFileSync(fallbackConfig, "utf8")
-    .match(/^\s*registry\s*=\s*(\S+)\s*$/m)?.[1];
-  return registry
-    ? [`--registry=${registry}`, "--omit-lockfile-registry-resolved=true"]
-    : [];
+  const registry = readFileSync(fallbackConfig, "utf8").match(/^\s*registry\s*=\s*(\S+)\s*$/m)?.[1];
+  return registry ? [`--registry=${registry}`, "--omit-lockfile-registry-resolved=true"] : [];
 }

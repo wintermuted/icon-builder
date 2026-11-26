@@ -21,7 +21,7 @@ export function getRouteFromHash() {
       tab: "logos",
       page: "source",
       projectName: decodeHashSegment(encodedProject),
-      sourcePath: decodeHashSegment(encodedSource)
+      sourcePath: decodeHashSegment(encodedSource),
     };
   }
 
@@ -75,7 +75,7 @@ export function wireThemeToggle(renderDiagrams) {
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: "loose",
-        theme: next === "dark" ? "dark" : "default"
+        theme: next === "dark" ? "dark" : "default",
       });
       renderDiagrams();
     }
@@ -102,7 +102,11 @@ export function wireTopNav() {
 }
 
 export function slugify(value) {
-  return String(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export function normalizeProjectPrompt(prompt, projectName, projectSlug) {
@@ -131,7 +135,7 @@ export function showToast(message) {
 function decodeHashSegment(value) {
   try {
     return decodeURIComponent(value);
-  } catch (_error) {
+  } catch {
     return value;
   }
 }

@@ -59,14 +59,14 @@ Analyze steering images during upload, persist their ten most-used colors, and d
 
 ## Relevant Files
 
-| File | Purpose |
-|---|---|
-| `scripts/python/analyze_palette.py` | Dominant-color extraction |
-| `scripts/node/serve-preview.mjs` | Upload processing and favorite persistence |
-| `preview/app.js` | Palette and favorite interaction rendering |
-| `preview/styles.css` | Swatch layout and states |
-| `manifests/assets.json` | Stored palettes and project favorites |
-| `.github/skills/wm-asset-manifest-spec/SKILL.md` | Palette manifest schema documentation |
+| File                                             | Purpose                                    |
+| ------------------------------------------------ | ------------------------------------------ |
+| `scripts/python/analyze_palette.py`              | Dominant-color extraction                  |
+| `scripts/node/serve-preview.mjs`                 | Upload processing and favorite persistence |
+| `preview/app.js`                                 | Palette and favorite interaction rendering |
+| `preview/styles.css`                             | Swatch layout and states                   |
+| `manifests/assets.json`                          | Stored palettes and project favorites      |
+| `.github/skills/wm-asset-manifest-spec/SKILL.md` | Palette manifest schema documentation      |
 
 ## Verification
 

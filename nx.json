@@ -5,33 +5,18 @@
     "legacy": true
   },
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
-    "production": [
-      "default",
-      "!{projectRoot}/**/*.md"
-    ],
-    "sharedGlobals": [
-      "{workspaceRoot}/package-lock.json",
-      "{workspaceRoot}/tsconfig.base.json"
-    ]
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": ["default", "!{projectRoot}/**/*.md"],
+    "sharedGlobals": ["{workspaceRoot}/package-lock.json", "{workspaceRoot}/tsconfig.base.json"]
   },
   "targetDefaults": {
     "typecheck": {
       "cache": true,
-      "inputs": [
-        "production",
-        "^production"
-      ]
+      "inputs": ["production", "^production"]
     },
     "build": {
       "cache": true,
-      "inputs": [
-        "production",
-        "^production"
-      ]
+      "inputs": ["production", "^production"]
     }
   }
 }

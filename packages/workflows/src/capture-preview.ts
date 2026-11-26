@@ -13,7 +13,9 @@ function delay(ms) {
 }
 
 async function captureTheme(page, theme, outputPath) {
-  await page.goto(`http://localhost:${port}/preview/index.html?theme=${theme}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`http://localhost:${port}/preview/index.html?theme=${theme}`, {
+    waitUntil: "domcontentloaded",
+  });
   await page.locator("#logo-groups .logo-group").first().waitFor({ state: "visible" });
   await page.screenshot({ path: outputPath, fullPage: true });
 }
@@ -21,10 +23,14 @@ async function captureTheme(page, theme, outputPath) {
 async function run() {
   await mkdir(outDir, { recursive: true });
 
-  const server = spawn("node", ["dist/packages/preview-server/src/index.js", "--port", String(port), "--quiet"], {
-    cwd: root,
-    stdio: "ignore"
-  });
+  const server = spawn(
+    "node",
+    ["dist/packages/preview-server/src/index.js", "--port", String(port), "--quiet"],
+    {
+      cwd: root,
+      stdio: "ignore",
+    },
+  );
 
   try {
     await delay(900);

@@ -15,7 +15,13 @@
     "graph": "nx graph",
     "build": "nx run-many -t build",
     "typecheck": "nx run-many -t typecheck",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "test:toolchain": "node --test scripts/node/typescript-toolchain.test.mjs",
+    "test:file-size": "node --test scripts/node/file-size.test.mjs",
+    "test:preview": "node --test scripts/node/preview-editor.test.mjs",
     "install:deps": "node scripts/node/install-deps.mjs",
     "preview": "npm run ensure:deps && nx run preview-server:serve",
     "ensure:deps": "node scripts/node/ensure-deps.mjs",
@@ -23,12 +29,8 @@
     "generate:png": "nx run image-generation:generate-png",
     "capture": "nx run workflows:capture",
     "workflow:logo": "nx run workflows:logo",
-    "ui-theme:link-local": "cd ../wintermuted-ui-theme && npm link && cd - && npm link @wintermuted/ui-theme",
-    "ui-theme:unlink-local": "npm unlink --no-save @wintermuted/ui-theme && npm install"
-  },
-  "dependencies": {
-    "@wintermuted/ui-theme": "^0.21.5",
-    "lucide": "^1.75.0"
+    "ui-theme:link-local": "cd ../wintermuted-ui-theme && npm link && cd - && npm link @wintermuted/ui-theme --workspace @wm-asset-workflows/preview-app",
+    "ui-theme:unlink-local": "npm unlink --no-save @wintermuted/ui-theme --workspace @wm-asset-workflows/preview-app && npm install"
   },
   "devDependencies": {
     "@nx/js": "24.0.6",
@@ -36,6 +38,8 @@
     "@typescript/native": "npm:typescript@^7.0.2",
     "esbuild": "^0.28.2",
     "nx": "24.0.6",
+    "oxfmt": "0.79.0",
+    "oxlint": "1.94.0",
     "playwright": "^1.65.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
   }

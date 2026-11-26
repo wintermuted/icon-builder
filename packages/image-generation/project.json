@@ -12,9 +12,7 @@
     },
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "main": "packages/image-generation/src/generate-images.ts",
         "outputPath": "dist/packages/image-generation",
@@ -23,19 +21,12 @@
     },
     "generate-png": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "build"
-      ],
-      "outputs": [
-        "{workspaceRoot}/outputs/png"
-      ],
+      "dependsOn": ["build"],
+      "outputs": ["{workspaceRoot}/outputs/png"],
       "options": {
         "command": "node dist/packages/image-generation/src/generate-images.js"
       }
     }
   },
-  "tags": [
-    "scope:images",
-    "type:application"
-  ]
+  "tags": ["scope:images", "type:application"]
 }
