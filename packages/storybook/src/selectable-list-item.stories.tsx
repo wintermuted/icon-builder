@@ -59,7 +59,8 @@ function SelectionExample(args: SelectableListItemProps) {
   );
 }
 const meta = {
-  title: "Shared/SelectableListItem",
+  id: "shared-selectablelistitem",
+  title: "Shared/Display/SelectableListItem",
   component: SelectableListItem,
   render: (args) => <SelectionExample {...args} />,
 } satisfies Meta<typeof SelectableListItem>;

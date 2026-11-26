@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CodeBlock } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/CodeBlock",
+  id: "shared-codeblock",
+  title: "Shared/Display/CodeBlock",
   component: CodeBlock,
   args: {
     children:

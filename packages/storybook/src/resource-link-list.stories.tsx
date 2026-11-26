@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ResourceLinkList } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/ResourceLinkList",
+  id: "shared-resourcelinklist",
+  title: "Shared/Display/ResourceLinkList",
   component: ResourceLinkList,
   args: {
     items: [

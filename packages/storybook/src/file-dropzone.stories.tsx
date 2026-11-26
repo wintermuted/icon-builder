@@ -22,7 +22,8 @@ function DropzoneExample(args: FileDropzoneProps) {
 }
 
 const meta = {
-  title: "Shared/FileDropzone",
+  id: "shared-filedropzone",
+  title: "Shared/Controls/FileDropzone",
   component: FileDropzone,
   args: {
     accept: "image/png,image/jpeg,image/webp,image/gif",

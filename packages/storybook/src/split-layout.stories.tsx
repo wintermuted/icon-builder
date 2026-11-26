@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SplitLayout } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/SplitLayout",
+  id: "shared-splitlayout",
+  title: "Shared/Layout/SplitLayout",
   component: SplitLayout,
   args: {
     children: [

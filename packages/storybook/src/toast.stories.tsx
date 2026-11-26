@@ -22,7 +22,8 @@ function ToastExample(args: ToastProps) {
 }
 
 const meta = {
-  title: "Shared/Toast",
+  id: "shared-toast",
+  title: "Shared/Feedback/Toast",
   component: Toast,
   args: { message: "Link copied.", duration: 2400 },
   render: (args) => <ToastExample {...args} />,

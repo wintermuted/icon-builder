@@ -3,7 +3,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { NumberStepper } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/NumberStepper",
+  id: "shared-numberstepper",
+  title: "Shared/Controls/NumberStepper",
   component: NumberStepper,
   args: { label: "Width", value: 24, step: 1 },
   argTypes: { inputProps: { control: false }, onValueChange: { control: false } },

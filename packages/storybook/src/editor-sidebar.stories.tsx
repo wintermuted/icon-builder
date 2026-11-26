@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EditorSidebar } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/EditorSidebar",
+  id: "shared-editorsidebar",
+  title: "Shared/Layout/EditorSidebar",
   component: EditorSidebar,
   args: { side: "left", label: "Asset analysis", children: null },
   argTypes: {

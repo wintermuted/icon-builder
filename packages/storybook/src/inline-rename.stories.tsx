@@ -32,7 +32,8 @@ function RenameExample(args: InlineRenameProps) {
 }
 
 const meta = {
-  title: "Shared/InlineRename",
+  id: "shared-inlinerename",
+  title: "Shared/Controls/InlineRename",
   component: InlineRename,
   args: {
     open: true,

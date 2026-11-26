@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ResponsiveGrid } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/ResponsiveGrid",
+  id: "shared-responsivegrid",
+  title: "Shared/Layout/ResponsiveGrid",
   component: ResponsiveGrid,
   args: {
     minItemWidth: "180px",

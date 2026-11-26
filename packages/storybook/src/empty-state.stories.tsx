@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EmptyState } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/EmptyState",
+  id: "shared-emptystate",
+  title: "Shared/Feedback/EmptyState",
   component: EmptyState,
   args: {
     heading: "No assets yet",

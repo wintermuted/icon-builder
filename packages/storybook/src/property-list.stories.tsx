@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { NumberStepper, PropertyList } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/PropertyList",
+  id: "shared-propertylist",
+  title: "Shared/Display/PropertyList",
   component: PropertyList,
   args: {
     items: [

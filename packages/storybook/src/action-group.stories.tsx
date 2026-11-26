@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ActionGroup } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/ActionGroup",
+  id: "shared-actiongroup",
+  title: "Shared/Layout/ActionGroup",
   component: ActionGroup,
   args: {
     children: (

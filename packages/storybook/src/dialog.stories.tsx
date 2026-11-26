@@ -32,7 +32,8 @@ function DialogExample(args: DialogProps) {
 }
 
 const meta = {
-  title: "Shared/Dialog",
+  id: "shared-dialog",
+  title: "Shared/Overlays/Dialog",
   component: Dialog,
   args: { title: "New item", children: null, onClose: () => {} },
   render: (args) => <DialogExample {...args} />,

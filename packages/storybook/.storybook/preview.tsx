@@ -6,6 +6,13 @@ import "../../../preview/styles.css";
 
 const preview: Preview = {
   tags: ["autodocs"],
+  parameters: {
+    options: {
+      storySort: {
+        order: ["Shared", ["Layout", "Controls", "Display", "Overlays", "Feedback"]],
+      },
+    },
+  },
   initialGlobals: { theme: "light" },
   globalTypes: {
     theme: {

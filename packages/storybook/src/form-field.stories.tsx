@@ -23,7 +23,8 @@ function ValidatedField(args: FormFieldProps) {
 }
 
 const meta = {
-  title: "Shared/FormField",
+  id: "shared-formfield",
+  title: "Shared/Controls/FormField",
   component: FormField,
   args: {
     label: "Project name",

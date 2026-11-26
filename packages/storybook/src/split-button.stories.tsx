@@ -13,7 +13,8 @@ function SplitExample(args: SplitButtonProps) {
   );
 }
 const meta = {
-  title: "Shared/SplitButton",
+  id: "shared-splitbutton",
+  title: "Shared/Controls/SplitButton",
   component: SplitButton,
   args: {
     actionLabel: "Add element",

@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AppFrame, PageHeader } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/AppFrame",
+  id: "shared-appframe",
+  title: "Shared/Layout/AppFrame",
   component: AppFrame,
   args: {
     header: (

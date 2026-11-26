@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PromptCarousel } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/PromptCarousel",
+  id: "shared-promptcarousel",
+  title: "Shared/Display/PromptCarousel",
   component: PromptCarousel,
   args: {
     prompts: [

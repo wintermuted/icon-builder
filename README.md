@@ -190,8 +190,10 @@ reports the unavailable assets instead of hiding all results.
 
 ### Storybook publishing
 
-The catalog covers all twelve shared React components with controls, generated
-API docs, and a Light/Dark toolbar. Stories load the theme, shared component styles,
+The catalog groups 32 shared components by type: Layout, Controls, Display,
+Overlays, and Feedback, with controls, generated API docs, and a Light/Dark toolbar.
+Explicit CSF IDs preserve existing story and Docs URLs when categories change.
+Stories load the theme, shared component styles,
 and the remaining app layout stylesheet,
 not its entrypoint or backend. Mermaid is bundled so diagram examples work
 without a CDN. Sidebar stories use separate storage keys to avoid changing

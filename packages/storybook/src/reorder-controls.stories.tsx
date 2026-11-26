@@ -32,7 +32,8 @@ function ReorderExample(args: ReorderControlsProps) {
   );
 }
 const meta = {
-  title: "Shared/ReorderControls",
+  id: "shared-reordercontrols",
+  title: "Shared/Controls/ReorderControls",
   component: ReorderControls,
   args: { label: "item" },
   argTypes: { onMoveUp: { control: false }, onMoveDown: { control: false } },

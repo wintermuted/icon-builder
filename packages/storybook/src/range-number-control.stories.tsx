@@ -3,7 +3,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RangeNumberControl } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/RangeNumberControl",
+  id: "shared-rangenumbercontrol",
+  title: "Shared/Controls/RangeNumberControl",
   component: RangeNumberControl,
   args: { label: "Opacity", value: 0.5, min: 0, max: 1, step: 0.01 },
   argTypes: {

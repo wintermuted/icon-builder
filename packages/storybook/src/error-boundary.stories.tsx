@@ -6,7 +6,8 @@ function FailedPreview(): never {
 }
 
 const meta = {
-  title: "Shared/PreviewBoundary",
+  id: "shared-previewboundary",
+  title: "Shared/Feedback/PreviewBoundary",
   component: PreviewBoundary,
   args: { children: null },
   argTypes: { children: { control: false } },

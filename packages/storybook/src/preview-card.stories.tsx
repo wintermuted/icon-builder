@@ -8,7 +8,8 @@ const preview = (
 );
 
 const meta = {
-  title: "Shared/PreviewCard",
+  id: "shared-previewcard",
+  title: "Shared/Display/PreviewCard",
   component: PreviewCard,
   args: {
     title: "Geometric mark",

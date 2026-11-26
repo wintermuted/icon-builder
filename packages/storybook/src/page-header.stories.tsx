@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Icon, PageHeader } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/PageHeader",
+  id: "shared-pageheader",
+  title: "Shared/Layout/PageHeader",
   component: PageHeader,
   args: {
     title: "Project assets",

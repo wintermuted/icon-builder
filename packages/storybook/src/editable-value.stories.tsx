@@ -38,7 +38,8 @@ function Example(args: EditableValueProps) {
   );
 }
 const meta = {
-  title: "Shared/EditableValue",
+  id: "shared-editablevalue",
+  title: "Shared/Controls/EditableValue",
   component: EditableValue,
   args: { label: "ViewBox", value: "0 0 240 240", editLabel: "Edit ViewBox" },
   argTypes: {

@@ -3,7 +3,8 @@ import { useArgs } from "storybook/preview-api";
 import { ToggleButton, type ToggleButtonProps } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/ToggleButton",
+  id: "shared-togglebutton",
+  title: "Shared/Controls/ToggleButton",
   component: ToggleButton,
   args: { pressed: false, children: "Show grid", icon: "Grid2x2" },
   render: function Render(args) {

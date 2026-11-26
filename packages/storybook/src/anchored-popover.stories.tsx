@@ -25,7 +25,8 @@ function PopoverExample({ edge = false, ...args }: AnchoredPopoverProps & { edge
   );
 }
 const meta = {
-  title: "Shared/AnchoredPopover",
+  id: "shared-anchoredpopover",
+  title: "Shared/Overlays/AnchoredPopover",
   component: AnchoredPopover,
   args: {
     anchorRef: { current: null },

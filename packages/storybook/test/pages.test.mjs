@@ -72,6 +72,22 @@ for (const prefix of ["/icon-builder/storybook/", "/icon-builder/previews/pr-42/
       assert.equal(stories.length, 72);
       const docs = Object.values(index.entries).filter((entry) => entry.type === "docs");
       assert.equal(docs.length, 32);
+      assert.deepEqual([...new Set(docs.map((entry) => entry.title.split("/")[1]))].sort(), [
+        "Controls",
+        "Display",
+        "Feedback",
+        "Layout",
+        "Overlays",
+      ]);
+      for (const entry of [...stories, ...docs]) {
+        const [namespace, group, component, extra] = entry.title.split("/");
+        assert.equal(namespace, "Shared");
+        assert.ok(group && component && !extra, `Grouped component title: ${entry.title}`);
+        assert.ok(
+          entry.id.startsWith(`shared-${component.toLowerCase()}--`),
+          `Preserved story/Docs URL: ${entry.id}`,
+        );
+      }
       for (const entry of stories) {
         await page.goto(`${base}iframe.html?id=${entry.id}&viewMode=story`);
         await page.locator("#storybook-root > *").first().waitFor();
