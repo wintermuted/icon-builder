@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PreviewBoundary } from "@wm-asset-workflows/ui-components";
 
-function FailedPreview() {
+function FailedPreview(): never {
   throw new Error("Example preview failure");
 }
 
