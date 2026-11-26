@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { normalizeProjectPrompt, slugify } from "../app-shell.js";
 import { resolveAssetPath } from "../project/model.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 import type { Project, Asset } from "../types.js";
 import { AssetCard } from "./collection.js";
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { projectRouteHref } from "../project/model.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 
 export function ProjectHeader({ name, found }: { name: string; found: boolean }) {
   const [editing, setEditing] = useState(false);

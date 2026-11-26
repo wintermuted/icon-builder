@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide";
 import { PreviewApp } from "./ui/shell.js";
-import { PreviewBoundary } from "./ui/error-boundary.js";
+import { PreviewBoundary } from "@wm-asset-workflows/ui-components";
 import { appState } from "./app-state.js";
 import { loadJson } from "./app-shell.js";
 import "@wintermuted/ui-theme/index.css";

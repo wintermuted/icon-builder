@@ -1,17 +1,37 @@
 import { useEffect, useRef, useState } from "react";
-import { appState } from "../app-state.js";
 
-function Diagram({ id, code, theme }: { id: string; code: string; theme: string }) {
+export interface MermaidRenderer {
+  initialize(config: Record<string, unknown>): void;
+  render(id: string, source: string): Promise<{ svg: string }>;
+}
+
+export interface DiagramSpec {
+  id: string;
+  title: string;
+  code: string;
+}
+
+export function Diagram({
+  id,
+  code,
+  theme,
+  renderer,
+}: {
+  id: string;
+  code: string;
+  theme: string;
+  renderer: MermaidRenderer;
+}) {
   const root = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true;
-    mermaid.initialize({
+    renderer.initialize({
       startOnLoad: false,
       securityLevel: "loose",
       theme: theme === "dark" ? "dark" : "default",
     });
-    mermaid.render(id, code).then(
+    renderer.render(id, code).then(
       ({ svg }) => {
         if (active && root.current) {
           root.current.innerHTML = svg;
@@ -26,7 +46,7 @@ function Diagram({ id, code, theme }: { id: string; code: string; theme: string 
     return () => {
       active = false;
     };
-  }, [id, code, theme]);
+  }, [id, code, theme, renderer]);
   return (
     <>
       <div ref={root} className="mermaid" />
@@ -37,7 +57,15 @@ function Diagram({ id, code, theme }: { id: string; code: string; theme: string 
   );
 }
 
-export function Diagrams({ theme }: { theme: string }) {
+export function Diagrams({
+  theme,
+  diagrams,
+  renderer,
+}: {
+  theme: string;
+  diagrams: readonly DiagramSpec[];
+  renderer: MermaidRenderer;
+}) {
   return (
     <section id="diagrams" className="card">
       <div className="card-header">
@@ -45,10 +73,10 @@ export function Diagrams({ theme }: { theme: string }) {
       </div>
       <div className="card-body">
         <div id="diagram-grid" className="asset-grid">
-          {appState.diagramData.map((item, index) => (
+          {diagrams.map((item, index) => (
             <article key={item.id} className="asset-tile">
               <h3>{item.title}</h3>
-              <Diagram id={`diagram-${index}`} code={item.code} theme={theme} />
+              <Diagram id={`diagram-${index}`} code={item.code} theme={theme} renderer={renderer} />
             </article>
           ))}
         </div>

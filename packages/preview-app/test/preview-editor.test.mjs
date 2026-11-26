@@ -411,3 +411,42 @@ test("invalid startup data produces a visible React error instead of leaving a l
   await page.getByRole("heading", { name: "Preview failed", exact: true }).waitFor();
   assert.match(await page.getByRole("alert").textContent(), /map/);
 });
+
+test("shared diagrams receive data and renderer props and recover from rendering failures", async () => {
+  await page.evaluate(() => {
+    window.mermaid.initialize = (config) => {
+      window.diagramTheme = config.theme;
+    };
+    window.mermaid.render = async (id, code) => ({
+      svg: `<svg data-render-id="${id}" data-source="${code}" data-theme="${window.diagramTheme}"></svg>`,
+    });
+    window.location.hash = "diagrams";
+  });
+  const diagram = page.locator("#diagram-grid .mermaid svg");
+  await diagram.waitFor({ state: "attached" });
+  assert.equal(await page.locator("#diagram-grid h3").textContent(), "Fixture diagram");
+  assert.equal(await diagram.getAttribute("data-source"), "graph TD; A-->B");
+  assert.equal(await diagram.getAttribute("data-render-id"), "diagram-0");
+  assert.equal(await diagram.getAttribute("data-theme"), "default");
+  await page.locator("#theme-toggle").click();
+  await page.waitForFunction(
+    () => document.querySelector("#diagram-grid svg")?.getAttribute("data-theme") === "dark",
+  );
+  await page.evaluate(() => {
+    window.mermaid.render = async () => {
+      throw new Error("Fixture diagram failed");
+    };
+  });
+  await page.locator("#theme-toggle").click();
+  await page.locator("#diagram-grid [role=alert]").waitFor();
+  assert.equal(
+    await page.locator("#diagram-grid [role=alert]").textContent(),
+    "Fixture diagram failed",
+  );
+  await page.evaluate(() => {
+    window.mermaid.render = async () => ({ svg: '<svg data-recovered="true"></svg>' });
+  });
+  await page.locator("#theme-toggle").click();
+  await page.locator("#diagram-grid svg[data-recovered]").waitFor({ state: "attached" });
+  assert.equal(await page.locator("#diagram-grid [role=alert]").isVisible(), false);
+});
