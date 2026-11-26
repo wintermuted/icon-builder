@@ -31,6 +31,7 @@ export function AnchoredPopover({
   useLayoutEffect(() => {
     const popover = element.current;
     if (!popover) return;
+    const mountedAnchor = anchorRef.current;
     const position = () => {
       const anchor = anchorRef.current;
       if (!anchor || !popover.matches(":popover-open")) return;
@@ -47,18 +48,18 @@ export function AnchoredPopover({
     };
     const resize = new ResizeObserver(position);
     resize.observe(popover);
-    if (anchorRef.current) resize.observe(anchorRef.current);
+    if (mountedAnchor) resize.observe(mountedAnchor);
     popover.addEventListener("toggle", toggle);
     window.addEventListener("resize", position);
     window.addEventListener("scroll", position, true);
-    anchorRef.current?.setAttribute("aria-expanded", String(popover.matches(":popover-open")));
+    mountedAnchor?.setAttribute("aria-expanded", String(popover.matches(":popover-open")));
     position();
     return () => {
       resize.disconnect();
       popover.removeEventListener("toggle", toggle);
       window.removeEventListener("resize", position);
       window.removeEventListener("scroll", position, true);
-      anchorRef.current?.setAttribute("aria-expanded", "false");
+      mountedAnchor?.setAttribute("aria-expanded", "false");
     };
   }, [anchorRef, offset, viewportPadding, onOpenChange]);
   return (

@@ -46,13 +46,16 @@ export function createLayerRow(
     const itemRef: { current: HTMLLIElement | null } = { current: null };
     context.presentation.mount(
       container,
-      createElement(SelectableListItem, {
-        ref: itemRef,
-        value: layer.number,
-        className: "asset-layer-draggable",
-        draggable: true,
-        children: nativeControl(contents),
-      }),
+      createElement(
+        SelectableListItem,
+        {
+          ref: itemRef,
+          value: layer.number,
+          className: "asset-layer-draggable",
+          draggable: true,
+        },
+        nativeControl(contents),
+      ),
     );
     let toggleSelection;
     if (context.onHighlight) {

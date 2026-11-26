@@ -46,7 +46,7 @@ async function exerciseRoot(scenario) {
       load(/\/react[-_]dom[-_]client\.js$/),
       load(/\/react[-_]dom\.js$/),
     ]);
-    const { createElement, Profiler } = reactModule.default;
+    const { createElement, createRef, Profiler } = reactModule.default;
     const { createRoot } = clientModule.default;
     const { flushSync } = domModule.default;
     const container = document.createElement("div");
@@ -61,6 +61,77 @@ async function exerciseRoot(scenario) {
         }),
     });
     try {
+      if (scenario === "refs") {
+        const [{ NumberStepper }, { RangeNumberControl }, { AnchoredPopover }] = await Promise.all([
+          import("/packages/ui-components/src/number-stepper.tsx"),
+          import("/packages/ui-components/src/range-number-control.tsx"),
+          import("/packages/ui-components/src/anchored-popover.tsx"),
+        ]);
+        const numberRef = createRef();
+        const sliderRef = createRef();
+        const anchorRef = createRef();
+        const firstAnchor = document.createElement("button");
+        const nextAnchor = document.createElement("button");
+        host.append(firstAnchor, nextAnchor);
+        anchorRef.current = firstAnchor;
+        let stepperNode = null;
+        let replacementNode = null;
+        let cleanups = 0;
+        const stepperRef = (node) => {
+          stepperNode = node;
+          return () => {
+            stepperNode = null;
+            cleanups++;
+          };
+        };
+        const replacementRef = (node) => {
+          replacementNode = node;
+        };
+        const render = (ref) =>
+          createElement(
+            "div",
+            null,
+            createElement(NumberStepper, {
+              label: "Ref stepper",
+              defaultValue: 1,
+              inputProps: { ref },
+            }),
+            createElement(RangeNumberControl, {
+              label: "Ref range",
+              defaultValue: 25,
+              inputProps: { ref: numberRef },
+              sliderProps: { ref: sliderRef },
+            }),
+            createElement(AnchoredPopover, { anchorRef }),
+          );
+        flushSync(() => root.render(render(stepperRef)));
+        const input = container.querySelector(".wm-number-stepper-input");
+        const mounted =
+          stepperNode === input &&
+          numberRef.current === container.querySelector(".wm-range-number-input") &&
+          sliderRef.current === container.querySelector(".wm-range-number-slider");
+        container.querySelector(".wm-number-stepper button").click();
+        container.querySelector(".wm-range-number-control button:last-child").click();
+        const values = [input.value, numberRef.current.value, sliderRef.current.value];
+        flushSync(() => root.render(render(replacementRef)));
+        const replaced = cleanups === 1 && stepperNode === null && replacementNode === input;
+        firstAnchor.setAttribute("aria-expanded", "true");
+        nextAnchor.setAttribute("aria-expanded", "true");
+        anchorRef.current = nextAnchor;
+        flushSync(() => root.render(null));
+        return {
+          mounted,
+          values,
+          replaced,
+          cleared:
+            replacementNode === null && numberRef.current === null && sliderRef.current === null,
+          anchors: [
+            firstAnchor.getAttribute("aria-expanded"),
+            nextAnchor.getAttribute("aria-expanded"),
+          ],
+          failures,
+        };
+      }
       if (scenario === "controlled") {
         const { SplitButton } = await import("/packages/ui-components/src/split-button.tsx");
         const props = { value: "circle", actionLabel: "Add", menuLabel: "Choose" };
@@ -158,4 +229,15 @@ test("an invalid explicit controlled SplitButton value remains an error", async 
       rangeError: true,
     },
   ]);
+});
+
+test("numeric refs preserve DOM handles and cleanup resets the original popover anchor", async () => {
+  assert.deepEqual(await exerciseRoot("refs"), {
+    mounted: true,
+    values: ["2", "26", "26"],
+    replaced: true,
+    cleared: true,
+    anchors: ["false", "true"],
+    failures: [],
+  });
 });

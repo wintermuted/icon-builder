@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useImperativeHandle, useRef } from "react";
 import type { ComponentPropsWithRef } from "react";
 import { Icon } from "./icon.js";
 import { stepNumber } from "./number-step.js";
@@ -67,22 +67,16 @@ export function RangeNumberControl({
     className: sliderClass = "",
     ...rangeProps
   } = sliderProps;
-  const attachNumber = useCallback(
-    (element: HTMLInputElement | null) => {
-      number.current = element;
-      if (typeof numberRef === "function") return numberRef(element);
-      if (numberRef) numberRef.current = element;
-    },
-    [numberRef],
-  );
-  const attachSlider = useCallback(
-    (element: HTMLInputElement | null) => {
-      slider.current = element;
-      if (typeof sliderRef === "function") return sliderRef(element);
-      if (sliderRef) sliderRef.current = element;
-    },
-    [sliderRef],
-  );
+  useImperativeHandle(numberRef, () => {
+    const element = number.current;
+    if (!element) throw new Error("RangeNumberControl number input did not mount.");
+    return element;
+  }, []);
+  useImperativeHandle(sliderRef, () => {
+    const element = slider.current;
+    if (!element) throw new Error("RangeNumberControl slider did not mount.");
+    return element;
+  }, []);
   const readOnly = numberProps.readOnly || rangeProps.readOnly;
   const update = (next: number) => {
     if (disabled || readOnly || !Number.isFinite(next) || next < min || next > max) return;
@@ -124,7 +118,7 @@ export function RangeNumberControl({
       <input
         {...rangeProps}
         {...shared}
-        ref={attachSlider}
+        ref={slider}
         type="range"
         aria-label={label}
         className={`wm-range-number-slider ${sliderClass}`}
@@ -137,7 +131,7 @@ export function RangeNumberControl({
       <input
         {...numberProps}
         {...shared}
-        ref={attachNumber}
+        ref={number}
         type="number"
         aria-label={inputLabel}
         className={`wm-range-number-input ${numberClass}`}

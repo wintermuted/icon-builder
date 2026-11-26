@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo } from "react";
+import { useLayoutEffect, useState } from "react";
 import { EditorPortals, EditorPresentation } from "../editor/presentation.js";
 import { appState } from "../app-state.js";
 import { renderAssetDetail } from "../views/asset-detail.js";
@@ -13,7 +13,7 @@ import {
 } from "@wm-asset-workflows/ui-components";
 
 export function AssetPage({ assetId }: { assetId: string }) {
-  const presentation = useMemo(() => new EditorPresentation(), [assetId]);
+  const [presentation] = useState(() => new EditorPresentation());
   useLayoutEffect(() => {
     renderAssetDetail(assetId, presentation);
     return () => {

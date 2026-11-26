@@ -90,12 +90,15 @@ export function createLayerPaintControls(
   };
   context.presentation.mount(
     opacityHost,
-    createElement(AnchoredPopover, {
-      anchorRef,
-      id: opacityEditorId,
-      className: "asset-layer-editor asset-layer-opacity-editor",
-      "aria-label": `Edit element ${context.layer.number} opacity`,
-      children: createElement(RangeNumberControl, {
+    createElement(
+      AnchoredPopover,
+      {
+        anchorRef,
+        id: opacityEditorId,
+        className: "asset-layer-editor asset-layer-opacity-editor",
+        "aria-label": `Edit element ${context.layer.number} opacity`,
+      },
+      createElement(RangeNumberControl, {
         label: "Opacity",
         inputLabel: `Element ${context.layer.number} opacity`,
         decreaseLabel: "Decrease opacity",
@@ -108,7 +111,7 @@ export function createLayerPaintControls(
         stopPropagation: true,
         onValueChange: setOpacity,
       }),
-    }),
+    ),
   );
   context.presentation.afterMount(() => {
     const editor = opacityHost.querySelector<HTMLDivElement>(".wm-anchored-popover");

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useImperativeHandle, useRef } from "react";
 import type { ComponentPropsWithRef } from "react";
 import { Icon } from "./icon.js";
 import { stepNumber } from "./number-step.js";
@@ -44,14 +44,11 @@ export function NumberStepper({
     className: inputClassName = "",
     ...nativeProps
   } = inputProps;
-  const attach = useCallback(
-    (element: HTMLInputElement | null) => {
-      input.current = element;
-      if (typeof ref === "function") return ref(element);
-      if (ref) ref.current = element;
-    },
-    [ref],
-  );
+  useImperativeHandle(ref, () => {
+    const element = input.current;
+    if (!element) throw new Error("NumberStepper input did not mount.");
+    return element;
+  }, []);
   const move = (direction: number) => {
     if (!input.current || disabled || nativeProps.readOnly) return;
     const current = input.current.valueAsNumber;
@@ -64,7 +61,7 @@ export function NumberStepper({
     <span className={`wm-number-stepper ${className}`}>
       <input
         {...nativeProps}
-        ref={attach}
+        ref={input}
         className={`wm-number-stepper-input ${inputClassName}`}
         type="number"
         aria-label={label}
