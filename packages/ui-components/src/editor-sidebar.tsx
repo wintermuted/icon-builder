@@ -5,12 +5,14 @@ export function EditorSidebar({
   side,
   label,
   children,
+  storageKey = `wm-assets-${side}-sidebar-collapsed`,
 }: {
   side: "left" | "right";
   label: string;
   children: ReactNode;
+  storageKey?: string;
 }) {
-  const key = `wm-assets-${side}-sidebar-collapsed`;
+  const key = storageKey;
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(key) === "true");
   const contentId = `asset-detail-${side}-sidebar-content`;
   return (

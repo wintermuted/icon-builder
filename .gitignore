@@ -1,6 +1,7 @@
 node_modules/
 .nx/
 dist/
+packages/storybook/debug-storybook.log
 .DS_Store
 
 outputs/png/*
