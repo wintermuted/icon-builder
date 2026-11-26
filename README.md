@@ -108,6 +108,8 @@ by `main.tsx`. `preview/styles.css` remains the authored application stylesheet.
 Relative asset URLs support both the Pages root and nested PR previews.
 Pages copies that output alongside canonical SVGs, the manifest, and the spec index;
 the capture workflow serves it through the backend's `--built` mode.
+Pages artifacts are named per workflow run attempt, and deployment waits for API
+visibility so reruns cannot collide with an earlier attempt's artifact.
 
 ### Dependency and Compiler Upgrades
 
