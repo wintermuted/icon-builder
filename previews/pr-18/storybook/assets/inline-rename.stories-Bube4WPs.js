@@ -1,0 +1,6 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t,p as n}from"./iframe-DY3mp-Om.js";import{X as r,t as i}from"./src-rjSk8eM7.js";function a(e){let[t,n]=(0,o.useState)(e.open),[i,a]=(0,o.useState)(e.value),[c,l]=(0,o.useState)(e.status);return(0,s.jsxs)(`div`,{style:{maxWidth:540},children:[(0,s.jsx)(`button`,{className:`btn btn-sm`,type:`button`,onClick:()=>n(!0),children:`Rename item`}),(0,s.jsx)(r,{...e,open:t,value:i,status:c,onValueChange:a,onSubmit:e=>{e.preventDefault(),l(`Saved "${i}".`)},onCancel:()=>{n(!1),a(e.value),l(``)}})]})}var o,s,c,l,u,d;function f(){return(f=e((()=>{o=n(),i(),s=t(),c={id:`shared-inlinerename`,title:`Shared/Controls/InlineRename`,component:r,args:{open:!0,value:`Reference`,label:`Item name`,status:``,onValueChange:()=>{},onSubmit:()=>{},onCancel:()=>{}},render:e=>(0,s.jsx)(a,{...e})},l={},u={args:{busy:!0,status:`Saving...`}},d=[`Editable`,`Busy`],l.parameters={...l.parameters,docs:{...l.parameters?.docs,source:{originalSource:`{}`,...l.parameters?.docs?.source}}},u.parameters={...u.parameters,docs:{...u.parameters?.docs,source:{originalSource:`{
+  args: {
+    busy: true,
+    status: "Saving..."
+  }
+}`,...u.parameters?.docs?.source}}}})))()}f();export{u as Busy,l as Editable,d as __namedExportsOrder,c as default};

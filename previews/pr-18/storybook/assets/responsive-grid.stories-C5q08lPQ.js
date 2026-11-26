@@ -1,0 +1,5 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t}from"./iframe-DY3mp-Om.js";import{P as n,t as r}from"./src-rjSk8eM7.js";var i,a,o,s,c;function l(){return(l=e((()=>{r(),i=t(),a={id:`shared-responsivegrid`,title:`Shared/Layout/ResponsiveGrid`,component:n,args:{minItemWidth:`180px`,gap:`12px`,children:Array.from({length:4},(e,t)=>(0,i.jsxs)(`article`,{style:{padding:`1rem`,border:`1px solid var(--wm-color-border)`},children:[`Asset `,t+1]},t))},argTypes:{children:{control:!1},mode:{control:`select`,options:[`auto-fit`,`auto-fill`]}}},o={},s={args:{mode:`auto-fill`}},c=[`Fit`,`Fill`],o.parameters={...o.parameters,docs:{...o.parameters?.docs,source:{originalSource:`{}`,...o.parameters?.docs?.source}}},s.parameters={...s.parameters,docs:{...s.parameters?.docs,source:{originalSource:`{
+  args: {
+    mode: "auto-fill"
+  }
+}`,...s.parameters?.docs?.source}}}})))()}l();export{s as Fill,o as Fit,c as __namedExportsOrder,a as default};
