@@ -124,8 +124,6 @@ flowchart LR
 
 Additional sections and multiple Mermaid blocks are supported in one file.
 
-````
-
 ### Rules
 
 - Any `.md` file in `specs/` is scanned for Mermaid blocks
@@ -137,6 +135,6 @@ Additional sections and multiple Mermaid blocks are supported in one file.
 
 ```bash
 npm run build:specs
-````
+```
 
 This regenerates `preview/spec-index.json`. The file is git-ignored; always rebuild before previewing.

@@ -62,7 +62,9 @@ npm run format:check    # Check formatting without writing files
 
 Oxlint and Oxfmt are root development tools configured by `.oxlintrc.json`
 and `.oxfmtrc.json`. Generated bundles, build outputs, and captures are excluded;
-Oxfmt also leaves the npm-managed lockfile untouched. The Code quality workflow
+Oxfmt also leaves the npm-managed lockfile and `manifests/assets.json` untouched.
+The preview server writes the manifest using two-space `JSON.stringify` formatting.
+The Code quality workflow
 runs both checks on pull requests and pushes to `main`, including docs-only changes.
 
 ### Source file length
