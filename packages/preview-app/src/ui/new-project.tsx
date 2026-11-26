@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { projectRouteHref } from "../project/model.js";
 import { slugify } from "../app-shell.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 
 interface ScaffoldResult {
   alreadyExists?: boolean;

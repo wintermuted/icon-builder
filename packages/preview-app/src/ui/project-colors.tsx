@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { collectColorUsageAcrossAssets } from "../project/icon-colors.js";
 import { projectForAsset, projectRouteHref } from "../project/model.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 
 export function FavoriteColors({
   favorites,

@@ -88,7 +88,13 @@ export async function startPreviewTestServer({ bundle = false } = {}) {
         response.writeHead(200, { "Content-Type": "application/json" });
         response.end(
           JSON.stringify(
-            pathname.includes("assets.json") ? { assets, projects: [project] } : { diagrams: [] },
+            pathname.includes("assets.json")
+              ? { assets, projects: [project] }
+              : {
+                  diagrams: [
+                    { id: "fixture-diagram", title: "Fixture diagram", code: "graph TD; A-->B" },
+                  ],
+                },
           ),
         );
         return;

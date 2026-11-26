@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { getRouteFromHash, applyThemeFromQuery } from "../app-shell.js";
 import { Collection } from "./collection.js";
-import { Diagrams } from "./diagrams.js";
+import { Diagrams, Icon } from "@wm-asset-workflows/ui-components";
+import { appState } from "../app-state.js";
 import { AssetPage } from "./asset-page.js";
 import { ProjectPage } from "./project-page.js";
 import { SourcePage } from "./source-page.js";
 import { NewProject } from "./new-project.js";
-import { Icon } from "./icon.js";
 
 function Toast() {
   const [message, setMessage] = useState("");
@@ -141,7 +141,11 @@ export function PreviewApp() {
           ) : (
             <>
               <Collection onNewProject={() => setNewProject(true)} />
-              <Diagrams theme={theme} />
+              <Diagrams
+                theme={theme}
+                diagrams={appState.diagramData}
+                renderer={typeof mermaid === "undefined" ? undefined : mermaid}
+              />
             </>
           )}
         </main>

@@ -1,0 +1,15 @@
+{
+  "name": "ui-components",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/ui-components/src",
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/ui-components/tsconfig.json"
+      }
+    }
+  },
+  "tags": ["scope:ui", "type:library"]
+}

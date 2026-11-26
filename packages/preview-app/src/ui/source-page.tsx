@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { appState } from "../app-state.js";
 import { projectRouteHref, resolveAssetPath } from "../project/model.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 
 export function SourcePage({
   projectName,

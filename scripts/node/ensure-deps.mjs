@@ -18,7 +18,12 @@ const REQUIRED_PATHS = [
 
 function missingDependencies() {
   const missing = REQUIRED_PATHS.filter((p) => !existsSync(join(root, p)));
-  for (const name of ["vite", "react-dom/client", "@vitejs/plugin-react"]) {
+  for (const name of [
+    "vite",
+    "react-dom/client",
+    "@vitejs/plugin-react",
+    "@wm-asset-workflows/ui-components",
+  ]) {
     try {
       previewRequire.resolve(name);
     } catch (error) {

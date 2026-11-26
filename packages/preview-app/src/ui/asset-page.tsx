@@ -2,7 +2,7 @@ import { useLayoutEffect } from "react";
 import { appState } from "../app-state.js";
 import { renderAssetDetail } from "../views/asset-detail.js";
 import { AnalysisPanel, LayerPanel } from "./editor-panels.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 
 export function AssetPage({ assetId }: { assetId: string }) {
   useLayoutEffect(() => {

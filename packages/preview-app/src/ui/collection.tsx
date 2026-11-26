@@ -1,6 +1,6 @@
 import { buildProjectAssets, projectRouteHref, primaryProjectAsset } from "../project/model.js";
 import { appState } from "../app-state.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 import { AssetPalette } from "./palette.js";
 import { showToast } from "../app-shell.js";
 import type { Asset } from "../types.js";

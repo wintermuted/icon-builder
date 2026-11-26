@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { sourceRouteHref, resolveAssetPath } from "../project/model.js";
 import { showToast } from "../app-shell.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 import type { SteeringSource } from "../types.js";
 
 interface Props {

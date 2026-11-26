@@ -18,6 +18,7 @@ specs/               Markdown specs with Mermaid blocks for the diagram lane
 manifests/assets.json  Asset catalog consumed by preview and generator scripts
 packages/            Nx-managed TypeScript package boundaries
 packages/preview-app/ TypeScript browser application source
+packages/ui-components/ Reusable React components consumed by the preview app
 packages/preview-server/ TypeScript preview HTTP server
 packages/workflows/  TypeScript workflow CLIs and shared paths
 packages/image-generation/ TypeScript CLI around deterministic Pillow generators
@@ -50,7 +51,7 @@ npm run capture         # Capture light/dark screenshots using Playwright
 npm run workflow:logo   # Run build:specs + generate:png + capture in sequence
 npm run graph           # Explore the Nx project and task graph
 npm run build           # Build every package through Nx
-npm run typecheck       # Check Node packages with native TypeScript 7
+npm run typecheck       # Check package types with native TypeScript 7
 npm run test:toolchain  # Verify native CLI and Nx compiler API compatibility
 npm run test:preview    # Exercise React editing/navigation and Vite APIs without a build
 npm run test:file-size  # Verify Oxlint's exact boundary (CI; invokes the linter)
@@ -79,6 +80,14 @@ The React entrypoint is `packages/preview-app/src/main.tsx`; TSX components unde
 `ui/` render the shell, project collection, project/source pages, dialogs, and editor
 scaffold. The SVG editor retains imperative controllers for the mutable SVG
 document and its element controls, mounted and cleaned up by `AssetPage`.
+Shared icons, collapsible editor sidebars, the preview error boundary, and Mermaid
+diagrams live in `@wm-asset-workflows/ui-components`. Import them from the package
+entrypoint; Vite consumes its TSX source directly without a separate library build.
+Diagram components receive their data and Mermaid renderer through props rather
+than accessing application state or browser globals. Consumers provide the
+existing `preview/styles.css` classes; the package does not import app styles.
+If the Mermaid CDN is unavailable, navigation and editing remain usable; only
+nonempty diagram sections show an unavailable-renderer alert.
 The entrypoint composes modules under `packages/preview-app/src/`:
 `svg/` owns cached SVG documents and edits, `canvas/` owns gestures and cleanup,
 `editor/` owns layer panels, and `project/` and `views/` own project data and DOM
@@ -119,12 +128,15 @@ reports the unavailable assets instead of hiding all results.
 
 ### Dependency and Compiler Upgrades
 
-The preview app owns `@wintermuted/ui-theme` and `lucide` in
-`packages/preview-app/package.json`. React, React DOM, and Lucide React also belong to that workspace, along with Vite,
-its React plugin, and React typings. npm may hoist or nest workspace dependencies;
+The preview app owns `@wintermuted/ui-theme`, `lucide`, React, React DOM, Vite,
+its React plugin, and React typings in `packages/preview-app/package.json`.
+The `ui-components` workspace owns Lucide React and declares React as a peer
+dependency so consumers share their React runtime. npm may hoist or nest workspace dependencies;
 the dependency check resolves Vite from the owning package rather than assuming
 a root-level binary. The theme is bundled by Vite and the SVG editor uses the
 existing Lucide DOM adapter.
+Startup also checks resolution of the UI workspace package so existing installs
+automatically restore its link after updating the checkout.
 
 Nx and `@nx/js` are kept at the same stable version. If `nx migrate` cannot
 retrieve provenance metadata from the configured registry, update the package

@@ -8,7 +8,7 @@ import {
   resolveSlotPreview,
 } from "../project/model.js";
 import { showToast } from "../app-shell.js";
-import { Icon } from "./icon.js";
+import { Icon } from "@wm-asset-workflows/ui-components";
 import { ProjectSource, GroundingUpload } from "./project-sources.js";
 import { FavoriteColors, ProjectIconColors } from "./project-colors.js";
 import { ProjectHeader } from "./project-header.js";
