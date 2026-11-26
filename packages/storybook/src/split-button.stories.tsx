@@ -12,6 +12,31 @@ function SplitExample(args: SplitButtonProps) {
     </div>
   );
 }
+
+function ChangingOptionsExample(args: SplitButtonProps) {
+  const [options, setOptions] = useState(args.options);
+  const [lastAction, setLastAction] = useState<string | null>(null);
+  return (
+    <div>
+      <SplitButton {...args} options={options} onAction={setLastAction} />
+      <button
+        type="button"
+        onClick={() =>
+          setOptions((current) => current.filter((option) => option.value !== "circle"))
+        }
+      >
+        Remove Circle
+      </button>
+      <button type="button" onClick={() => setOptions([])}>
+        Clear options
+      </button>
+      <button type="button" onClick={() => setOptions(args.options)}>
+        Restore options
+      </button>
+      <p role="status">{lastAction ? `Added ${lastAction}` : "Choose a shape, then add it."}</p>
+    </div>
+  );
+}
 const meta = {
   id: "shared-splitbutton",
   title: "Shared/Controls/SplitButton",
@@ -42,3 +67,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 export const Disabled: Story = { args: { disabled: true } };
 export const Empty: Story = { args: { options: [], value: undefined } };
+export const ChangingOptions: Story = {
+  args: { value: undefined, defaultValue: "rect" },
+  render: (args) => <ChangingOptionsExample {...args} />,
+};

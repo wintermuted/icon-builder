@@ -69,6 +69,12 @@ export function createLayerPaintControls(
   const opacityHost = document.createElement("span");
   opacityHost.style.display = "contents";
   let attrOpacityInput = null;
+  const initialOpacity =
+    currentEdits.opacity ?? (context.layer.opacity === "" ? 1 : Number(context.layer.opacity));
+  const opacityEditorId = `asset-layer-opacity-editor-${context.asset.id}-${context.layer.number}`;
+  let opacityEditor: HTMLDivElement;
+  let opacityInput: HTMLInputElement;
+  let opacitySlider: HTMLInputElement;
   const setOpacity = (value) => {
     const nextOpacity = Number(value);
     if (!Number.isFinite(nextOpacity) || nextOpacity < 0 || nextOpacity > 1) return;
@@ -86,7 +92,7 @@ export function createLayerPaintControls(
     opacityHost,
     createElement(AnchoredPopover, {
       anchorRef,
-      id: `asset-layer-opacity-editor-${context.asset.id}-${context.layer.number}`,
+      id: opacityEditorId,
       className: "asset-layer-editor asset-layer-opacity-editor",
       "aria-label": `Edit element ${context.layer.number} opacity`,
       children: createElement(RangeNumberControl, {
@@ -94,9 +100,7 @@ export function createLayerPaintControls(
         inputLabel: `Element ${context.layer.number} opacity`,
         decreaseLabel: "Decrease opacity",
         increaseLabel: "Increase opacity",
-        defaultValue:
-          currentEdits.opacity ??
-          (context.layer.opacity === "" ? 1 : Number(context.layer.opacity)),
+        defaultValue: initialOpacity,
         min: 0,
         max: 1,
         step: 0.01,
@@ -106,16 +110,26 @@ export function createLayerPaintControls(
       }),
     }),
   );
-  const opacityEditor = opacityHost.querySelector<HTMLDivElement>(".wm-anchored-popover");
-  const opacityInput = opacityHost.querySelector<HTMLInputElement>('input[type="number"]');
-  const opacitySlider = opacityHost.querySelector<HTMLInputElement>('input[type="range"]');
-  if (!opacityEditor || !opacityInput || !opacitySlider)
-    throw new Error("Opacity controls did not mount.");
+  context.presentation.afterMount(() => {
+    const editor = opacityHost.querySelector<HTMLDivElement>(".wm-anchored-popover");
+    const input = opacityHost.querySelector<HTMLInputElement>('input[type="number"]');
+    const slider = opacityHost.querySelector<HTMLInputElement>('input[type="range"]');
+    if (!editor || !input || !slider) throw new Error("Opacity controls did not mount.");
+    opacityEditor = editor;
+    opacityInput = input;
+    opacitySlider = slider;
+  });
   return {
     opacityValue,
-    opacityEditor,
+    opacityEditorId,
+    initialOpacity,
+    get opacityEditor() {
+      return opacityEditor;
+    },
     opacityHost,
-    opacityInput,
+    get opacityInput() {
+      return opacityInput;
+    },
     currentEdits,
     syncColorInputs,
     registerColorInput,

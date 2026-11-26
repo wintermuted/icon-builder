@@ -118,7 +118,9 @@ owns editing and persistence. `PreviewSurface` contains images with configurable
 height and width. `CodeBlock` preserves text and optionally wraps long lines;
 clipboard actions remain separate. The app's imperative SVG controllers mount
 shared React presentation through route-owned portals, retaining their native
-controls and cleaning up presentation on refresh or navigation.
+controls and cleaning up presentation on refresh or navigation. Each loaded
+editor region batches portal registration into one commit; controller DOM
+initialization runs after all controls in that batch are mounted.
 
 `RangeNumberControl` coordinates a range slider, numeric input, and bounded
 increment/decrement actions. It supports controlled values or forwarded native
@@ -133,6 +135,9 @@ or existing native controller. `SplitButton` separates option selection from its
 primary action, supports controlled/default selections, and handles keyboard
 navigation, Escape, outside clicks, and disabled/empty choices. These components
 do not interpret SVG shapes, reorder models, or persist edits.
+If an uncontrolled SplitButton selection is removed, it resets to the first
+remaining option or the empty state. An unknown explicit controlled value remains
+an error.
 
 React is a peer dependency; `@wintermuted/ui-theme` is a direct dependency of
 `ui-components`. Consumers load the global theme once, followed by the package
@@ -206,7 +211,7 @@ alongside the app at `/icon-builder/preview/`. PR deployments include both at
 The existing Pages workflow builds and typechecks the workspace, stages
 `dist/storybook/` into the same artifact, and health-checks both surfaces.
 CI also renders the staged catalog at production and nested PR prefixes before
-deployment, including all 72 stories, 32 generated Docs pages, and interactive
+deployment, including all 73 stories, 32 generated Docs pages, and interactive
 checks for the extracted controls and layout primitives.
 Closing a PR removes its entire preview directory, including Storybook.
 

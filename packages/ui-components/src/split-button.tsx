@@ -43,14 +43,17 @@ export function SplitButton({
   className = "",
   ...props
 }: SplitButtonProps) {
-  const [selection, setSelection] = useState(defaultValue);
+  const [selection, setSelection] = useState(defaultValue ?? options[0]?.value);
   const [expanded, setExpanded] = useState(false);
   const menu = useRef<HTMLDetailsElement | null>(null);
   const summary = useRef<HTMLElement | null>(null);
   const id = useId();
-  const key = value ?? selection ?? options[0]?.value;
-  const option = options.find((entry) => entry.value === key);
-  if (key !== undefined && !option) throw new RangeError(`Unknown SplitButton option: ${key}`);
+  const option =
+    options.find((entry) => entry.value === (value ?? selection)) ??
+    (value === undefined ? options[0] : undefined);
+  if (value !== undefined && !option) throw new RangeError(`Unknown SplitButton option: ${value}`);
+  const key = option?.value;
+  if (value === undefined && selection !== key) setSelection(key);
   const menuDisabled = disabled || !options.some((entry) => !entry.disabled);
   useEffect(() => {
     const closeOutside = (event: PointerEvent) => {

@@ -126,4 +126,38 @@ export async function verifyEditorControlInteractions(page, base) {
     await page.getByLabel("Choose shape", { exact: true }).press("Enter");
     assert.equal(await page.locator("details").getAttribute("open"), null);
   }
+
+  await open("shared-splitbutton--changing-options");
+  await page.getByLabel("Choose shape", { exact: true }).click();
+  await page.getByRole("button", { name: "Circle", exact: true }).click();
+  await page.getByRole("button", { name: "Remove Circle", exact: true }).click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector(".wm-split-button > button")?.getAttribute("data-value") === "rect",
+  );
+  assert.equal(await page.getByRole("status").textContent(), "Choose a shape, then add it.");
+  await page.getByRole("button", { name: "Add element", exact: true }).click();
+  assert.equal(await page.getByRole("status").textContent(), "Added rect");
+  await page.getByRole("button", { name: "Clear options", exact: true }).click();
+  assert.equal(
+    await page.getByRole("button", { name: "Add element", exact: true }).isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page.getByLabel("Choose shape", { exact: true }).getAttribute("aria-disabled"),
+    "true",
+  );
+  await page.getByRole("button", { name: "Restore options", exact: true }).click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector(".wm-split-button > button")?.getAttribute("data-value") === "rect",
+  );
+  await page.getByLabel("Choose shape", { exact: true }).click();
+  await page.getByRole("button", { name: "Circle", exact: true }).click();
+  await page.getByRole("button", { name: "Clear options", exact: true }).click();
+  await page.getByRole("button", { name: "Restore options", exact: true }).click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector(".wm-split-button > button")?.getAttribute("data-value") === "rect",
+  );
 }

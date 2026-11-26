@@ -68,11 +68,15 @@ export function renderAssetLayerActions(
       },
     }),
   );
-  const addButton = actionsBar.querySelector<HTMLButtonElement>(".asset-layer-add-button");
-  if (!addButton) throw new Error("SplitButton did not mount.");
-  addButton.dataset.shape = selectedShape;
-  actionsBar.querySelectorAll<HTMLButtonElement>(".asset-layer-shape-option").forEach((button) => {
-    button.dataset.shape = button.dataset.value;
+  presentation.afterMount(() => {
+    const addButton = actionsBar.querySelector<HTMLButtonElement>(".asset-layer-add-button");
+    if (!addButton) throw new Error("SplitButton did not mount.");
+    addButton.dataset.shape = selectedShape;
+    actionsBar
+      .querySelectorAll<HTMLButtonElement>(".asset-layer-shape-option")
+      .forEach((button) => {
+        button.dataset.shape = button.dataset.value;
+      });
   });
 
   const combineGroup = document.createElement("div");

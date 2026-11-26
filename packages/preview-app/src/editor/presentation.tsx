@@ -10,6 +10,9 @@ export class EditorPresentation {
   private listeners = new Set<() => void>();
   private nextKey = 0;
   private disposed = false;
+  private pending: Presentation[] = [];
+  private initializers: (() => void)[] = [];
+  private batchDepth = 0;
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -21,14 +24,51 @@ export class EditorPresentation {
 
   mount(host: HTMLElement, content: ReactNode) {
     if (this.disposed) throw new Error("Cannot mount a disposed editor presentation.");
-    flushSync(() => {
-      this.entries = [...this.entries, { host, content, key: this.nextKey++ }];
-      this.listeners.forEach((listener) => listener());
-    });
+    this.pending.push({ host, content, key: this.nextKey++ });
+    if (!this.batchDepth) this.commit();
+  }
+
+  batch(render: () => void) {
+    if (this.disposed) throw new Error("Cannot batch a disposed editor presentation.");
+    const pendingStart = this.pending.length;
+    const initializerStart = this.initializers.length;
+    this.batchDepth++;
+    try {
+      render();
+    } catch (error) {
+      this.pending.length = pendingStart;
+      this.initializers.length = initializerStart;
+      throw error;
+    } finally {
+      this.batchDepth--;
+      if (!this.batchDepth) this.commit();
+    }
+  }
+
+  afterMount(initialize: () => void) {
+    if (this.disposed) throw new Error("Cannot initialize a disposed editor presentation.");
+    if (this.batchDepth) this.initializers.push(initialize);
+    else initialize();
+  }
+
+  private commit() {
+    const pending = this.pending;
+    const initializers = this.initializers;
+    this.pending = [];
+    this.initializers = [];
+    if (pending.length) {
+      flushSync(() => {
+        this.entries = this.entries.concat(pending);
+        this.listeners.forEach((listener) => listener());
+      });
+    }
+    initializers.forEach((initialize) => initialize());
   }
 
   clear() {
     this.revision++;
+    this.pending = [];
+    this.initializers = [];
     if (!this.entries.length) return;
     flushSync(() => {
       this.entries = [];
@@ -40,6 +80,8 @@ export class EditorPresentation {
     this.revision++;
     this.disposed = true;
     this.entries = [];
+    this.pending = [];
+    this.initializers = [];
     this.listeners.clear();
   }
 }

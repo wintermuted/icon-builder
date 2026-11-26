@@ -8,12 +8,14 @@ export function createSteppedNumberField({
   ariaLabel,
   onChange,
   presentation,
+  onMount,
 }: {
   value: string;
   step: string;
   ariaLabel: string;
   onChange(value: number): void;
   presentation: EditorPresentation;
+  onMount?(input: HTMLInputElement): void;
 }) {
   const field = document.createElement("span");
   field.style.display = "contents";
@@ -30,9 +32,12 @@ export function createSteppedNumberField({
       onValueChange: onChange,
     }),
   );
-  const input = field.querySelector("input");
-  if (!input) throw new Error("NumberStepper did not mount its input.");
-  return { field, input };
+  presentation.afterMount(() => {
+    const input = field.querySelector("input");
+    if (!input) throw new Error("NumberStepper did not mount its input.");
+    onMount?.(input);
+  });
+  return { field };
 }
 
 export function createGeometryField({ value, ariaLabel, onChange }) {

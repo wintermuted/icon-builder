@@ -43,29 +43,20 @@ export function createLayerRow(
   function renderElementRow(layer, container: HTMLElement) {
     const contents = document.createElement("span");
     contents.style.display = "contents";
+    const itemRef: { current: HTMLLIElement | null } = { current: null };
     context.presentation.mount(
       container,
       createElement(SelectableListItem, {
+        ref: itemRef,
         value: layer.number,
         className: "asset-layer-draggable",
         draggable: true,
         children: nativeControl(contents),
       }),
     );
-    const item = container.lastElementChild;
-    if (!(item instanceof HTMLLIElement)) throw new Error("SelectableListItem did not mount.");
     let toggleSelection;
     if (context.onHighlight) {
-      item.addEventListener("mouseenter", () => {
-        context.hoveredLayerNumber = layer.number;
-        context.syncHighlight();
-      });
-      item.addEventListener("mouseleave", () => {
-        if (context.hoveredLayerNumber === layer.number) context.hoveredLayerNumber = null;
-        context.syncHighlight();
-      });
       toggleSelection = (event) => context.selectLayer(layer.number, { additive: event?.shiftKey });
-      item.addEventListener("click", toggleSelection);
     }
     const number = document.createElement(context.onHighlight ? "button" : "span");
     number.className = "asset-layer-number";
@@ -102,16 +93,6 @@ export function createLayerRow(
       else context.selection.delete(layer.number);
       context.syncSelection();
     });
-    // Keep row drag-and-drop from hijacking checkbox interaction.
-    const restoreDraggable = () => {
-      item.draggable = true;
-    };
-    selectLabel.addEventListener("pointerdown", () => {
-      item.draggable = false;
-    });
-    selectLabel.addEventListener("pointerup", restoreDraggable);
-    selectLabel.addEventListener("pointercancel", restoreDraggable);
-    item.addEventListener("mouseleave", restoreDraggable);
     selectLabel.appendChild(selectCheckbox);
 
     const identity = document.createElement("div");
@@ -147,34 +128,6 @@ export function createLayerRow(
       }),
     );
 
-    item.draggable = true;
-    item.classList.add("asset-layer-draggable");
-    item.addEventListener("dragstart", (event) => {
-      event.dataTransfer.setData("text/plain", String(layer.number));
-      event.dataTransfer.effectAllowed = "move";
-      item.classList.add("is-dragging");
-    });
-    item.addEventListener("dragend", () => {
-      item.classList.remove("is-dragging");
-      for (const otherItem of context.layerItems.values())
-        otherItem.classList.remove("is-drag-over");
-    });
-    item.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-      item.classList.add("is-drag-over");
-    });
-    item.addEventListener("dragleave", () => {
-      item.classList.remove("is-drag-over");
-    });
-    item.addEventListener("drop", (event) => {
-      event.preventDefault();
-      item.classList.remove("is-drag-over");
-      const sourceNumber = Number(event.dataTransfer.getData("text/plain"));
-      if (!Number.isFinite(sourceNumber) || sourceNumber === layer.number) return;
-      reorderAssetLayer(context.asset, sourceNumber, layer.number, () => context.onRefresh());
-    });
-
     const layerPaintControlsController = createLayerPaintControls({
       presentation: context.presentation,
       layerEdits: context.layerEdits,
@@ -190,11 +143,11 @@ export function createLayerRow(
     );
     layerPaintControlsController.opacityValue.setAttribute(
       "aria-controls",
-      layerPaintControlsController.opacityEditor.id,
+      layerPaintControlsController.opacityEditorId,
     );
     layerPaintControlsController.opacityValue.setAttribute("aria-expanded", "false");
     layerPaintControlsController.opacityValue.title = "Edit opacity";
-    layerPaintControlsController.opacityValue.innerHTML = `<i data-lucide="circle-gauge" aria-hidden="true"></i><span>${layerPaintControlsController.opacityInput.value}</span>`;
+    layerPaintControlsController.opacityValue.innerHTML = `<i data-lucide="circle-gauge" aria-hidden="true"></i><span>${layerPaintControlsController.initialOpacity}</span>`;
     layerPaintControlsController.opacityValue.addEventListener("click", (event) => {
       event.stopPropagation();
       const popover = layerPaintControlsController.opacityEditor;
@@ -335,15 +288,17 @@ export function createLayerRow(
       } else if (name === "opacity") {
         const initialOpacity =
           layerPaintControlsController.currentEdits.opacity ?? (value === "" ? 1 : Number(value));
-        const { field, input } = createSteppedNumberField({
+        const { field } = createSteppedNumberField({
           presentation: context.presentation,
           value: String(initialOpacity),
           step: "0.01",
           ariaLabel: `Element ${layer.number} opacity`,
           onChange: (next) =>
             layerPaintControlsController.setOpacity(Math.min(1, Math.max(0, next))),
+          onMount: (input) => {
+            layerPaintControlsController.attrOpacityInput = input;
+          },
         });
-        layerPaintControlsController.attrOpacityInput = input;
         description.appendChild(field);
       } else if (value !== "" && Number.isFinite(Number(value))) {
         const step = value.includes(".") ? "0.01" : "1";
@@ -412,11 +367,58 @@ export function createLayerRow(
       layerPaintControlsController.opacityHost,
     );
     contents.append(selectLabel, number, reorder, identity, layerPaintControlsController.details);
-    context.layerItems.set(layer.number, item);
+    context.presentation.afterMount(() => {
+      const item = itemRef.current;
+      if (!item) throw new Error("SelectableListItem did not mount.");
+      if (context.onHighlight) {
+        item.addEventListener("mouseenter", () => {
+          context.hoveredLayerNumber = layer.number;
+          context.syncHighlight();
+        });
+        item.addEventListener("mouseleave", () => {
+          if (context.hoveredLayerNumber === layer.number) context.hoveredLayerNumber = null;
+          context.syncHighlight();
+        });
+        item.addEventListener("click", toggleSelection);
+      }
+      // Keep row drag-and-drop from hijacking checkbox interaction.
+      const restoreDraggable = () => {
+        item.draggable = true;
+      };
+      selectLabel.addEventListener("pointerdown", () => {
+        item.draggable = false;
+      });
+      selectLabel.addEventListener("pointerup", restoreDraggable);
+      selectLabel.addEventListener("pointercancel", restoreDraggable);
+      item.addEventListener("mouseleave", restoreDraggable);
+      item.addEventListener("dragstart", (event) => {
+        event.dataTransfer.setData("text/plain", String(layer.number));
+        event.dataTransfer.effectAllowed = "move";
+        item.classList.add("is-dragging");
+      });
+      item.addEventListener("dragend", () => {
+        item.classList.remove("is-dragging");
+        for (const otherItem of context.layerItems.values())
+          otherItem.classList.remove("is-drag-over");
+      });
+      item.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        item.classList.add("is-drag-over");
+      });
+      item.addEventListener("dragleave", () => item.classList.remove("is-drag-over"));
+      item.addEventListener("drop", (event) => {
+        event.preventDefault();
+        item.classList.remove("is-drag-over");
+        const sourceNumber = Number(event.dataTransfer.getData("text/plain"));
+        if (!Number.isFinite(sourceNumber) || sourceNumber === layer.number) return;
+        reorderAssetLayer(context.asset, sourceNumber, layer.number, () => context.onRefresh());
+      });
+      context.layerItems.set(layer.number, item);
+    });
     context.layerCheckboxes.set(layer.number, selectCheckbox);
     context.layerEditButtons.set(layer.number, editButton);
     if (context.onHighlight) context.layerButtons.set(layer.number, number);
-    return item;
   }
   return {
     renderElementRow,

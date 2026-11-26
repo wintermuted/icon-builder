@@ -69,7 +69,7 @@ for (const prefix of ["/icon-builder/storybook/", "/icon-builder/previews/pr-42/
       assert.equal(indexResponse.status(), 200);
       const index = await indexResponse.json();
       const stories = Object.values(index.entries).filter((entry) => entry.type === "story");
-      assert.equal(stories.length, 72);
+      assert.equal(stories.length, 73);
       const docs = Object.values(index.entries).filter((entry) => entry.type === "docs");
       assert.equal(docs.length, 32);
       assert.deepEqual([...new Set(docs.map((entry) => entry.title.split("/")[1]))].sort(), [

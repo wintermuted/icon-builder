@@ -122,7 +122,7 @@ export interface LayerBindings {
   syncSelection(): void;
   selectLayer(layer: number, options?: { additive?: boolean }): void;
   addElement(shape: string, container: SVGElement): void;
-  renderElementRow(layer: PaintLayer, container: HTMLElement): HTMLLIElement;
+  renderElementRow(layer: PaintLayer, container: HTMLElement): void;
 }
 
 export interface ProjectSourceBindings {
