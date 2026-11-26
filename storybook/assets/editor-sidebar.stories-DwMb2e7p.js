@@ -1,0 +1,6 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t}from"./iframe-Dp-O5ltd.js";import{it as n,t as r}from"./src-CXCu7fA9.js";var i,a,o,s,c;function l(){return(l=e((()=>{r(),i=t(),a={id:`shared-editorsidebar`,title:`Shared/Layout/EditorSidebar`,component:n,args:{side:`left`,label:`Asset analysis`,children:null},argTypes:{side:{control:`inline-radio`,options:[`left`,`right`]},children:{control:!1},storageKey:{control:!1}},render:e=>(0,i.jsx)(`div`,{style:{maxWidth:360},children:(0,i.jsx)(n,{...e,storageKey:`wm-storybook-${e.side}-sidebar-collapsed`,children:(0,i.jsxs)(`div`,{className:`card-body`,children:[(0,i.jsx)(`h4`,{children:`Asset palette`}),(0,i.jsx)(`p`,{children:`Collapse or expand this panel. Storybook preferences are separate from the app.`}),(0,i.jsx)(`button`,{className:`btn btn-sm`,type:`button`,children:`Add color`})]})})})},o={},s={args:{side:`right`,label:`Element editor`}},c=[`Analysis`,`Elements`],o.parameters={...o.parameters,docs:{...o.parameters?.docs,source:{originalSource:`{}`,...o.parameters?.docs?.source}}},s.parameters={...s.parameters,docs:{...s.parameters?.docs,source:{originalSource:`{
+  args: {
+    side: "right",
+    label: "Element editor"
+  }
+}`,...s.parameters?.docs?.source}}}})))()}l();export{o as Analysis,s as Elements,c as __namedExportsOrder,a as default};
