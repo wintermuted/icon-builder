@@ -257,6 +257,11 @@ test("project and source routes preserve prompts, slots, and color mutation payl
     await page.locator("#source-prompt-reference").textContent(),
     /Repository file: assets\/svg\/steering.svg/,
   );
+  await page.evaluate(() => (window.location.hash = "project/Fixture%20Project"));
+  await page
+    .locator('.source-material-swatch[data-color="#445566"][aria-pressed="true"]')
+    .waitFor();
+  assert.match(await page.locator("#project-favorite-colors").textContent(), /#445566/);
 });
 
 test("React sidebar and theme updates preserve the active editor document", async () => {

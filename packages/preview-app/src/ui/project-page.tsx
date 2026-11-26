@@ -25,14 +25,8 @@ export function ProjectPage({ projectName }: { projectName: string }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const updateColor = async (color: string, selected: boolean, custom = false) => {
-    const result = await updateProjectFavoriteColor(projectName, color, selected, custom);
-    const next = {
-      ...steer,
-      favoriteColors: result.favoriteColors || [],
-      customColors: result.customColors || [],
-    };
-    if (meta) meta.agentSteer = next;
-    setSteer(next);
+    await updateProjectFavoriteColor(projectName, color, selected, custom);
+    setSteer(normalizeProjectSteer(projectName));
   };
   const remove = async (color: string) => {
     try {

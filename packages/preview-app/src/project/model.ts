@@ -60,6 +60,14 @@ export async function updateProjectFavoriteColor(project, color, selected, custo
   });
   const result = await response.json();
   if (!response.ok || result.error) throw new Error(result.error || "Favorite color update failed");
+  const projectMeta = appState.projectMetaByName.get(project);
+  if (projectMeta) {
+    projectMeta.agentSteer = {
+      ...projectMeta.agentSteer,
+      favoriteColors: result.favoriteColors || [],
+      customColors: result.customColors || [],
+    };
+  }
   return result;
 }
 
