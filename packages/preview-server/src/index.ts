@@ -9,5 +9,6 @@ reload.startWatchers();
 
 const server = createServer(createRequestHandler({ ...config, reload }));
 server.listen(config.port, () => {
-  if (!config.quiet) console.log(`Preview server running at http://localhost:${config.port}/preview/index.html`);
+  if (!config.quiet)
+    console.log(`Preview server running at http://localhost:${config.port}/preview/index.html`);
 });

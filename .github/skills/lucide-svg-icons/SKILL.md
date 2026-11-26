@@ -34,12 +34,12 @@ The `__iconNode` path data is identical between `lucide` and `lucide-react`.
 
 React component name → kebab-case filename:
 
-| Component | File |
-|-----------|------|
-| `RefreshCw` | `refresh-cw.js` |
+| Component    | File             |
+| ------------ | ---------------- |
+| `RefreshCw`  | `refresh-cw.js`  |
 | `DollarSign` | `dollar-sign.js` |
 | `ArrowRight` | `arrow-right.js` |
-| `X` | `x.js` |
+| `X`          | `x.js`           |
 
 General rule: `PascalCase` → `kebab-case`.
 

@@ -2,5 +2,9 @@
   "name": "@wm-asset-workflows/preview-app",
   "private": true,
   "type": "module",
-  "main": "../../preview/app.js"
+  "main": "../../preview/app.js",
+  "dependencies": {
+    "@wintermuted/ui-theme": "^0.21.5",
+    "lucide": "^1.75.0"
+  }
 }

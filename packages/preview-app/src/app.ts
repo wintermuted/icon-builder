@@ -6,7 +6,7 @@ import {
   showToast,
   slugify,
   wireThemeToggle,
-  wireTopNav
+  wireTopNav,
 } from "./app-shell.js";
 
 let diagramData = [];
@@ -47,9 +47,16 @@ const NEW_ELEMENT_SHAPES = [
   { value: "line", label: "Line", icon: "minus" },
   { value: "polyline", label: "Polyline", icon: "spline" },
   { value: "polygon", label: "Polygon", icon: "pentagon" },
-  { value: "path", label: "Path", icon: "pen-line" }
+  { value: "path", label: "Path", icon: "pen-line" },
 ];
-const SVG_PAINT_PROPERTIES = ["fill", "stroke", "stop-color", "flood-color", "lighting-color", "color"];
+const SVG_PAINT_PROPERTIES = [
+  "fill",
+  "stroke",
+  "stop-color",
+  "flood-color",
+  "lighting-color",
+  "color",
+];
 const GRAPHIC_ELEMENT_SELECTOR = "path, rect, circle, ellipse, line, polyline, polygon";
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
@@ -60,7 +67,7 @@ const SVG_ELEMENT_GEOMETRY_ATTRIBUTES = new Map([
   ["line", ["x1", "y1", "x2", "y2"]],
   ["polyline", ["points"]],
   ["polygon", ["points"]],
-  ["path", ["d"]]
+  ["path", ["d"]],
 ]);
 
 function enumerateElementAttributes(elementName, attributes) {
@@ -70,7 +77,11 @@ function enumerateElementAttributes(elementName, attributes) {
     if (!existing.has(name)) entries.push([name, ""]);
   }
   if (!existing.has("stroke")) entries.push(["stroke", "none"]);
-  const styleOrder = new Map([["fill", 0], ["opacity", 1], ["stroke", 2]]);
+  const styleOrder = new Map([
+    ["fill", 0],
+    ["opacity", 1],
+    ["stroke", 2],
+  ]);
   return entries
     .map((entry, index) => ({ entry, index }))
     .sort((left, right) => {
@@ -85,16 +96,17 @@ function normalizeSvgColor(value) {
   const color = String(value || "").trim();
   const hex = color.match(/^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i)?.[1];
   if (!hex) return "";
-  const expanded = hex.length <= 4
-    ? [...hex].map((character) => character.repeat(2)).join("")
-    : hex;
+  const expanded =
+    hex.length <= 4 ? [...hex].map((character) => character.repeat(2)).join("") : hex;
   return `#${expanded.toUpperCase()}`;
 }
 
 function resolveSvgPaint(element, property, svg) {
   let candidate = element;
   while (candidate) {
-    const value = String(candidate.getAttribute(property) || candidate.style?.getPropertyValue(property) || "").trim();
+    const value = String(
+      candidate.getAttribute(property) || candidate.style?.getPropertyValue(property) || "",
+    ).trim();
     if (value) return normalizeSvgColor(value) || value;
     if (candidate === svg) break;
     candidate = candidate.parentElement;
@@ -109,8 +121,9 @@ function graphicElementPaints(element, svg) {
 }
 
 function describeGraphicElement(element, svg) {
-  const paints = graphicElementPaints(element, svg)
-    .map(([property, value]) => `${property} ${value}`);
+  const paints = graphicElementPaints(element, svg).map(
+    ([property, value]) => `${property} ${value}`,
+  );
   return `${element.localName}${paints.length ? ` · ${paints.join(" · ")}` : ""}`;
 }
 
@@ -131,7 +144,7 @@ function computePaintLayers(svg) {
       paints: graphicElementPaints(element, svg),
       opacity: element.getAttribute("opacity") || "",
       attributes: Array.from(element.attributes, (attribute) => [attribute.name, attribute.value]),
-      groupDepth: depth
+      groupDepth: depth,
     };
   });
 }
@@ -200,7 +213,8 @@ function reorderAssetLayer(asset, fromNumber, toNumber, onComplete) {
     const target = graphics[toNumber - 1];
     if (!moving || !target || moving === target) return;
     const oldNumberByElement = new Map(graphics.map((element, index) => [element, index + 1]));
-    if (fromNumber < toNumber) target.after(moving); else target.before(moving);
+    if (fromNumber < toNumber) target.after(moving);
+    else target.before(moving);
     const newGraphics = Array.from(svg.querySelectorAll(GRAPHIC_ELEMENT_SELECTOR));
     const remap = new Map();
     newGraphics.forEach((element, index) => {
@@ -224,7 +238,7 @@ function multiplySvgMatrices(left, right) {
     a1 * c2 + c1 * d2,
     b1 * c2 + d1 * d2,
     a1 * e2 + c1 * f2 + e1,
-    b1 * e2 + d1 * f2 + f1
+    b1 * e2 + d1 * f2 + f1,
   ];
 }
 
@@ -238,7 +252,7 @@ function invertSvgMatrix(matrix) {
     -c / determinant,
     a / determinant,
     (c * f - d * e) / determinant,
-    (b * e - a * f) / determinant
+    (b * e - a * f) / determinant,
   ];
 }
 
@@ -254,10 +268,14 @@ function svgTransformToMatrix(name, args) {
     const angle = toRadians(args[0] || 0);
     const rotation = [Math.cos(angle), Math.sin(angle), -Math.sin(angle), Math.cos(angle), 0, 0];
     if (args.length < 3) return rotation;
-    return multiplySvgMatrices(
-      multiplySvgMatrices([1, 0, 0, 1, args[1], args[2]], rotation),
-      [1, 0, 0, 1, -args[1], -args[2]]
-    );
+    return multiplySvgMatrices(multiplySvgMatrices([1, 0, 0, 1, args[1], args[2]], rotation), [
+      1,
+      0,
+      0,
+      1,
+      -args[1],
+      -args[2],
+    ]);
   }
   if (name === "skewX") return [1, 0, Math.tan(toRadians(args[0] || 0)), 1, 0, 0];
   if (name === "skewY") return [1, Math.tan(toRadians(args[0] || 0)), 0, 1, 0, 0];
@@ -266,8 +284,13 @@ function svgTransformToMatrix(name, args) {
 
 function parseSvgTransform(value) {
   let matrix = IDENTITY_MATRIX;
-  for (const [, name, rawArgs] of String(value || "").matchAll(/(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)/g)) {
-    const args = rawArgs.split(/[\s,]+/).filter(Boolean).map(Number);
+  for (const [, name, rawArgs] of String(value || "").matchAll(
+    /(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)/g,
+  )) {
+    const args = rawArgs
+      .split(/[\s,]+/)
+      .filter(Boolean)
+      .map(Number);
     if (args.some((argument) => !Number.isFinite(argument))) continue;
     matrix = multiplySvgMatrices(matrix, svgTransformToMatrix(name, args));
   }
@@ -284,8 +307,9 @@ function accumulatedSvgMatrix(element, root) {
     node = node.parentElement;
   }
   return chain.reduce(
-    (matrix, node) => multiplySvgMatrices(matrix, parseSvgTransform(node.getAttribute("transform"))),
-    IDENTITY_MATRIX
+    (matrix, node) =>
+      multiplySvgMatrices(matrix, parseSvgTransform(node.getAttribute("transform"))),
+    IDENTITY_MATRIX,
   );
 }
 
@@ -335,7 +359,9 @@ function combineAssetLayers(asset, layerNumbers, onComplete) {
     const inverseDestination = invertSvgMatrix(accumulatedSvgMatrix(group.parentElement, svg));
     for (const element of selected) {
       const effective = accumulatedSvgMatrix(element, svg);
-      const preserved = inverseDestination ? multiplySvgMatrices(inverseDestination, effective) : effective;
+      const preserved = inverseDestination
+        ? multiplySvgMatrices(inverseDestination, effective)
+        : effective;
       group.appendChild(element);
       const transform = svgMatrixToString(preserved);
       if (transform) element.setAttribute("transform", transform);
@@ -343,7 +369,8 @@ function combineAssetLayers(asset, layerNumbers, onComplete) {
     }
 
     for (const candidate of Array.from(svg.querySelectorAll("g"))) {
-      if (candidate !== group && !candidate.children.length && !candidate.getAttribute("id")) candidate.remove();
+      if (candidate !== group && !candidate.children.length && !candidate.getAttribute("id"))
+        candidate.remove();
     }
 
     const newGraphics = Array.from(svg.querySelectorAll(GRAPHIC_ELEMENT_SELECTOR));
@@ -405,8 +432,10 @@ function createDefaultShapeElement(svg, shape) {
       [centerX, centerY - half],
       [centerX + half, centerY],
       [centerX, centerY + half],
-      [centerX - half, centerY]
-    ].map(([x, y]) => `${x},${y}`).join(" ");
+      [centerX - half, centerY],
+    ]
+      .map(([x, y]) => `${x},${y}`)
+      .join(" ");
     element.setAttribute("points", points);
     if (shape === "polyline") {
       element.setAttribute("fill", "none");
@@ -417,7 +446,7 @@ function createDefaultShapeElement(svg, shape) {
     const half = size / 2;
     element.setAttribute(
       "d",
-      `M ${centerX} ${centerY - half} L ${centerX + half} ${centerY} L ${centerX} ${centerY + half} L ${centerX - half} ${centerY} Z`
+      `M ${centerX} ${centerY - half} L ${centerX + half} ${centerY} L ${centerX} ${centerY + half} L ${centerX - half} ${centerY} Z`,
     );
   }
   return element;
@@ -456,7 +485,7 @@ function describeSvgEffects(documentRoot) {
     ["gradient", documentRoot.querySelectorAll("linearGradient, radialGradient").length],
     ["clip path", documentRoot.querySelectorAll("clipPath").length],
     ["mask", documentRoot.querySelectorAll("mask").length],
-    ["filter", documentRoot.querySelectorAll("filter").length]
+    ["filter", documentRoot.querySelectorAll("filter").length],
   ];
   const used = effects.filter(([, count]) => count > 0);
   return used.length
@@ -466,46 +495,60 @@ function describeSvgEffects(documentRoot) {
 
 function loadAssetSvgData(source) {
   if (!assetSvgDataCache.has(source)) {
-    assetSvgDataCache.set(source, (async () => {
-      const response = await fetch(`../${source}`);
-      if (!response.ok) throw new Error(`Failed to load ${source}`);
-      const sourceText = await response.text();
-      const documentRoot = new DOMParser().parseFromString(sourceText, "image/svg+xml");
-      if (documentRoot.querySelector("parsererror")) throw new Error(`Failed to parse ${source}`);
+    assetSvgDataCache.set(
+      source,
+      (async () => {
+        const response = await fetch(`../${source}`);
+        if (!response.ok) throw new Error(`Failed to load ${source}`);
+        const sourceText = await response.text();
+        const documentRoot = new DOMParser().parseFromString(sourceText, "image/svg+xml");
+        if (documentRoot.querySelector("parsererror")) throw new Error(`Failed to parse ${source}`);
 
-      const colors = [];
-      for (const element of documentRoot.querySelectorAll("*")) {
-        for (const property of SVG_PAINT_PROPERTIES) {
-          const color = normalizeSvgColor(element.getAttribute(property) || element.style?.getPropertyValue(property));
-          if (color && !colors.includes(color)) colors.push(color);
+        const colors = [];
+        for (const element of documentRoot.querySelectorAll("*")) {
+          for (const property of SVG_PAINT_PROPERTIES) {
+            const color = normalizeSvgColor(
+              element.getAttribute(property) || element.style?.getPropertyValue(property),
+            );
+            if (color && !colors.includes(color)) colors.push(color);
+          }
         }
-      }
-      const svg = documentRoot.documentElement;
-      const graphicElements = Array.from(documentRoot.querySelectorAll(GRAPHIC_ELEMENT_SELECTOR));
-      const paths = Array.from(documentRoot.querySelectorAll("path"));
-      const pathCommands = /[AaCcHhLlMmQqSsTtVvZz]/g;
-      const paintLayers = computePaintLayers(svg);
-      return {
-        colors,
-        viewBox: svg.getAttribute("viewBox") || "Not set",
-        width: svg.getAttribute("width") || "Not set",
-        height: svg.getAttribute("height") || "Not set",
-        paintLayers,
-        paintLayerCount: paintLayers.length,
-        topmostLayer: graphicElements.length ? describeGraphicElement(graphicElements.at(-1), svg) : "None",
-        pathCount: paths.length,
-        closedPathCount: paths.filter((path) => /[Zz]/.test(path.getAttribute("d") || "")).length,
-        pathSubpathCount: paths.reduce((count, path) => count + ((path.getAttribute("d") || "").match(/[Mm]/g)?.length || 0), 0),
-        pathCommandCount: paths.reduce((count, path) => count + ((path.getAttribute("d") || "").match(pathCommands)?.length || 0), 0),
-        groupCount: documentRoot.querySelectorAll("g").length,
-        maxGroupDepth: Math.max(0, ...paintLayers.map((layer) => layer.groupDepth)),
-        effects: describeSvgEffects(documentRoot),
-        byteSize: new TextEncoder().encode(sourceText).length,
-        accessibleName: svg.querySelector("title")?.textContent?.trim() || "Not defined",
-        description: svg.querySelector("desc")?.textContent?.trim() || "Not defined",
-        svg
-      };
-    })());
+        const svg = documentRoot.documentElement;
+        const graphicElements = Array.from(documentRoot.querySelectorAll(GRAPHIC_ELEMENT_SELECTOR));
+        const paths = Array.from(documentRoot.querySelectorAll("path"));
+        const pathCommands = /[AaCcHhLlMmQqSsTtVvZz]/g;
+        const paintLayers = computePaintLayers(svg);
+        return {
+          colors,
+          viewBox: svg.getAttribute("viewBox") || "Not set",
+          width: svg.getAttribute("width") || "Not set",
+          height: svg.getAttribute("height") || "Not set",
+          paintLayers,
+          paintLayerCount: paintLayers.length,
+          topmostLayer: graphicElements.length
+            ? describeGraphicElement(graphicElements.at(-1), svg)
+            : "None",
+          pathCount: paths.length,
+          closedPathCount: paths.filter((path) => /[Zz]/.test(path.getAttribute("d") || "")).length,
+          pathSubpathCount: paths.reduce(
+            (count, path) => count + ((path.getAttribute("d") || "").match(/[Mm]/g)?.length || 0),
+            0,
+          ),
+          pathCommandCount: paths.reduce(
+            (count, path) =>
+              count + ((path.getAttribute("d") || "").match(pathCommands)?.length || 0),
+            0,
+          ),
+          groupCount: documentRoot.querySelectorAll("g").length,
+          maxGroupDepth: Math.max(0, ...paintLayers.map((layer) => layer.groupDepth)),
+          effects: describeSvgEffects(documentRoot),
+          byteSize: new TextEncoder().encode(sourceText).length,
+          accessibleName: svg.querySelector("title")?.textContent?.trim() || "Not defined",
+          description: svg.querySelector("desc")?.textContent?.trim() || "Not defined",
+          svg,
+        };
+      })(),
+    );
   }
   return assetSvgDataCache.get(source);
 }
@@ -515,15 +558,20 @@ function loadAssetColors(source) {
 }
 
 function elementUsesSvgColor(element, color) {
-  return SVG_PAINT_PROPERTIES.some((property) => (
-    normalizeSvgColor(element.getAttribute(property) || element.style?.getPropertyValue(property)) === color
-  ));
+  return SVG_PAINT_PROPERTIES.some(
+    (property) =>
+      normalizeSvgColor(
+        element.getAttribute(property) || element.style?.getPropertyValue(property),
+      ) === color,
+  );
 }
 
 function setPrimarySvgColorHighlight(root, color, highlighted) {
   const svg = root.querySelector("svg");
   if (!svg) return [];
-  const graphics = Array.from(svg.querySelectorAll("path, rect, circle, ellipse, line, polyline, polygon"));
+  const graphics = Array.from(
+    svg.querySelectorAll("path, rect, circle, ellipse, line, polyline, polygon"),
+  );
   graphics.forEach((element, index) => {
     element.dataset.paintLayer = String(index + 1);
   });
@@ -552,7 +600,9 @@ function setPrimarySvgColorHighlight(root, color, highlighted) {
 }
 
 function setPrimarySvgLayerHighlight(root, layerNumber, highlighted) {
-  const graphics = Array.from(root.querySelectorAll("svg :is(path, rect, circle, ellipse, line, polyline, polygon)"));
+  const graphics = Array.from(
+    root.querySelectorAll("svg :is(path, rect, circle, ellipse, line, polyline, polygon)"),
+  );
   if (!highlighted) {
     for (const element of graphics) {
       element.classList.remove("is-color-highlighted");
@@ -574,7 +624,9 @@ function setPrimarySvgLayerHighlight(root, layerNumber, highlighted) {
 // already gets the stronger red is-color-highlighted treatment above, and
 // stacking both would just be visual clutter for the common single-select case.
 function setPrimarySvgMultiSelectHighlight(root, layerNumbers) {
-  const graphics = Array.from(root.querySelectorAll("svg :is(path, rect, circle, ellipse, line, polyline, polygon)"));
+  const graphics = Array.from(
+    root.querySelectorAll("svg :is(path, rect, circle, ellipse, line, polyline, polygon)"),
+  );
   const selected = new Set(layerNumbers);
   const showAll = selected.size > 1;
   graphics.forEach((element, idx) => {
@@ -583,13 +635,20 @@ function setPrimarySvgMultiSelectHighlight(root, layerNumbers) {
 }
 
 function describeSvgRegions(elements) {
-  const labels = { rect: "rectangle", ellipse: "ellipse", polyline: "polyline", polygon: "polygon" };
+  const labels = {
+    rect: "rectangle",
+    ellipse: "ellipse",
+    polyline: "polyline",
+    polygon: "polygon",
+  };
   const counts = new Map();
   for (const element of elements) {
     const name = labels[element.localName] || element.localName;
     counts.set(name, (counts.get(name) || 0) + 1);
   }
-  return Array.from(counts, ([name, count]) => `${count} ${name}${count === 1 ? "" : "s"}`).join(", ");
+  return Array.from(counts, ([name, count]) => `${count} ${name}${count === 1 ? "" : "s"}`).join(
+    ", ",
+  );
 }
 
 function describeSvgLayers(elements) {
@@ -606,7 +665,9 @@ function describeSvgLayers(elements) {
       ranges.push([layer, layer]);
     }
   }
-  const summary = ranges.map(([start, end]) => start === end ? String(start) : `${start}-${end}`).join(", ");
+  const summary = ranges
+    .map(([start, end]) => (start === end ? String(start) : `${start}-${end}`))
+    .join(", ");
   return `${layers.length === 1 ? "element" : "elements"} ${summary}`;
 }
 
@@ -625,26 +686,29 @@ function renderAssetPrimarySvg(root, asset, size = "fit") {
   root.dataset.assetId = asset.id;
   setAssetPrimarySvgSize(root, asset, size);
 
-  loadAssetSvgData(asset.source).then((data) => {
-    if (!root.isConnected || root.dataset.assetId !== asset.id) return;
-    const svg = document.importNode(data.svg, true);
-    svg.removeAttribute("width");
-    svg.removeAttribute("height");
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("focusable", "false");
-    const viewBox = assetViewBoxEdits.get(asset.id);
-    if (viewBox) svg.setAttribute("viewBox", viewBox.join(" "));
-    const sourceSize = assetSourceSizeEdits.get(asset.id);
-    if (sourceSize) {
-      svg.setAttribute("width", String(sourceSize.width));
-      svg.setAttribute("height", String(sourceSize.height));
-    }
-    applyAssetAccessibility(svg, asset.id);
-    applyAssetLayerEdits(svg, asset.id);
-    root.replaceChildren(svg);
-  }).catch(() => {
-    if (root.isConnected && root.dataset.assetId === asset.id) root.textContent = "Preview unavailable";
-  });
+  loadAssetSvgData(asset.source)
+    .then((data) => {
+      if (!root.isConnected || root.dataset.assetId !== asset.id) return;
+      const svg = document.importNode(data.svg, true);
+      svg.removeAttribute("width");
+      svg.removeAttribute("height");
+      svg.setAttribute("aria-hidden", "true");
+      svg.setAttribute("focusable", "false");
+      const viewBox = assetViewBoxEdits.get(asset.id);
+      if (viewBox) svg.setAttribute("viewBox", viewBox.join(" "));
+      const sourceSize = assetSourceSizeEdits.get(asset.id);
+      if (sourceSize) {
+        svg.setAttribute("width", String(sourceSize.width));
+        svg.setAttribute("height", String(sourceSize.height));
+      }
+      applyAssetAccessibility(svg, asset.id);
+      applyAssetLayerEdits(svg, asset.id);
+      root.replaceChildren(svg);
+    })
+    .catch(() => {
+      if (root.isConnected && root.dataset.assetId === asset.id)
+        root.textContent = "Preview unavailable";
+    });
 }
 
 function applyAssetAccessibility(svg, assetId) {
@@ -678,7 +742,10 @@ function applyAssetAccessibility(svg, assetId) {
 }
 
 function parseSvgViewBox(value) {
-  const numbers = String(value || "").trim().split(/[\s,]+/).map(Number);
+  const numbers = String(value || "")
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number);
   return numbers.length === 4 && numbers.every(Number.isFinite) ? numbers : null;
 }
 
@@ -690,7 +757,7 @@ function updateAssetLayerEdits(assetId, layerNumber, updates) {
     ...existing,
     ...updates,
     paints: { ...existing.paints, ...updates.paints },
-    attrs: { ...existing.attrs, ...updates.attrs }
+    attrs: { ...existing.attrs, ...updates.attrs },
   });
   assetModified.add(assetId);
 }
@@ -699,7 +766,9 @@ function applyAssetLayerEdits(svg, assetId) {
   if (!svg) return;
   const edits = assetLayerEdits.get(assetId);
   if (!edits) return;
-  const graphics = Array.from(svg.querySelectorAll(":is(path, rect, circle, ellipse, line, polyline, polygon)"));
+  const graphics = Array.from(
+    svg.querySelectorAll(":is(path, rect, circle, ellipse, line, polyline, polygon)"),
+  );
   for (const [layerNumber, edit] of edits) {
     const element = graphics[layerNumber - 1];
     if (!element) continue;
@@ -710,8 +779,14 @@ function applyAssetLayerEdits(svg, assetId) {
       element.setAttribute(property, value);
     }
     if (edit.opacity !== undefined) element.setAttribute("opacity", String(edit.opacity));
-    if (edit.offsetX !== undefined || edit.offsetY !== undefined || edit.resize || edit.rotation !== undefined) {
-      const originalTransform = element.dataset.originalTransform ?? element.getAttribute("transform") ?? "";
+    if (
+      edit.offsetX !== undefined ||
+      edit.offsetY !== undefined ||
+      edit.resize ||
+      edit.rotation !== undefined
+    ) {
+      const originalTransform =
+        element.dataset.originalTransform ?? element.getAttribute("transform") ?? "";
       element.dataset.originalTransform = originalTransform;
       const parts = [originalTransform];
       if (edit.rotation !== undefined) {
@@ -725,7 +800,11 @@ function applyAssetLayerEdits(svg, assetId) {
           centerY = (edit.resize.top + edit.resize.bottom) / 2;
         } else {
           let bbox = null;
-          try { bbox = element.getBBox(); } catch { /* not renderable yet */ }
+          try {
+            bbox = element.getBBox();
+          } catch {
+            /* not renderable yet */
+          }
           centerX = bbox ? bbox.x + bbox.width / 2 : 0;
           centerY = bbox ? bbox.y + bbox.height / 2 : 0;
         }
@@ -746,7 +825,8 @@ function applyAssetLayerEdits(svg, assetId) {
         // that aren't being dragged, even if a previous resize used a different
         // anchor. Applied innermost (rightmost) so it acts on the element's
         // native geometry before the offset/original transform.
-        const { nativeLeft, nativeTop, nativeWidth, nativeHeight, left, top, right, bottom } = edit.resize;
+        const { nativeLeft, nativeTop, nativeWidth, nativeHeight, left, top, right, bottom } =
+          edit.resize;
         const scaleX = nativeWidth > 0 ? (right - left) / nativeWidth : 1;
         const scaleY = nativeHeight > 0 ? (bottom - top) / nativeHeight : 1;
         const translateX = left - scaleX * nativeLeft;
@@ -802,29 +882,52 @@ function positionPrimaryTooltip(tooltip, container, element) {
 // sync. Returns `{ updateTooltip, cleanup }`; callers must invoke the
 // previous cleanup before wiring up a new asset (renderAssetDetail re-runs
 // per view).
-function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles, guides, asset, layersController, points, shapeModeBanner, gridOverlay, gridVisibilityToggle, gridSnapToggle, gridSizeInput, onLayerEdited) {
+function enablePrimaryLayerInteraction(
+  root,
+  previewContainer,
+  tooltip,
+  handles,
+  guides,
+  asset,
+  layersController,
+  points,
+  shapeModeBanner,
+  gridOverlay,
+  gridVisibilityToggle,
+  gridSnapToggle,
+  gridSizeInput,
+  onLayerEdited,
+) {
   const getGraphics = () => {
     const svg = root.querySelector("svg");
-    return svg ? Array.from(svg.querySelectorAll(":is(path, rect, circle, ellipse, line, polyline, polygon)")) : [];
+    return svg
+      ? Array.from(
+          svg.querySelectorAll(":is(path, rect, circle, ellipse, line, polyline, polygon)"),
+        )
+      : [];
   };
   const syncLayerDimensions = (layerNumber) => {
     const element = getGraphics()[layerNumber - 1];
     if (!element) return;
     const edit = assetLayerEdits.get(asset.id)?.get(layerNumber);
     let bbox = { x: 0, y: 0, width: 0, height: 0 };
-    try { bbox = element.getBBox(); } catch { /* element may not be renderable yet */ }
+    try {
+      bbox = element.getBBox();
+    } catch {
+      /* element may not be renderable yet */
+    }
     const box = edit?.resize ?? {
       left: bbox.x,
       top: bbox.y,
       right: bbox.x + bbox.width,
-      bottom: bbox.y + bbox.height
+      bottom: bbox.y + bbox.height,
     };
     layersController.syncDimensionInputs(layerNumber, {
       x: box.left + (edit?.offsetX ?? 0),
       y: box.top + (edit?.offsetY ?? 0),
       width: box.right - box.left,
       height: box.bottom - box.top,
-      rx: element.getAttribute("rx") || ""
+      rx: element.getAttribute("rx") || "",
     });
   };
   const isTypingTarget = (element) => {
@@ -863,7 +966,10 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
   const getSelectionScreenBox = (layerNumbers) => {
     const containerRect = previewContainer.getBoundingClientRect();
     const graphics = getGraphics();
-    let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+    let left = Infinity,
+      top = Infinity,
+      right = -Infinity,
+      bottom = -Infinity;
     let found = false;
     for (const layerNumber of layerNumbers) {
       const element = graphics[layerNumber - 1];
@@ -880,16 +986,19 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       left: left - containerRect.left,
       top: top - containerRect.top,
       right: right - containerRect.left,
-      bottom: bottom - containerRect.top
+      bottom: bottom - containerRect.top,
     };
   };
 
   const updateHandles = (layerNumber) => {
     if (!handles) return;
     const multiSelected = layersController.getMultiSelection?.() || [];
-    const layerNumbers = multiSelected.length > 1
-      ? multiSelected
-      : (layerNumber === null || layerNumber === undefined ? [] : [layerNumber]);
+    const layerNumbers =
+      multiSelected.length > 1
+        ? multiSelected
+        : layerNumber === null || layerNumber === undefined
+          ? []
+          : [layerNumber];
     if (!layerNumbers.length) {
       handles.hidden = true;
       return;
@@ -903,9 +1012,14 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     const midX = (left + right) / 2;
     const midY = (top + bottom) / 2;
     const positions = {
-      nw: [left, top], n: [midX, top], ne: [right, top],
-      e: [right, midY], se: [right, bottom], s: [midX, bottom],
-      sw: [left, bottom], w: [left, midY]
+      nw: [left, top],
+      n: [midX, top],
+      ne: [right, top],
+      e: [right, midY],
+      se: [right, bottom],
+      s: [midX, bottom],
+      sw: [left, bottom],
+      w: [left, midY],
     };
     for (const [name, handleEl] of handleElements) {
       const [x, y] = positions[name];
@@ -942,8 +1056,14 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     if (element.localName === "line") {
       const edit = assetLayerEdits.get(asset.id)?.get(layerNumber)?.attrs || {};
       return [
-        { x: Number(edit.x1 ?? element.getAttribute("x1") ?? 0), y: Number(edit.y1 ?? element.getAttribute("y1") ?? 0) },
-        { x: Number(edit.x2 ?? element.getAttribute("x2") ?? 0), y: Number(edit.y2 ?? element.getAttribute("y2") ?? 0) }
+        {
+          x: Number(edit.x1 ?? element.getAttribute("x1") ?? 0),
+          y: Number(edit.y1 ?? element.getAttribute("y1") ?? 0),
+        },
+        {
+          x: Number(edit.x2 ?? element.getAttribute("x2") ?? 0),
+          y: Number(edit.y2 ?? element.getAttribute("y2") ?? 0),
+        },
       ];
     }
     const edited = assetLayerEdits.get(asset.id)?.get(layerNumber)?.attrs?.points;
@@ -954,7 +1074,11 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
   // every ancestor transform plus the element's edit transform) is the only
   // reliable way to line the handles up with what's rendered.
   const getShapeMatrix = (element) => {
-    try { return element.getScreenCTM(); } catch { return null; }
+    try {
+      return element.getScreenCTM();
+    } catch {
+      return null;
+    }
   };
 
   const updatePointHandles = () => {
@@ -974,14 +1098,16 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     }
     const shapePoints = getShapePoints(element, shapeEditLayerNumber);
     if (points.childElementCount !== shapePoints.length) {
-      points.replaceChildren(...shapePoints.map((_, index) => {
-        const handleEl = document.createElement("button");
-        handleEl.type = "button";
-        handleEl.className = "asset-point-handle";
-        handleEl.dataset.pointIndex = String(index);
-        handleEl.setAttribute("aria-label", `Point ${index + 1}`);
-        return handleEl;
-      }));
+      points.replaceChildren(
+        ...shapePoints.map((_, index) => {
+          const handleEl = document.createElement("button");
+          handleEl.type = "button";
+          handleEl.className = "asset-point-handle";
+          handleEl.dataset.pointIndex = String(index);
+          handleEl.setAttribute("aria-label", `Point ${index + 1}`);
+          return handleEl;
+        }),
+      );
     }
     shapePoints.forEach((point, index) => {
       const handleEl = points.children[index];
@@ -1051,15 +1177,26 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     const nextPoints = [...currentPoints];
     nextPoints.splice(longestIndex + 1, 0, midpoint);
     const serialized = serializeSvgPoints(nextPoints);
-    const attrs = element.localName === "line"
-      ? (index === 0 ? { x1: String(x), y1: String(y) } : { x2: String(x), y2: String(y) })
-      : { points: serialized };
+    const attrs =
+      element.localName === "line"
+        ? index === 0
+          ? { x1: String(x), y1: String(y) }
+          : { x2: String(x), y2: String(y) }
+        : { points: serialized };
     updateAssetLayerEdits(asset.id, shapeEditLayerNumber, { attrs });
     applyAssetLayerEdits(root.querySelector("svg"), asset.id);
     onLayerEdited?.();
     if (element.localName === "line") {
-      layersController.syncGeometryInput?.(shapeEditLayerNumber, index === 0 ? "x1" : "x2", String(x));
-      layersController.syncGeometryInput?.(shapeEditLayerNumber, index === 0 ? "y1" : "y2", String(y));
+      layersController.syncGeometryInput?.(
+        shapeEditLayerNumber,
+        index === 0 ? "x1" : "x2",
+        String(x),
+      );
+      layersController.syncGeometryInput?.(
+        shapeEditLayerNumber,
+        index === 0 ? "y1" : "y2",
+        String(y),
+      );
     } else {
       layersController.syncGeometryInput?.(shapeEditLayerNumber, "points", serialized);
     }
@@ -1123,16 +1260,19 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     if (!element) return;
     shapeEditLayerNumber = layerNumber;
     element.classList.add("is-shape-editing");
-    if (handles) handles.hidden = !POINT_EDITABLE_SHAPES.has(element.localName) && element.localName !== "line";
+    if (handles)
+      handles.hidden =
+        !POINT_EDITABLE_SHAPES.has(element.localName) && element.localName !== "line";
     updatePointHandles();
     updateShapeModeBanner();
     updateGridOverlay();
   };
 
   const onDoubleClick = (event) => {
-    const target = event.target instanceof Element
-      ? event.target.closest(":is(path, rect, circle, ellipse, line, polyline, polygon)")
-      : null;
+    const target =
+      event.target instanceof Element
+        ? event.target.closest(":is(path, rect, circle, ellipse, line, polyline, polygon)")
+        : null;
     if (!target) {
       exitShapeEditMode();
       return;
@@ -1146,21 +1286,26 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
   };
 
   const onPointPointerDown = (event) => {
-    const handleEl = event.target instanceof Element ? event.target.closest(".asset-point-handle") : null;
+    const handleEl =
+      event.target instanceof Element ? event.target.closest(".asset-point-handle") : null;
     if (!handleEl) return;
     const element = getShapeEditElement();
     const matrix = element && getShapeMatrix(element);
     if (!element || !matrix) return;
     event.preventDefault();
     event.stopPropagation();
-    try { handleEl.setPointerCapture?.(event.pointerId); } catch { /* pointer already released */ }
+    try {
+      handleEl.setPointerCapture?.(event.pointerId);
+    } catch {
+      /* pointer already released */
+    }
     handleEl.classList.add("is-active");
     pointDragState = {
       handleEl,
       pointerId: event.pointerId,
       index: Number(handleEl.dataset.pointIndex),
       inverse: matrix.inverse(),
-      points: getShapePoints(element, shapeEditLayerNumber)
+      points: getShapePoints(element, shapeEditLayerNumber),
     };
   };
 
@@ -1183,7 +1328,11 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
 
   const onPointPointerUp = (event) => {
     if (!pointDragState || event.pointerId !== pointDragState.pointerId) return;
-    try { pointDragState.handleEl.releasePointerCapture?.(event.pointerId); } catch { /* not captured */ }
+    try {
+      pointDragState.handleEl.releasePointerCapture?.(event.pointerId);
+    } catch {
+      /* not captured */
+    }
     pointDragState.handleEl.classList.remove("is-active");
     pointDragState = null;
   };
@@ -1210,12 +1359,16 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     }
     const edit = assetLayerEdits.get(asset.id)?.get(layerNumber);
     let bbox = { x: 0, y: 0, width: 0, height: 0 };
-    try { bbox = element.getBBox(); } catch { /* element may not be renderable yet */ }
+    try {
+      bbox = element.getBBox();
+    } catch {
+      /* element may not be renderable yet */
+    }
     const box = edit?.resize ?? {
       left: bbox.x,
       top: bbox.y,
       right: bbox.x + bbox.width,
-      bottom: bbox.y + bbox.height
+      bottom: bbox.y + bbox.height,
     };
     const x = box.left + (edit?.offsetX ?? 0);
     const y = box.top + (edit?.offsetY ?? 0);
@@ -1256,7 +1409,8 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       return;
     }
     const layerNumber = layersController.getSelectedLayer();
-    if (layerNumber === null || layerNumber === undefined || isTypingTarget(document.activeElement)) return;
+    if (layerNumber === null || layerNumber === undefined || isTypingTarget(document.activeElement))
+      return;
     const deltas = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
     const delta = deltas[event.key];
     if (!delta) return;
@@ -1269,7 +1423,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       const existing = assetLayerEdits.get(asset.id)?.get(number);
       offsetsByLayer.set(number, {
         offsetX: (existing?.offsetX || 0) + delta[0] * step,
-        offsetY: (existing?.offsetY || 0) + delta[1] * step
+        offsetY: (existing?.offsetY || 0) + delta[1] * step,
       });
     }
     moveSelectedLayers(layerNumbers, offsetsByLayer);
@@ -1292,7 +1446,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     const bounds = svg?.getBoundingClientRect();
     return {
       x: viewBox && bounds?.width ? viewBox.width / bounds.width : 1,
-      y: viewBox && bounds?.height ? viewBox.height / bounds.height : 1
+      y: viewBox && bounds?.height ? viewBox.height / bounds.height : 1,
     };
   };
 
@@ -1331,7 +1485,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     const excluded = new Set(
       Array.isArray(excludeIndices) || excludeIndices instanceof Set
         ? excludeIndices
-        : [excludeIndices]
+        : [excludeIndices],
     );
     const containerRect = previewContainer.getBoundingClientRect();
     const toEdges = (rect) => ({
@@ -1340,7 +1494,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       centerX: (rect.left + rect.right) / 2 - containerRect.left,
       top: rect.top - containerRect.top,
       bottom: rect.bottom - containerRect.top,
-      centerY: (rect.top + rect.bottom) / 2 - containerRect.top
+      centerY: (rect.top + rect.bottom) / 2 - containerRect.top,
     });
     const targets = [];
     const svg = root.querySelector("svg");
@@ -1381,7 +1535,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       centerX: (rect.left + rect.right) / 2 - containerRect.left,
       top: rect.top - containerRect.top,
       bottom: rect.bottom - containerRect.top,
-      centerY: (rect.top + rect.bottom) / 2 - containerRect.top
+      centerY: (rect.top + rect.bottom) / 2 - containerRect.top,
     };
   };
 
@@ -1410,7 +1564,11 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
     const element = getGraphics()[layerNumber - 1];
     if (!element) return null;
     let nativeBBox;
-    try { nativeBBox = element.getBBox(); } catch { return null; }
+    try {
+      nativeBBox = element.getBBox();
+    } catch {
+      return null;
+    }
     if (!nativeBBox) return null;
     const edit = assetLayerEdits.get(asset.id)?.get(layerNumber);
     const offsetX = edit?.offsetX || 0;
@@ -1419,7 +1577,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       left: nativeBBox.x,
       top: nativeBBox.y,
       right: nativeBBox.x + nativeBBox.width,
-      bottom: nativeBBox.y + nativeBBox.height
+      bottom: nativeBBox.y + nativeBBox.height,
     };
     return {
       layerNumber,
@@ -1431,15 +1589,18 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
         left: base.left + offsetX,
         top: base.top + offsetY,
         right: base.right + offsetX,
-        bottom: base.bottom + offsetY
-      }
+        bottom: base.bottom + offsetY,
+      },
     };
   };
 
   const startGroupResize = (handleName, layerNumbers, event) => {
     const entries = layerNumbers.map(getElementResizeSnapshot).filter(Boolean);
     if (entries.length < 2) return;
-    let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+    let left = Infinity,
+      top = Infinity,
+      right = -Infinity,
+      bottom = -Infinity;
     for (const entry of entries) {
       left = Math.min(left, entry.adjusted.left);
       top = Math.min(top, entry.adjusted.top);
@@ -1453,7 +1614,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       startY: event.clientY,
       unitsPerPixel: getUnitsPerPixel(),
       initialBox: { left, top, right, bottom },
-      entries
+      entries,
     };
     event.target.setPointerCapture?.(event.pointerId);
   };
@@ -1487,13 +1648,18 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
         centerX,
         centerY,
         startAngleDeg: existingRotation,
-        startPointerAngleDeg: Math.atan2(event.clientY - centerY, event.clientX - centerX) * (180 / Math.PI)
+        startPointerAngleDeg:
+          Math.atan2(event.clientY - centerY, event.clientX - centerX) * (180 / Math.PI),
       };
       event.target.setPointerCapture?.(event.pointerId);
       return;
     }
     let nativeBBox;
-    try { nativeBBox = element.getBBox(); } catch { return; }
+    try {
+      nativeBBox = element.getBBox();
+    } catch {
+      return;
+    }
     if (!nativeBBox) return;
     const unitsPerPixel = getUnitsPerPixel();
     const existingResize = assetLayerEdits.get(asset.id)?.get(layerNumber)?.resize;
@@ -1507,7 +1673,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       left: nativeBBox.x,
       top: nativeBBox.y,
       right: nativeBBox.x + nativeBBox.width,
-      bottom: nativeBBox.y + nativeBBox.height
+      bottom: nativeBBox.y + nativeBBox.height,
     };
     resizeState = {
       layerNumber,
@@ -1517,7 +1683,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       startY: event.clientY,
       nativeBBox,
       currentBox,
-      unitsPerPixel
+      unitsPerPixel,
     };
     event.target.setPointerCapture?.(event.pointerId);
   };
@@ -1562,18 +1728,24 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
         bases,
         scaleX,
         scaleY,
-        moved: false
+        moved: false,
       };
       event.target.setPointerCapture?.(event.pointerId);
     } else {
-      pendingSelectInfo = { layerNumber, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY };
+      pendingSelectInfo = {
+        layerNumber,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+      };
     }
     event.preventDefault();
   };
   const onPointerMove = (event) => {
     if (rotateState && event.pointerId === rotateState.pointerId) {
       const { centerX, centerY, startAngleDeg, startPointerAngleDeg, layerNumber } = rotateState;
-      const pointerAngleDeg = Math.atan2(event.clientY - centerY, event.clientX - centerX) * (180 / Math.PI);
+      const pointerAngleDeg =
+        Math.atan2(event.clientY - centerY, event.clientX - centerX) * (180 / Math.PI);
       let rotation = startAngleDeg + (pointerAngleDeg - startPointerAngleDeg);
       if (event.shiftKey) rotation = Math.round(rotation / 15) * 15; // snap to 15° increments
       updateAssetLayerEdits(asset.id, layerNumber, { rotation });
@@ -1607,10 +1779,12 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
           const dominant = Math.abs(dxLocal) >= Math.abs(dyLocal) ? "x" : "y";
           if (dominant === "x") {
             const height = Math.max(minSize, (right - left) / aspect);
-            if (handle.includes("s")) bottom = top + height; else top = bottom - height;
+            if (handle.includes("s")) bottom = top + height;
+            else top = bottom - height;
           } else {
             const width = Math.max(minSize, (bottom - top) * aspect);
-            if (handle.includes("e")) right = left + width; else left = right - width;
+            if (handle.includes("e")) right = left + width;
+            else left = right - width;
           }
         } else if (touchesX) {
           const height = Math.max(minSize, (right - left) / aspect);
@@ -1648,8 +1822,8 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
             left: newLeft - offsetX,
             top: newTop - offsetY,
             right: newRight - offsetX,
-            bottom: newBottom - offsetY
-          }
+            bottom: newBottom - offsetY,
+          },
         });
       }
       applyAssetLayerEdits(root.querySelector("svg"), asset.id);
@@ -1659,7 +1833,8 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       return;
     }
     if (resizeState && event.pointerId === resizeState.pointerId) {
-      const { handle, nativeBBox, currentBox, unitsPerPixel, layerNumber, startX, startY } = resizeState;
+      const { handle, nativeBBox, currentBox, unitsPerPixel, layerNumber, startX, startY } =
+        resizeState;
       const dxLocal = (event.clientX - startX) * unitsPerPixel.x;
       const dyLocal = (event.clientY - startY) * unitsPerPixel.y;
       const minSize = 2;
@@ -1686,10 +1861,12 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
           const dominant = Math.abs(dxLocal) >= Math.abs(dyLocal) ? "x" : "y";
           if (dominant === "x") {
             const height = Math.max(minSize, (right - left) / nativeAspect);
-            if (handle.includes("s")) bottom = top + height; else top = bottom - height;
+            if (handle.includes("s")) bottom = top + height;
+            else top = bottom - height;
           } else {
             const width = Math.max(minSize, (bottom - top) * nativeAspect);
-            if (handle.includes("e")) right = left + width; else left = right - width;
+            if (handle.includes("e")) right = left + width;
+            else left = right - width;
           }
         } else if (touchesX) {
           const height = Math.max(minSize, (right - left) / nativeAspect);
@@ -1716,8 +1893,8 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
             nativeTop: nativeBBox.y,
             nativeWidth: nativeBBox.width,
             nativeHeight: nativeBBox.height,
-            ...box
-          }
+            ...box,
+          },
         });
         applyAssetLayerEdits(root.querySelector("svg"), asset.id);
         syncLayerDimensions(layerNumber);
@@ -1737,17 +1914,33 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
           let snappedY = false;
           if (handle.includes("e")) {
             const snap = findAxisSnap(activeEdges, ["right"], targets);
-            if (snap) { right += snap.delta * unitsPerPixel.x; snappedX = true; showGuide("v", snap.screenPos); }
+            if (snap) {
+              right += snap.delta * unitsPerPixel.x;
+              snappedX = true;
+              showGuide("v", snap.screenPos);
+            }
           } else if (handle.includes("w")) {
             const snap = findAxisSnap(activeEdges, ["left"], targets);
-            if (snap) { left += snap.delta * unitsPerPixel.x; snappedX = true; showGuide("v", snap.screenPos); }
+            if (snap) {
+              left += snap.delta * unitsPerPixel.x;
+              snappedX = true;
+              showGuide("v", snap.screenPos);
+            }
           }
           if (handle.includes("s")) {
             const snap = findAxisSnap(activeEdges, ["bottom"], targets);
-            if (snap) { bottom += snap.delta * unitsPerPixel.y; snappedY = true; showGuide("h", snap.screenPos); }
+            if (snap) {
+              bottom += snap.delta * unitsPerPixel.y;
+              snappedY = true;
+              showGuide("h", snap.screenPos);
+            }
           } else if (handle.includes("n")) {
             const snap = findAxisSnap(activeEdges, ["top"], targets);
-            if (snap) { top += snap.delta * unitsPerPixel.y; snappedY = true; showGuide("h", snap.screenPos); }
+            if (snap) {
+              top += snap.delta * unitsPerPixel.y;
+              snappedY = true;
+              showGuide("h", snap.screenPos);
+            }
           }
           if (snappedX || snappedY) applyResize({ left, top, right, bottom });
         }
@@ -1770,7 +1963,7 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
         const base = dragState.bases.get(layerNumber);
         updateAssetLayerEdits(asset.id, layerNumber, {
           offsetX: base.offsetX + offsetDx,
-          offsetY: base.offsetY + offsetDy
+          offsetY: base.offsetY + offsetDy,
         });
       }
       applyAssetLayerEdits(root.querySelector("svg"), asset.id);
@@ -1785,7 +1978,10 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       const graphics = getGraphics();
       const excludeIndices = dragState.layerNumbers.map((n) => n - 1);
       const targets = getAlignmentTargets(excludeIndices);
-      let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+      let left = Infinity,
+        top = Infinity,
+        right = -Infinity,
+        bottom = -Infinity;
       let found = false;
       for (const layerNumber of dragState.layerNumbers) {
         const element = graphics[layerNumber - 1];
@@ -1798,11 +1994,24 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
         found = true;
       }
       if (found) {
-        const activeEdges = { left, right, centerX: (left + right) / 2, top, bottom, centerY: (top + bottom) / 2 };
+        const activeEdges = {
+          left,
+          right,
+          centerX: (left + right) / 2,
+          top,
+          bottom,
+          centerY: (top + bottom) / 2,
+        };
         const xSnap = findAxisSnap(activeEdges, ["left", "right", "centerX"], targets);
         const ySnap = findAxisSnap(activeEdges, ["top", "bottom", "centerY"], targets);
-        if (xSnap) { deltaX += xSnap.delta * dragState.scaleX; showGuide("v", xSnap.screenPos); }
-        if (ySnap) { deltaY += ySnap.delta * dragState.scaleY; showGuide("h", ySnap.screenPos); }
+        if (xSnap) {
+          deltaX += xSnap.delta * dragState.scaleX;
+          showGuide("v", xSnap.screenPos);
+        }
+        if (ySnap) {
+          deltaY += ySnap.delta * dragState.scaleY;
+          showGuide("h", ySnap.screenPos);
+        }
         if (xSnap || ySnap) applyGroupOffset(deltaX, deltaY);
       }
     }
@@ -1872,7 +2081,8 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
   const onGridVisibilityToggle = () => {
     gridVisible = !gridVisible;
     gridVisibilityToggle?.setAttribute("aria-pressed", String(gridVisible));
-    if (gridVisibilityToggle) gridVisibilityToggle.textContent = gridVisible ? "Hide grid" : "Show grid";
+    if (gridVisibilityToggle)
+      gridVisibilityToggle.textContent = gridVisible ? "Hide grid" : "Show grid";
     updateGridOverlay();
   };
   const onGridSnapToggle = () => {
@@ -1913,11 +2123,14 @@ function enablePrimaryLayerInteraction(root, previewContainer, tooltip, handles,
       gridSizeInput?.removeEventListener("input", onGridSizeInput);
       if (tooltip) tooltip.hidden = true;
       if (handles) handles.hidden = true;
-      if (points) { points.hidden = true; points.replaceChildren(); }
+      if (points) {
+        points.hidden = true;
+        points.replaceChildren();
+      }
       if (shapeModeBanner) shapeModeBanner.hidden = true;
       if (gridOverlay) gridOverlay.hidden = true;
       clearGuides();
-    }
+    },
   };
 }
 
@@ -2011,49 +2224,66 @@ function parseSvgPoints(value) {
 }
 
 function serializeSvgPoints(points) {
-  return points.map(({ x, y }) => `${Math.round(x * 100) / 100},${Math.round(y * 100) / 100}`).join(" ");
+  return points
+    .map(({ x, y }) => `${Math.round(x * 100) / 100},${Math.round(y * 100) / 100}`)
+    .join(" ");
 }
 
 function renderAssetColorList(root, asset, onHighlight) {
   root.textContent = "Loading...";
   root.dataset.assetId = asset.id;
 
-  loadAssetColors(asset.source).then((colors) => {
-    if (!root.isConnected || root.dataset.assetId !== asset.id) return;
-    root.textContent = "";
-    if (!colors.length) {
-      root.textContent = "No explicit colors";
-      return;
-    }
-    for (const color of colors) {
-      const item = document.createElement("span");
-      item.className = "asset-color";
-      item.setAttribute("aria-label", color);
-      if (onHighlight) {
-        let hovered = false;
-        let focused = false;
-        const syncHighlight = () => {
-          const active = hovered || focused;
-          item.classList.toggle("is-active", active);
-          onHighlight(color, active);
-        };
-        item.tabIndex = 0;
-        item.addEventListener("mouseenter", () => { hovered = true; syncHighlight(); });
-        item.addEventListener("mouseleave", () => { hovered = false; syncHighlight(); });
-        item.addEventListener("focus", () => { focused = true; syncHighlight(); });
-        item.addEventListener("blur", () => { focused = false; syncHighlight(); });
+  loadAssetColors(asset.source)
+    .then((colors) => {
+      if (!root.isConnected || root.dataset.assetId !== asset.id) return;
+      root.textContent = "";
+      if (!colors.length) {
+        root.textContent = "No explicit colors";
+        return;
       }
-      const swatch = document.createElement("span");
-      swatch.className = "asset-color-swatch";
-      swatch.style.backgroundColor = color;
-      swatch.setAttribute("aria-hidden", "true");
-      item.dataset.tooltip = color;
-      item.appendChild(swatch);
-      root.appendChild(item);
-    }
-  }).catch(() => {
-    if (root.isConnected && root.dataset.assetId === asset.id) root.textContent = "Colors unavailable";
-  });
+      for (const color of colors) {
+        const item = document.createElement("span");
+        item.className = "asset-color";
+        item.setAttribute("aria-label", color);
+        if (onHighlight) {
+          let hovered = false;
+          let focused = false;
+          const syncHighlight = () => {
+            const active = hovered || focused;
+            item.classList.toggle("is-active", active);
+            onHighlight(color, active);
+          };
+          item.tabIndex = 0;
+          item.addEventListener("mouseenter", () => {
+            hovered = true;
+            syncHighlight();
+          });
+          item.addEventListener("mouseleave", () => {
+            hovered = false;
+            syncHighlight();
+          });
+          item.addEventListener("focus", () => {
+            focused = true;
+            syncHighlight();
+          });
+          item.addEventListener("blur", () => {
+            focused = false;
+            syncHighlight();
+          });
+        }
+        const swatch = document.createElement("span");
+        swatch.className = "asset-color-swatch";
+        swatch.style.backgroundColor = color;
+        swatch.setAttribute("aria-hidden", "true");
+        item.dataset.tooltip = color;
+        item.appendChild(swatch);
+        root.appendChild(item);
+      }
+    })
+    .catch(() => {
+      if (root.isConnected && root.dataset.assetId === asset.id)
+        root.textContent = "Colors unavailable";
+    });
 }
 
 function renderStaticAssetColorList(root, colors, emptyMessage) {
@@ -2080,7 +2310,7 @@ function renderAssetSourceSizeEditor(body, root, asset, data, onChange) {
   const sourceViewBox = parseSvgViewBox(data.viewBox);
   const sourceSize = assetSourceSizeEdits.get(asset.id) || {
     width: Number.isFinite(Number(data.width)) ? Number(data.width) : sourceViewBox?.[2],
-    height: Number.isFinite(Number(data.height)) ? Number(data.height) : sourceViewBox?.[3]
+    height: Number.isFinite(Number(data.height)) ? Number(data.height) : sourceViewBox?.[3],
   };
   assetSourceSizeEdits.set(asset.id, sourceSize);
   const summary = document.createElement("div");
@@ -2089,9 +2319,10 @@ function renderAssetSourceSizeEditor(body, root, asset, data, onChange) {
   const label = document.createElement("span");
   label.textContent = "Source size";
   const value = document.createElement("code");
-  value.textContent = Number.isFinite(sourceSize.width) && Number.isFinite(sourceSize.height)
-    ? `${sourceSize.width} × ${sourceSize.height}`
-    : "Not defined";
+  value.textContent =
+    Number.isFinite(sourceSize.width) && Number.isFinite(sourceSize.height)
+      ? `${sourceSize.width} × ${sourceSize.height}`
+      : "Not defined";
   const editButton = document.createElement("button");
   editButton.type = "button";
   editButton.className = "asset-accessibility-edit";
@@ -2109,7 +2340,10 @@ function renderAssetSourceSizeEditor(body, root, asset, data, onChange) {
   heading.textContent = "Edit source size";
   const widthInput = document.createElement("input");
   const heightInput = document.createElement("input");
-  for (const [input, name] of [[widthInput, "Source width"], [heightInput, "Source height"]]) {
+  for (const [input, name] of [
+    [widthInput, "Source width"],
+    [heightInput, "Source height"],
+  ]) {
     input.type = "number";
     input.min = "0.01";
     input.step = "0.01";
@@ -2141,7 +2375,9 @@ function renderAssetSourceSizeEditor(body, root, asset, data, onChange) {
     editor.hidden = false;
     widthInput.focus();
   });
-  cancel.addEventListener("click", () => { editor.hidden = true; });
+  cancel.addEventListener("click", () => {
+    editor.hidden = true;
+  });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
@@ -2157,105 +2393,121 @@ function renderAssetDiagnostics(root, asset, onAccessibilityChange, onSourceSize
   root.textContent = "Loading...";
   root.dataset.assetId = asset.id;
 
-  loadAssetSvgData(asset.source).then((data) => {
-    if (!root.isConnected || root.dataset.assetId !== asset.id) return;
-    root.textContent = "";
-    const accessibility = assetAccessibilityEdits.get(asset.id) || {
-      title: data.accessibleName === "Not defined" ? "" : data.accessibleName,
-      description: data.description === "Not defined" ? "" : data.description
-    };
-    assetAccessibilityEdits.set(asset.id, accessibility);
-    const body = root.parentElement;
-    body?.querySelectorAll("[data-accessibility-editor]").forEach((element) => element.remove());
-    body?.querySelectorAll("[data-source-size-editor], [data-source-size-summary]").forEach((element) => element.remove());
-    if (body) renderAssetSourceSizeEditor(body, root, asset, data, onSourceSizeChange);
-    const summary = document.createElement("div");
-    summary.className = "asset-accessibility-summary";
-    const summaryLabel = document.createElement("span");
-    summaryLabel.textContent = "Accessibility";
-    const summaryValue = document.createElement("code");
-    summaryValue.textContent = accessibility.title || "No title or description";
-    const editButton = document.createElement("button");
-    editButton.type = "button";
-    editButton.className = "asset-accessibility-edit";
-    editButton.setAttribute("aria-label", "Edit accessible title and description");
-    editButton.title = "Edit accessible title and description";
-    editButton.innerHTML = '<i data-lucide="pencil" aria-hidden="true"></i>';
-    summary.append(summaryLabel, summaryValue, editButton);
+  loadAssetSvgData(asset.source)
+    .then((data) => {
+      if (!root.isConnected || root.dataset.assetId !== asset.id) return;
+      root.textContent = "";
+      const accessibility = assetAccessibilityEdits.get(asset.id) || {
+        title: data.accessibleName === "Not defined" ? "" : data.accessibleName,
+        description: data.description === "Not defined" ? "" : data.description,
+      };
+      assetAccessibilityEdits.set(asset.id, accessibility);
+      const body = root.parentElement;
+      body?.querySelectorAll("[data-accessibility-editor]").forEach((element) => element.remove());
+      body
+        ?.querySelectorAll("[data-source-size-editor], [data-source-size-summary]")
+        .forEach((element) => element.remove());
+      if (body) renderAssetSourceSizeEditor(body, root, asset, data, onSourceSizeChange);
+      const summary = document.createElement("div");
+      summary.className = "asset-accessibility-summary";
+      const summaryLabel = document.createElement("span");
+      summaryLabel.textContent = "Accessibility";
+      const summaryValue = document.createElement("code");
+      summaryValue.textContent = accessibility.title || "No title or description";
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "asset-accessibility-edit";
+      editButton.setAttribute("aria-label", "Edit accessible title and description");
+      editButton.title = "Edit accessible title and description";
+      editButton.innerHTML = '<i data-lucide="pencil" aria-hidden="true"></i>';
+      summary.append(summaryLabel, summaryValue, editButton);
 
-    const editor = document.createElement("div");
-    editor.className = "asset-accessibility-editor";
-    editor.dataset.accessibilityEditor = "";
-    editor.hidden = true;
-    const form = document.createElement("form");
-    const heading = document.createElement("strong");
-    heading.textContent = "Edit accessibility";
-    const titleLabel = document.createElement("label");
-    titleLabel.textContent = "Accessible title";
-    const titleInput = document.createElement("input");
-    titleInput.type = "text";
-    titleInput.setAttribute("aria-label", "Accessible title");
-    titleLabel.appendChild(titleInput);
-    const descriptionLabel = document.createElement("label");
-    descriptionLabel.textContent = "Description";
-    const descriptionInput = document.createElement("textarea");
-    descriptionInput.rows = 2;
-    descriptionInput.setAttribute("aria-label", "Accessible description");
-    descriptionLabel.appendChild(descriptionInput);
-    const actions = document.createElement("div");
-    actions.className = "asset-accessibility-actions";
-    const cancelButton = document.createElement("button");
-    cancelButton.type = "button";
-    cancelButton.textContent = "Cancel";
-    const applyButton = document.createElement("button");
-    applyButton.type = "submit";
-    applyButton.textContent = "Apply";
-    actions.append(cancelButton, applyButton);
-    form.append(heading, titleLabel, descriptionLabel, actions);
-    editor.appendChild(form);
-    body?.insertBefore(summary, root);
-    body?.insertBefore(editor, root);
+      const editor = document.createElement("div");
+      editor.className = "asset-accessibility-editor";
+      editor.dataset.accessibilityEditor = "";
+      editor.hidden = true;
+      const form = document.createElement("form");
+      const heading = document.createElement("strong");
+      heading.textContent = "Edit accessibility";
+      const titleLabel = document.createElement("label");
+      titleLabel.textContent = "Accessible title";
+      const titleInput = document.createElement("input");
+      titleInput.type = "text";
+      titleInput.setAttribute("aria-label", "Accessible title");
+      titleLabel.appendChild(titleInput);
+      const descriptionLabel = document.createElement("label");
+      descriptionLabel.textContent = "Description";
+      const descriptionInput = document.createElement("textarea");
+      descriptionInput.rows = 2;
+      descriptionInput.setAttribute("aria-label", "Accessible description");
+      descriptionLabel.appendChild(descriptionInput);
+      const actions = document.createElement("div");
+      actions.className = "asset-accessibility-actions";
+      const cancelButton = document.createElement("button");
+      cancelButton.type = "button";
+      cancelButton.textContent = "Cancel";
+      const applyButton = document.createElement("button");
+      applyButton.type = "submit";
+      applyButton.textContent = "Apply";
+      actions.append(cancelButton, applyButton);
+      form.append(heading, titleLabel, descriptionLabel, actions);
+      editor.appendChild(form);
+      body?.insertBefore(summary, root);
+      body?.insertBefore(editor, root);
 
-    const openEditor = () => {
-      titleInput.value = accessibility.title;
-      descriptionInput.value = accessibility.description;
-      editor.hidden = false;
-      titleInput.focus();
-    };
-    const closeEditor = () => { editor.hidden = true; };
-    editButton.addEventListener("click", openEditor);
-    cancelButton.addEventListener("click", closeEditor);
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const next = { title: titleInput.value.trim(), description: descriptionInput.value.trim() };
-      assetAccessibilityEdits.set(asset.id, next);
-      summaryValue.textContent = next.title || "No title or description";
-      onAccessibilityChange?.(next);
-      closeEditor();
+      const openEditor = () => {
+        titleInput.value = accessibility.title;
+        descriptionInput.value = accessibility.description;
+        editor.hidden = false;
+        titleInput.focus();
+      };
+      const closeEditor = () => {
+        editor.hidden = true;
+      };
+      editButton.addEventListener("click", openEditor);
+      cancelButton.addEventListener("click", closeEditor);
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const next = { title: titleInput.value.trim(), description: descriptionInput.value.trim() };
+        assetAccessibilityEdits.set(asset.id, next);
+        summaryValue.textContent = next.title || "No title or description";
+        onAccessibilityChange?.(next);
+        closeEditor();
+      });
+      const diagnostics = [
+        ["Elements", `${data.paintLayerCount} primitives`],
+        ["Element order", "DOM order, bottom → top"],
+        ["Topmost element", data.topmostLayer],
+        [
+          "Paths",
+          `${data.pathCount} (${data.closedPathCount} closed, ${data.pathCount - data.closedPathCount} open)`,
+        ],
+        ["Path subpaths", String(data.pathSubpathCount)],
+        ["Path commands", String(data.pathCommandCount)],
+        [
+          "Groups",
+          data.groupCount ? `${data.groupCount} (max depth ${data.maxGroupDepth})` : "None",
+        ],
+        ["Effects", data.effects],
+        [
+          "File size",
+          data.byteSize < 1024 ? `${data.byteSize} B` : `${(data.byteSize / 1024).toFixed(1)} KB`,
+        ],
+      ];
+      for (const [label, value] of diagnostics) {
+        const term = document.createElement("dt");
+        term.textContent = label;
+        const description = document.createElement("dd");
+        description.textContent = value;
+        root.appendChild(term);
+        root.appendChild(description);
+      }
+      if (typeof lucide !== "undefined") lucide.createIcons();
+    })
+    .catch(() => {
+      if (root.isConnected && root.dataset.assetId === asset.id)
+        root.textContent = "Diagnostics unavailable";
     });
-    const diagnostics = [
-      ["Elements", `${data.paintLayerCount} primitives`],
-      ["Element order", "DOM order, bottom → top"],
-      ["Topmost element", data.topmostLayer],
-      ["Paths", `${data.pathCount} (${data.closedPathCount} closed, ${data.pathCount - data.closedPathCount} open)`],
-      ["Path subpaths", String(data.pathSubpathCount)],
-      ["Path commands", String(data.pathCommandCount)],
-      ["Groups", data.groupCount ? `${data.groupCount} (max depth ${data.maxGroupDepth})` : "None"],
-      ["Effects", data.effects],
-      ["File size", data.byteSize < 1024 ? `${data.byteSize} B` : `${(data.byteSize / 1024).toFixed(1)} KB`],
-    ];
-    for (const [label, value] of diagnostics) {
-      const term = document.createElement("dt");
-      term.textContent = label;
-      const description = document.createElement("dd");
-      description.textContent = value;
-      root.appendChild(term);
-      root.appendChild(description);
-    }
-    if (typeof lucide !== "undefined") lucide.createIcons();
-  }).catch(() => {
-    if (root.isConnected && root.dataset.assetId === asset.id) root.textContent = "Diagnostics unavailable";
-  });
 }
 
 function assetLayerSelection(assetId) {
@@ -2276,7 +2528,8 @@ function renderAssetLayerActions(actionsBar, data, onCombine, onClear, onAdd) {
   addGroup.className = "asset-layer-add-group";
 
   let selectedShape = NEW_ELEMENT_SHAPES[0].value;
-  const getShape = () => NEW_ELEMENT_SHAPES.find(({ value }) => value === selectedShape) || NEW_ELEMENT_SHAPES[0];
+  const getShape = () =>
+    NEW_ELEMENT_SHAPES.find(({ value }) => value === selectedShape) || NEW_ELEMENT_SHAPES[0];
 
   const addButton = document.createElement("button");
   addButton.type = "button";
@@ -2338,7 +2591,8 @@ function renderAssetLayerActions(actionsBar, data, onCombine, onClear, onAdd) {
   combineButton.className = "asset-layer-combine-button";
   combineButton.disabled = true;
   combineButton.title = "Wrap the selected elements in a group";
-  combineButton.innerHTML = '<i data-lucide="layers" aria-hidden="true"></i><span>Combine elements</span>';
+  combineButton.innerHTML =
+    '<i data-lucide="layers" aria-hidden="true"></i><span>Combine elements</span>';
   combineButton.addEventListener("click", onCombine);
 
   combineGroup.append(status, clearButton, combineButton);
@@ -2346,7 +2600,16 @@ function renderAssetLayerActions(actionsBar, data, onCombine, onClear, onAdd) {
   return { status, combineButton, clearButton, getShape };
 }
 
-function renderAssetLayers(root, editorPanel, actionsBar, asset, onHighlight, onEdit, onSelect, onMultiSelectChange) {
+function renderAssetLayers(
+  root,
+  editorPanel,
+  actionsBar,
+  asset,
+  onHighlight,
+  onEdit,
+  onSelect,
+  onMultiSelectChange,
+) {
   root.textContent = "Loading...";
   root.dataset.assetId = asset.id;
   editorPanel.hidden = true;
@@ -2362,673 +2625,747 @@ function renderAssetLayers(root, editorPanel, actionsBar, asset, onHighlight, on
     selectLayer: () => {},
     getSelectedLayer: () => null,
     getMultiSelection: () => [],
-    syncDimensionInputs: () => {}
+    syncDimensionInputs: () => {},
   };
 
-  loadAssetSvgData(asset.source).then((data) => {
-    if (!root.isConnected || root.dataset.assetId !== asset.id) return;
-    root.textContent = "";
-    const pendingSelection = assetPendingElementSelection.get(asset.id);
-    if (pendingSelection !== undefined) assetPendingElementSelection.delete(asset.id);
-    let selectedLayerNumber = pendingSelection ?? null;
-    // Elements shift-clicked together (canvas or panel row) so multiple can be
-    // moved/inspected as a group. Distinct from the checkbox-driven `selection`
-    // Set below, which only tracks candidates for the "combine into group"
-    // action - keeping the two decoupled means shift-clicking to multi-select
-    // never clobbers an in-progress combine checkbox selection, and vice versa.
-    let multiSelection = new Set(selectedLayerNumber !== null ? [selectedLayerNumber] : []);
-    onSelect?.(selectedLayerNumber);
-    onMultiSelectChange?.([...multiSelection]);
-    let hoveredLayerNumber = null;
-    let focusedLayerNumber = null;
-    const layerItems = new Map();
-    const layerButtons = new Map();
-    const layerEditButtons = new Map();
-    // Geometry textareas keyed `${layerNumber}:${attrName}`, so on-canvas point
-    // dragging can push updated values back into the open detail editor.
-    const geometryInputs = new Map();
-    const layerCheckboxes = new Map();
-    const layerEdits = assetLayerEdits.get(asset.id) || new Map();
-    const selection = assetLayerSelection(asset.id);
-    for (const layerNumber of [...selection]) {
-      if (layerNumber > data.paintLayerCount) selection.delete(layerNumber);
-    }
-    const addElement = (shape, container) => {
-      createAssetElement(asset, shape, container, (newNumber) => {
-        if (newNumber) assetPendingElementSelection.set(asset.id, newNumber);
-        assetModified.add(asset.id);
-        showToast(`Added a new ${shape} element.`);
-        renderAssetDetail(asset.id);
-      });
-    };
-    const { status: combineStatus, combineButton, clearButton } = renderAssetLayerActions(actionsBar, data, () => {
-      const combining = [...selection];
-      combineAssetLayers(asset, combining, (combinedNumbers) => {
-        assetModified.add(asset.id);
-        selection.clear();
-        if (combinedNumbers?.length) assetPendingGroupFocus.set(asset.id, new Set(combinedNumbers));
-        showToast(`Combined ${combinedNumbers.length || combining.length} elements into a group.`);
-        renderAssetDetail(asset.id);
-      });
-    }, () => {
-      selection.clear();
-      syncSelection();
-    }, (shape) => addElement(shape, data.svg));
-    function syncSelection() {
-      for (const [layerNumber, item] of layerItems) {
-        const isSelected = selection.has(layerNumber);
-        item.classList.toggle("is-multi-selected", isSelected);
-        const checkbox = layerCheckboxes.get(layerNumber);
-        if (checkbox) checkbox.checked = isSelected;
-      }
-      combineButton.disabled = selection.size < 2;
-      clearButton.hidden = selection.size === 0;
-      combineStatus.textContent = selection.size === 0
-        ? "Select 2 elements to combine."
-        : selection.size === 1
-          ? "Select one more element to combine."
-          : `${selection.size} selected. Ready to combine.`;
-    }
-    const syncHighlight = () => {
-      const highlightedLayerNumber = hoveredLayerNumber ?? focusedLayerNumber ?? selectedLayerNumber;
-      for (const [layerNumber, item] of layerItems) {
-        item.classList.toggle("is-active", layerNumber === highlightedLayerNumber);
-        item.classList.toggle("is-selected", multiSelection.has(layerNumber));
-        layerButtons.get(layerNumber)?.setAttribute("aria-pressed", String(multiSelection.has(layerNumber)));
-      }
-      onHighlight(highlightedLayerNumber, highlightedLayerNumber !== null);
-    };
-    // `options.additive` (shift-click) adds/removes a layer from the
-    // multi-selection without disturbing the rest of it; a plain click
-    // replaces the whole multi-selection with just the toggled layer (or
-    // clears it, matching the pre-existing single-select toggle behavior).
-    const selectLayer = (layerNumber, options = {}) => {
-      if (options.additive) {
-        if (multiSelection.has(layerNumber)) {
-          multiSelection.delete(layerNumber);
-          if (selectedLayerNumber === layerNumber) {
-            const remaining = [...multiSelection];
-            selectedLayerNumber = remaining.length ? remaining[remaining.length - 1] : null;
-          }
-        } else {
-          multiSelection.add(layerNumber);
-          selectedLayerNumber = layerNumber;
-        }
-      } else {
-        selectedLayerNumber = selectedLayerNumber === layerNumber ? null : layerNumber;
-        multiSelection = new Set(selectedLayerNumber !== null ? [selectedLayerNumber] : []);
-      }
-      // Keep the combine checkboxes in sync with whatever is currently
-      // (multi-)selected, so shift-clicking elements on the canvas or panel
-      // checks their boxes without any extra step.
-      selection.clear();
-      for (const number of multiSelection) selection.add(number);
-      syncSelection();
+  loadAssetSvgData(asset.source)
+    .then((data) => {
+      if (!root.isConnected || root.dataset.assetId !== asset.id) return;
+      root.textContent = "";
+      const pendingSelection = assetPendingElementSelection.get(asset.id);
+      if (pendingSelection !== undefined) assetPendingElementSelection.delete(asset.id);
+      let selectedLayerNumber = pendingSelection ?? null;
+      // Elements shift-clicked together (canvas or panel row) so multiple can be
+      // moved/inspected as a group. Distinct from the checkbox-driven `selection`
+      // Set below, which only tracks candidates for the "combine into group"
+      // action - keeping the two decoupled means shift-clicking to multi-select
+      // never clobbers an in-progress combine checkbox selection, and vice versa.
+      let multiSelection = new Set(selectedLayerNumber !== null ? [selectedLayerNumber] : []);
       onSelect?.(selectedLayerNumber);
       onMultiSelectChange?.([...multiSelection]);
-      syncHighlight();
-    };
-    controller.setHoveredLayer = (layerNumber) => { hoveredLayerNumber = layerNumber; syncHighlight(); };
-    controller.clearHoveredLayer = (layerNumber) => {
-      if (hoveredLayerNumber === layerNumber) hoveredLayerNumber = null;
-      syncHighlight();
-    };
-    controller.selectLayer = selectLayer;
-    controller.openEditor = (layerNumber) => layerEditButtons.get(layerNumber)?.click();
-    controller.getSelectedLayer = () => selectedLayerNumber;
-    controller.getMultiSelection = () => [...multiSelection];
-    controller.syncGeometryInput = (layerNumber, name, value) => {
-      const input = geometryInputs.get(`${layerNumber}:${name}`);
-      if (input && input.value !== value) input.value = value;
-    };
-    controller.syncDimensionInputs = (layerNumber, values) => {
-      for (const [name, value] of Object.entries(values)) {
-        const input = geometryInputs.get(`${layerNumber}:${name}`);
-        if (input && document.activeElement !== input) input.value = String(value);
+      let hoveredLayerNumber = null;
+      let focusedLayerNumber = null;
+      const layerItems = new Map();
+      const layerButtons = new Map();
+      const layerEditButtons = new Map();
+      // Geometry textareas keyed `${layerNumber}:${attrName}`, so on-canvas point
+      // dragging can push updated values back into the open detail editor.
+      const geometryInputs = new Map();
+      const layerCheckboxes = new Map();
+      const layerEdits = assetLayerEdits.get(asset.id) || new Map();
+      const selection = assetLayerSelection(asset.id);
+      for (const layerNumber of [...selection]) {
+        if (layerNumber > data.paintLayerCount) selection.delete(layerNumber);
       }
-    };
-    const layerByNumber = new Map(data.paintLayers.map((entry) => [entry.number, entry]));
-    function renderElementRow(layer) {
-      const item = document.createElement("li");
-      item.value = layer.number;
-      let toggleSelection;
-      if (onHighlight) {
-        item.addEventListener("mouseenter", () => { hoveredLayerNumber = layer.number; syncHighlight(); });
-        item.addEventListener("mouseleave", () => {
-          if (hoveredLayerNumber === layer.number) hoveredLayerNumber = null;
-          syncHighlight();
+      const addElement = (shape, container) => {
+        createAssetElement(asset, shape, container, (newNumber) => {
+          if (newNumber) assetPendingElementSelection.set(asset.id, newNumber);
+          assetModified.add(asset.id);
+          showToast(`Added a new ${shape} element.`);
+          renderAssetDetail(asset.id);
         });
-        toggleSelection = (event) => selectLayer(layer.number, { additive: event?.shiftKey });
-        item.addEventListener("click", toggleSelection);
-      }
-      const number = document.createElement(onHighlight ? "button" : "span");
-      number.className = "asset-layer-number";
-      number.textContent = String(layer.number);
-      if (onHighlight) {
-        number.type = "button";
-        number.setAttribute("aria-label", `Select element ${layer.number}`);
-        number.setAttribute("aria-pressed", "false");
-        number.addEventListener("click", (event) => {
-          event.stopPropagation();
-          toggleSelection();
-        });
-        number.addEventListener("focus", () => { focusedLayerNumber = layer.number; syncHighlight(); });
-        number.addEventListener("blur", () => {
-          if (focusedLayerNumber === layer.number) focusedLayerNumber = null;
-          syncHighlight();
-        });
-      }
-      const selectLabel = document.createElement("label");
-      selectLabel.className = "asset-layer-select";
-      const selectCheckbox = document.createElement("input");
-      selectCheckbox.type = "checkbox";
-      selectCheckbox.className = "asset-layer-select-input";
-      selectCheckbox.checked = selection.has(layer.number);
-      selectCheckbox.setAttribute("aria-label", `Select element ${layer.number} for combining`);
-      selectLabel.title = `Select element ${layer.number} for combining`;
-      selectLabel.addEventListener("click", (event) => event.stopPropagation());
-      selectCheckbox.addEventListener("click", (event) => event.stopPropagation());
-      selectCheckbox.addEventListener("change", () => {
-        if (selectCheckbox.checked) selection.add(layer.number);
-        else selection.delete(layer.number);
-        syncSelection();
-      });
-      // Keep row drag-and-drop from hijacking checkbox interaction.
-      const restoreDraggable = () => { item.draggable = true; };
-      selectLabel.addEventListener("pointerdown", () => { item.draggable = false; });
-      selectLabel.addEventListener("pointerup", restoreDraggable);
-      selectLabel.addEventListener("pointercancel", restoreDraggable);
-      item.addEventListener("mouseleave", restoreDraggable);
-      selectLabel.appendChild(selectCheckbox);
-
-      const identity = document.createElement("div");
-      identity.className = "asset-layer-identity";
-      const elementName = document.createElement("code");
-      elementName.textContent = layer.element;
-      identity.appendChild(elementName);
-      if (layer.id) {
-        const id = document.createElement("code");
-        id.textContent = `#${layer.id}`;
-        identity.appendChild(id);
-      }
-
-      const reorder = document.createElement("span");
-      reorder.className = "asset-layer-reorder";
-      const moveUpButton = document.createElement("button");
-      moveUpButton.type = "button";
-      moveUpButton.className = "asset-layer-reorder-button";
-      moveUpButton.setAttribute("aria-label", `Move element ${layer.number} up`);
-      moveUpButton.innerHTML = '<i data-lucide="chevron-up" aria-hidden="true"></i>';
-      moveUpButton.disabled = layer.number >= data.paintLayerCount;
-      moveUpButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        reorderAssetLayer(asset, layer.number, layer.number + 1, () => renderAssetDetail(asset.id));
-      });
-      const moveDownButton = document.createElement("button");
-      moveDownButton.type = "button";
-      moveDownButton.className = "asset-layer-reorder-button";
-      moveDownButton.setAttribute("aria-label", `Move element ${layer.number} down`);
-      moveDownButton.innerHTML = '<i data-lucide="chevron-down" aria-hidden="true"></i>';
-      moveDownButton.disabled = layer.number <= 1;
-      moveDownButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        reorderAssetLayer(asset, layer.number, layer.number - 1, () => renderAssetDetail(asset.id));
-      });
-      reorder.append(moveUpButton, moveDownButton);
-
-      item.draggable = true;
-      item.classList.add("asset-layer-draggable");
-      item.addEventListener("dragstart", (event) => {
-        event.dataTransfer.setData("text/plain", String(layer.number));
-        event.dataTransfer.effectAllowed = "move";
-        item.classList.add("is-dragging");
-      });
-      item.addEventListener("dragend", () => {
-        item.classList.remove("is-dragging");
-        for (const otherItem of layerItems.values()) otherItem.classList.remove("is-drag-over");
-      });
-      item.addEventListener("dragover", (event) => {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
-        item.classList.add("is-drag-over");
-      });
-      item.addEventListener("dragleave", () => {
-        item.classList.remove("is-drag-over");
-      });
-      item.addEventListener("drop", (event) => {
-        event.preventDefault();
-        item.classList.remove("is-drag-over");
-        const sourceNumber = Number(event.dataTransfer.getData("text/plain"));
-        if (!Number.isFinite(sourceNumber) || sourceNumber === layer.number) return;
-        reorderAssetLayer(asset, sourceNumber, layer.number, () => renderAssetDetail(asset.id));
-      });
-
-      const details = document.createElement("div");
-      details.className = "asset-layer-details";
-      const paints = document.createElement("div");
-      paints.className = "asset-layer-paints";
-      const positionPopover = (popover, trigger) => {
-        if (!popover.matches(":popover-open")) popover.showPopover();
-        const triggerBounds = trigger.getBoundingClientRect();
-        const popoverBounds = popover.getBoundingClientRect();
-        popover.style.top = `${Math.min(triggerBounds.bottom + 6, window.innerHeight - popoverBounds.height - 8)}px`;
-        popover.style.left = `${Math.max(8, Math.min(triggerBounds.left, window.innerWidth - popoverBounds.width - 8))}px`;
       };
-      const currentEdits = layerEdits.get(layer.number) || { paints: {}, attrs: {} };
-      let firstColorInput = null;
-      const colorInputsByProperty = new Map();
-      const registerColorInput = (property, input, onSync) => {
-        if (!colorInputsByProperty.has(property)) colorInputsByProperty.set(property, []);
-        colorInputsByProperty.get(property).push({ input, onSync });
-      };
-      const syncColorInputs = (property, nextValue, sourceInput) => {
-        for (const entry of colorInputsByProperty.get(property) || []) {
-          if (entry.input !== sourceInput) entry.input.value = nextValue;
-          entry.onSync?.(nextValue);
-        }
-      };
-      for (const [property, value] of layer.paints) {
-        const editedValue = currentEdits.paints[property] || value;
-        const paint = document.createElement("span");
-        paint.className = "asset-layer-paint";
-        const color = normalizeSvgColor(editedValue);
-        const label = document.createElement("code");
-        label.textContent = color ? property : `${property} ${editedValue}`;
-        paint.appendChild(label);
-        if (color) {
-          const colorInput = document.createElement("input");
-          colorInput.className = "asset-layer-color-input";
-          colorInput.type = "color";
-          colorInput.id = `asset-layer-color-input-${asset.id}-${layer.number}-${property}`;
-          colorInput.value = color;
-          colorInput.setAttribute("aria-label", `Element ${layer.number} ${property} color`);
-          colorInput.addEventListener("click", (event) => event.stopPropagation());
-          colorInput.addEventListener("keydown", (event) => event.stopPropagation());
-          colorInput.addEventListener("input", () => {
-            const nextValue = colorInput.value.toUpperCase();
-            updateAssetLayerEdits(asset.id, layer.number, { paints: { [property]: nextValue } });
-            label.textContent = property;
-            syncColorInputs(property, nextValue, colorInput);
-            onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
-          });
-          paint.appendChild(colorInput);
-          registerColorInput(property, colorInput);
-          if (!firstColorInput) firstColorInput = colorInput;
-        }
-        paints.appendChild(paint);
-      }
-      const opacityEditor = document.createElement("div");
-      opacityEditor.className = "asset-layer-editor asset-layer-opacity-editor";
-      opacityEditor.id = `asset-layer-opacity-editor-${asset.id}-${layer.number}`;
-      opacityEditor.setAttribute("popover", "auto");
-      opacityEditor.setAttribute("role", "dialog");
-      opacityEditor.setAttribute("aria-label", `Edit element ${layer.number} opacity`);
-      const opacityControl = document.createElement("label");
-      opacityControl.className = "asset-layer-opacity-control";
-      opacityControl.textContent = "Opacity";
-      const decrement = document.createElement("button");
-      decrement.type = "button";
-      decrement.className = "asset-layer-opacity-step";
-      decrement.setAttribute("aria-label", "Decrease opacity");
-      decrement.innerHTML = '<i data-lucide="minus" aria-hidden="true"></i>';
-      const opacitySlider = document.createElement("input");
-      opacitySlider.type = "range";
-      opacitySlider.min = "0";
-      opacitySlider.max = "1";
-      opacitySlider.step = "0.01";
-      const opacityInput = document.createElement("input");
-      opacityInput.type = "number";
-      opacityInput.min = "0";
-      opacityInput.max = "1";
-      opacityInput.step = "0.01";
-      opacityInput.value = String(currentEdits.opacity ?? (layer.opacity === "" ? 1 : Number(layer.opacity)));
-      opacitySlider.value = opacityInput.value;
-      opacityInput.setAttribute("aria-label", `Element ${layer.number} opacity`);
-      opacityInput.addEventListener("click", (event) => event.stopPropagation());
-      opacityInput.addEventListener("keydown", (event) => event.stopPropagation());
-      let attrOpacityInput = null;
-      const setOpacity = (value) => {
-        const nextOpacity = Number(value);
-        if (!Number.isFinite(nextOpacity) || nextOpacity < 0 || nextOpacity > 1) return;
-        opacityInput.value = String(nextOpacity);
-        opacitySlider.value = String(nextOpacity);
-        if (attrOpacityInput) attrOpacityInput.value = String(nextOpacity);
-        updateAssetLayerEdits(asset.id, layer.number, { opacity: nextOpacity });
-        opacityValue.lastChild.textContent = String(nextOpacity);
-        onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
-      };
-      opacityInput.addEventListener("input", () => setOpacity(opacityInput.value));
-      opacitySlider.addEventListener("input", () => setOpacity(opacitySlider.value));
-      decrement.addEventListener("click", () => setOpacity(Math.max(0, Number(opacityInput.value) - 0.01)));
-      const increment = document.createElement("button");
-      increment.type = "button";
-      increment.className = "asset-layer-opacity-step";
-      increment.setAttribute("aria-label", "Increase opacity");
-      increment.innerHTML = '<i data-lucide="plus" aria-hidden="true"></i>';
-      increment.addEventListener("click", () => setOpacity(Math.min(1, Number(opacityInput.value) + 0.01)));
-      opacityControl.append(decrement, opacitySlider, opacityInput, increment);
-      opacityEditor.appendChild(opacityControl);
-      const opacityValue = document.createElement("button");
-      opacityValue.type = "button";
-      opacityValue.className = "asset-layer-opacity-value";
-      opacityValue.setAttribute("aria-label", `Edit element ${layer.number} opacity`);
-      opacityValue.setAttribute("aria-controls", opacityEditor.id);
-      opacityValue.setAttribute("aria-expanded", "false");
-      opacityValue.title = "Edit opacity";
-      opacityValue.innerHTML = `<i data-lucide="circle-gauge" aria-hidden="true"></i><span>${opacityInput.value}</span>`;
-      opacityValue.addEventListener("click", (event) => {
-        event.stopPropagation();
-        positionPopover(opacityEditor, opacityValue);
-      });
-      opacityEditor.addEventListener("toggle", () => opacityValue.setAttribute("aria-expanded", String(opacityEditor.matches(":popover-open"))));
-      const layerEditor = document.createElement("div");
-      layerEditor.className = "asset-layer-editor asset-layer-edit-mode";
-      layerEditor.id = `asset-layer-edit-mode-${asset.id}-${layer.number}`;
-      const editorHeader = document.createElement("div");
-      editorHeader.className = "asset-layer-edit-mode-header";
-      const editorTitle = document.createElement("strong");
-      editorTitle.textContent = `Element ${layer.number}`;
-      const closeButton = document.createElement("button");
-      closeButton.type = "button";
-      closeButton.className = "asset-layer-editor-close";
-      closeButton.setAttribute("aria-label", "Close element editor");
-      closeButton.title = "Close element editor";
-      closeButton.innerHTML = '<i data-lucide="x" aria-hidden="true"></i>';
-      editorHeader.append(editorTitle, closeButton);
-      const strokeControls = document.createElement("div");
-      strokeControls.className = "asset-layer-stroke-controls";
-      const currentAttrs = currentEdits.attrs || {};
-      const strokeLabel = document.createElement("label");
-      const strokeInput = document.createElement("input");
-      strokeInput.type = "color";
-      strokeInput.value = normalizeSvgColor(currentEdits.paints.stroke ?? resolveSvgPaint(layer.elementNode, "stroke", data.svg)) || "#000000";
-      strokeInput.setAttribute("aria-label", `Element ${layer.number} stroke color`);
-      const { field: strokeWidthField } = createSteppedNumberField({
-        value: currentAttrs["stroke-width"] ?? layer.elementNode.getAttribute("stroke-width") ?? "1",
-        step: "0.01",
-        ariaLabel: `Element ${layer.number} stroke width`,
-        onChange: (next) => {
-          if (next < 0) return;
-          updateAssetLayerEdits(asset.id, layer.number, {
-            paints: { stroke: strokeInput.value.toUpperCase() },
-            attrs: { "stroke-width": String(next) }
-          });
-          onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
-        }
-      });
-      strokeInput.addEventListener("input", () => {
-        updateAssetLayerEdits(asset.id, layer.number, { paints: { stroke: strokeInput.value.toUpperCase() } });
-        onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
-      });
-      strokeLabel.append(strokeInput, strokeWidthField);
-      strokeControls.appendChild(strokeLabel);
-      const attributes = document.createElement("dl");
-      attributes.className = "asset-layer-attributes";
-      const dimensions = document.createElement("div");
-      dimensions.className = "asset-layer-dimensions";
-      const dimensionsTitle = document.createElement("strong");
-      dimensionsTitle.textContent = "Dimensions";
-      const dimensionAttributes = document.createElement("dl");
-      dimensionAttributes.className = "asset-layer-attributes asset-layer-dimensions-list";
-      dimensions.append(dimensionsTitle, dimensionAttributes);
-      const elementGeometryNames = new Set(SVG_ELEMENT_GEOMETRY_ATTRIBUTES.get(layer.element) || []);
-      const appendDimensionAttribute = (name, value) => {
-        const term = document.createElement("dt");
-        term.textContent = name;
-        const description = document.createElement("dd");
-        if (GEOMETRY_ATTRIBUTES.has(name)) {
-          const { field, input } = createGeometryField({
-            value: currentAttrs[name] ?? value,
-            ariaLabel: `Element ${layer.number} ${name}`,
-            onChange: (next) => {
-              updateAssetLayerEdits(asset.id, layer.number, { attrs: { [name]: next } });
-              onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
-            }
-          });
-          geometryInputs.set(`${layer.number}:${name}`, input);
-          description.appendChild(field);
-        } else {
-          const step = value.includes(".") ? "0.01" : "1";
-          const { field } = createSteppedNumberField({
-            value: currentAttrs[name] ?? value,
-            step,
-            ariaLabel: `Element ${layer.number} ${name}`,
-            onChange: (next) => {
-              updateAssetLayerEdits(asset.id, layer.number, { attrs: { [name]: String(next) } });
-              onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
-            }
-          });
-          description.appendChild(field);
-        }
-        dimensionAttributes.append(term, description);
-      };
-      for (const [name, value] of enumerateElementAttributes(layer.element, layer.attributes)) {
-        if (elementGeometryNames.has(name)) {
-          appendDimensionAttribute(name, value);
-          continue;
-        }
-        const term = document.createElement("dt");
-        term.textContent = name;
-        const description = document.createElement("dd");
-        if (name === "stroke") {
-          description.appendChild(strokeControls);
-          attributes.append(term, description);
-          continue;
-        }
-        const isColorAttr = name === "fill" || name === "stroke";
-        const normalizedColor = isColorAttr ? normalizeSvgColor(currentEdits.paints[name] ?? value) : "";
-        if (normalizedColor) {
-          const field = document.createElement("span");
-          field.className = "asset-layer-attr-color-field";
-          const colorInput = document.createElement("input");
-          colorInput.type = "color";
-          colorInput.className = "asset-layer-color-input";
-          colorInput.value = normalizedColor;
-          colorInput.setAttribute("aria-label", `Element ${layer.number} ${name} color`);
-          colorInput.addEventListener("click", (event) => event.stopPropagation());
-          colorInput.addEventListener("keydown", (event) => event.stopPropagation());
-          const valueText = document.createElement("code");
-          valueText.textContent = normalizedColor;
-          colorInput.addEventListener("input", () => {
-            const nextValue = colorInput.value.toUpperCase();
-            updateAssetLayerEdits(asset.id, layer.number, { paints: { [name]: nextValue } });
-            valueText.textContent = nextValue;
-            syncColorInputs(name, nextValue, colorInput);
-            onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
-          });
-          registerColorInput(name, colorInput, (nextValue) => { valueText.textContent = nextValue; });
-          field.append(colorInput, valueText);
-          description.appendChild(field);
-        } else if (name === "opacity") {
-          const initialOpacity = currentEdits.opacity ?? (value === "" ? 1 : Number(value));
-          const { field, input } = createSteppedNumberField({
-            value: String(initialOpacity),
-            step: "0.01",
-            ariaLabel: `Element ${layer.number} opacity`,
-            onChange: (next) => setOpacity(Math.min(1, Math.max(0, next)))
-          });
-          attrOpacityInput = input;
-          description.appendChild(field);
-        } else if (value !== "" && Number.isFinite(Number(value))) {
-          const step = value.includes(".") ? "0.01" : "1";
-          const { field } = createSteppedNumberField({
-            value: currentAttrs[name] ?? value,
-            step,
-            ariaLabel: `Element ${layer.number} ${name}`,
-            onChange: (next) => {
-              updateAssetLayerEdits(asset.id, layer.number, { attrs: { [name]: String(next) } });
-              onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
-            }
-          });
-          description.appendChild(field);
-        } else {
-          description.textContent = value;
-        }
-        attributes.append(term, description);
-      }
-      layerEditor.append(editorHeader, attributes, dimensions);
-      const editButton = document.createElement("button");
-      editButton.type = "button";
-      editButton.className = "asset-layer-edit-button";
-      editButton.setAttribute("aria-label", `Edit element ${layer.number}`);
-      editButton.setAttribute("aria-controls", layerEditor.id);
-      editButton.setAttribute("aria-expanded", "false");
-      editButton.title = `Edit element ${layer.number}`;
-      editButton.innerHTML = '<i data-lucide="pencil" aria-hidden="true"></i>';
-      editButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        root.hidden = true;
-        editorPanel.replaceChildren(layerEditor);
-        editorPanel.hidden = false;
-        editButton.setAttribute("aria-expanded", "true");
-        if (typeof lucide !== "undefined") lucide.createIcons();
-        editorPanel.scrollIntoView({ block: "nearest" });
-        closeButton.focus();
-      });
-      closeButton.addEventListener("click", () => {
-        editorPanel.hidden = true;
-        editorPanel.replaceChildren();
-        root.hidden = false;
-        editButton.setAttribute("aria-expanded", "false");
-        editButton.focus();
-      });
-      details.appendChild(paints);
-      details.append(opacityValue, editButton, opacityEditor);
-      item.appendChild(selectLabel);
-      item.appendChild(number);
-      item.appendChild(reorder);
-      item.appendChild(identity);
-      item.appendChild(details);
-      layerItems.set(layer.number, item);
-      layerCheckboxes.set(layer.number, selectCheckbox);
-      layerEditButtons.set(layer.number, editButton);
-      if (onHighlight) layerButtons.set(layer.number, number);
-      return item;
-    }
-
-    function renderElementNodes(nodes, container) {
-      for (const node of [...nodes].reverse()) {
-        if (node.type === "group") {
-          const groupItem = document.createElement("li");
-          groupItem.className = "asset-element-group";
-          const header = document.createElement("div");
-          header.className = "asset-element-group-header";
-          const isCollapsed = collapsedGroupsForAsset(asset.id).has(node.element);
-          const collapseButton = document.createElement("button");
-          collapseButton.type = "button";
-          collapseButton.className = "asset-element-group-collapse-button";
-          collapseButton.setAttribute("aria-expanded", String(!isCollapsed));
-          collapseButton.title = isCollapsed ? "Expand group" : "Collapse group";
-          collapseButton.setAttribute("aria-label", isCollapsed ? "Expand group" : "Collapse group");
-          collapseButton.innerHTML = `<i data-lucide="${isCollapsed ? "chevron-right" : "chevron-down"}" aria-hidden="true"></i>`;
-          header.appendChild(collapseButton);
-          const tag = document.createElement("code");
-          tag.textContent = "<g>";
-          header.appendChild(tag);
-          const allGroups = Array.from(data.svg.querySelectorAll("g"));
-          const groupKey = allGroups.indexOf(node.element) + 1;
-          const groupEdit = groupKey ? (assetGroupEdits.get(asset.id)?.get(groupKey) || {}) : {};
-          const groupOpacity = document.createElement("input");
-          groupOpacity.type = "number";
-          groupOpacity.min = "0";
-          groupOpacity.max = "1";
-          groupOpacity.step = "0.01";
-          groupOpacity.value = String(groupEdit.opacity ?? node.element.getAttribute("opacity") ?? 1);
-          groupOpacity.className = "asset-element-group-opacity";
-          groupOpacity.setAttribute("aria-label", "Group opacity");
-          groupOpacity.title = "Group opacity";
-          groupOpacity.addEventListener("pointerdown", (event) => event.stopPropagation());
-          groupOpacity.addEventListener("input", () => {
-            const next = Number(groupOpacity.value);
-            if (!Number.isFinite(next) || next < 0 || next > 1 || !groupKey) return;
-            if (!assetGroupEdits.has(asset.id)) assetGroupEdits.set(asset.id, new Map());
-            assetGroupEdits.get(asset.id).set(groupKey, { opacity: next });
+      const {
+        status: combineStatus,
+        combineButton,
+        clearButton,
+      } = renderAssetLayerActions(
+        actionsBar,
+        data,
+        () => {
+          const combining = [...selection];
+          combineAssetLayers(asset, combining, (combinedNumbers) => {
             assetModified.add(asset.id);
-            const primaryGroup = document.querySelectorAll("#asset-primary-svg svg g")[groupKey - 1];
-            if (primaryGroup) primaryGroup.setAttribute("opacity", String(next));
-            applyAssetLayerEdits(document.querySelector("#asset-primary-svg svg"), asset.id);
-            onEdit?.();
+            selection.clear();
+            if (combinedNumbers?.length)
+              assetPendingGroupFocus.set(asset.id, new Set(combinedNumbers));
+            showToast(
+              `Combined ${combinedNumbers.length || combining.length} elements into a group.`,
+            );
+            renderAssetDetail(asset.id);
           });
-          header.appendChild(groupOpacity);
-          const nameInput = document.createElement("input");
-          nameInput.type = "text";
-          nameInput.className = "asset-element-group-name";
-          nameInput.value = node.element.getAttribute("id") || "";
-          nameInput.placeholder = "Unnamed group";
-          nameInput.setAttribute("aria-label", "Group name");
-          nameInput.title = "Group name (stored as this <g>'s id attribute)";
-          nameInput.addEventListener("pointerdown", (event) => event.stopPropagation());
-          nameInput.addEventListener("keydown", (event) => event.stopPropagation());
-          nameInput.addEventListener("change", () => {
-            const nextId = sanitizeSvgId(nameInput.value);
-            if (nextId) node.element.setAttribute("id", nextId);
-            else node.element.removeAttribute("id");
-            nameInput.value = nextId;
-          });
-          header.appendChild(nameInput);
-          const addToGroupButton = document.createElement("button");
-          addToGroupButton.type = "button";
-          addToGroupButton.className = "asset-element-group-add-button";
-          addToGroupButton.title = "Add a new element inside this group";
-          addToGroupButton.setAttribute("aria-label", "Add element to this group");
-          addToGroupButton.innerHTML = '<i data-lucide="plus" aria-hidden="true"></i>';
-          addToGroupButton.addEventListener("click", (event) => {
-            event.stopPropagation();
-            collapsedGroupsForAsset(asset.id).delete(node.element);
-            const shape = actionsBar.querySelector(".asset-layer-add-button")?.dataset.shape || "rect";
-            addElement(shape, node.element);
-          });
-          header.appendChild(addToGroupButton);
-          const nestedList = document.createElement("ol");
-          nestedList.className = "asset-element-group-children";
-          nestedList.hidden = isCollapsed;
-          groupItem.classList.toggle("is-collapsed", isCollapsed);
-          collapseButton.addEventListener("click", (event) => {
-            event.stopPropagation();
-            const collapsedSet = collapsedGroupsForAsset(asset.id);
-            const nowCollapsed = !collapsedSet.has(node.element);
-            if (nowCollapsed) collapsedSet.add(node.element);
-            else collapsedSet.delete(node.element);
-            nestedList.hidden = nowCollapsed;
-            groupItem.classList.toggle("is-collapsed", nowCollapsed);
-            collapseButton.setAttribute("aria-expanded", String(!nowCollapsed));
-            collapseButton.title = nowCollapsed ? "Expand group" : "Collapse group";
-            collapseButton.setAttribute("aria-label", nowCollapsed ? "Expand group" : "Collapse group");
-            collapseButton.innerHTML = `<i data-lucide="${nowCollapsed ? "chevron-right" : "chevron-down"}" aria-hidden="true"></i>`;
-            if (typeof lucide !== "undefined") lucide.createIcons();
-          });
-          renderElementNodes(node.children, nestedList);
-          groupItem.append(header, nestedList);
-          container.appendChild(groupItem);
-
-          const pendingFocus = assetPendingGroupFocus.get(asset.id);
-          if (pendingFocus) {
-            const groupNumbers = collectElementNumbers(node);
-            if (groupNumbers.length === pendingFocus.size && groupNumbers.every((number) => pendingFocus.has(number))) {
-              assetPendingGroupFocus.delete(asset.id);
-              setTimeout(() => {
-                nameInput.focus();
-                nameInput.select();
-              }, 0);
+        },
+        () => {
+          selection.clear();
+          syncSelection();
+        },
+        (shape) => addElement(shape, data.svg),
+      );
+      function syncSelection() {
+        for (const [layerNumber, item] of layerItems) {
+          const isSelected = selection.has(layerNumber);
+          item.classList.toggle("is-multi-selected", isSelected);
+          const checkbox = layerCheckboxes.get(layerNumber);
+          if (checkbox) checkbox.checked = isSelected;
+        }
+        combineButton.disabled = selection.size < 2;
+        clearButton.hidden = selection.size === 0;
+        combineStatus.textContent =
+          selection.size === 0
+            ? "Select 2 elements to combine."
+            : selection.size === 1
+              ? "Select one more element to combine."
+              : `${selection.size} selected. Ready to combine.`;
+      }
+      const syncHighlight = () => {
+        const highlightedLayerNumber =
+          hoveredLayerNumber ?? focusedLayerNumber ?? selectedLayerNumber;
+        for (const [layerNumber, item] of layerItems) {
+          item.classList.toggle("is-active", layerNumber === highlightedLayerNumber);
+          item.classList.toggle("is-selected", multiSelection.has(layerNumber));
+          layerButtons
+            .get(layerNumber)
+            ?.setAttribute("aria-pressed", String(multiSelection.has(layerNumber)));
+        }
+        onHighlight(highlightedLayerNumber, highlightedLayerNumber !== null);
+      };
+      // `options.additive` (shift-click) adds/removes a layer from the
+      // multi-selection without disturbing the rest of it; a plain click
+      // replaces the whole multi-selection with just the toggled layer (or
+      // clears it, matching the pre-existing single-select toggle behavior).
+      const selectLayer = (layerNumber, options = {}) => {
+        if (options.additive) {
+          if (multiSelection.has(layerNumber)) {
+            multiSelection.delete(layerNumber);
+            if (selectedLayerNumber === layerNumber) {
+              const remaining = [...multiSelection];
+              selectedLayerNumber = remaining.length ? remaining[remaining.length - 1] : null;
             }
+          } else {
+            multiSelection.add(layerNumber);
+            selectedLayerNumber = layerNumber;
           }
         } else {
-          const layer = layerByNumber.get(node.number);
-          if (layer) container.appendChild(renderElementRow(layer));
+          selectedLayerNumber = selectedLayerNumber === layerNumber ? null : layerNumber;
+          multiSelection = new Set(selectedLayerNumber !== null ? [selectedLayerNumber] : []);
+        }
+        // Keep the combine checkboxes in sync with whatever is currently
+        // (multi-)selected, so shift-clicking elements on the canvas or panel
+        // checks their boxes without any extra step.
+        selection.clear();
+        for (const number of multiSelection) selection.add(number);
+        syncSelection();
+        onSelect?.(selectedLayerNumber);
+        onMultiSelectChange?.([...multiSelection]);
+        syncHighlight();
+      };
+      controller.setHoveredLayer = (layerNumber) => {
+        hoveredLayerNumber = layerNumber;
+        syncHighlight();
+      };
+      controller.clearHoveredLayer = (layerNumber) => {
+        if (hoveredLayerNumber === layerNumber) hoveredLayerNumber = null;
+        syncHighlight();
+      };
+      controller.selectLayer = selectLayer;
+      controller.openEditor = (layerNumber) => layerEditButtons.get(layerNumber)?.click();
+      controller.getSelectedLayer = () => selectedLayerNumber;
+      controller.getMultiSelection = () => [...multiSelection];
+      controller.syncGeometryInput = (layerNumber, name, value) => {
+        const input = geometryInputs.get(`${layerNumber}:${name}`);
+        if (input && input.value !== value) input.value = value;
+      };
+      controller.syncDimensionInputs = (layerNumber, values) => {
+        for (const [name, value] of Object.entries(values)) {
+          const input = geometryInputs.get(`${layerNumber}:${name}`);
+          if (input && document.activeElement !== input) input.value = String(value);
+        }
+      };
+      const layerByNumber = new Map(data.paintLayers.map((entry) => [entry.number, entry]));
+      function renderElementRow(layer) {
+        const item = document.createElement("li");
+        item.value = layer.number;
+        let toggleSelection;
+        if (onHighlight) {
+          item.addEventListener("mouseenter", () => {
+            hoveredLayerNumber = layer.number;
+            syncHighlight();
+          });
+          item.addEventListener("mouseleave", () => {
+            if (hoveredLayerNumber === layer.number) hoveredLayerNumber = null;
+            syncHighlight();
+          });
+          toggleSelection = (event) => selectLayer(layer.number, { additive: event?.shiftKey });
+          item.addEventListener("click", toggleSelection);
+        }
+        const number = document.createElement(onHighlight ? "button" : "span");
+        number.className = "asset-layer-number";
+        number.textContent = String(layer.number);
+        if (onHighlight) {
+          number.type = "button";
+          number.setAttribute("aria-label", `Select element ${layer.number}`);
+          number.setAttribute("aria-pressed", "false");
+          number.addEventListener("click", (event) => {
+            event.stopPropagation();
+            toggleSelection();
+          });
+          number.addEventListener("focus", () => {
+            focusedLayerNumber = layer.number;
+            syncHighlight();
+          });
+          number.addEventListener("blur", () => {
+            if (focusedLayerNumber === layer.number) focusedLayerNumber = null;
+            syncHighlight();
+          });
+        }
+        const selectLabel = document.createElement("label");
+        selectLabel.className = "asset-layer-select";
+        const selectCheckbox = document.createElement("input");
+        selectCheckbox.type = "checkbox";
+        selectCheckbox.className = "asset-layer-select-input";
+        selectCheckbox.checked = selection.has(layer.number);
+        selectCheckbox.setAttribute("aria-label", `Select element ${layer.number} for combining`);
+        selectLabel.title = `Select element ${layer.number} for combining`;
+        selectLabel.addEventListener("click", (event) => event.stopPropagation());
+        selectCheckbox.addEventListener("click", (event) => event.stopPropagation());
+        selectCheckbox.addEventListener("change", () => {
+          if (selectCheckbox.checked) selection.add(layer.number);
+          else selection.delete(layer.number);
+          syncSelection();
+        });
+        // Keep row drag-and-drop from hijacking checkbox interaction.
+        const restoreDraggable = () => {
+          item.draggable = true;
+        };
+        selectLabel.addEventListener("pointerdown", () => {
+          item.draggable = false;
+        });
+        selectLabel.addEventListener("pointerup", restoreDraggable);
+        selectLabel.addEventListener("pointercancel", restoreDraggable);
+        item.addEventListener("mouseleave", restoreDraggable);
+        selectLabel.appendChild(selectCheckbox);
+
+        const identity = document.createElement("div");
+        identity.className = "asset-layer-identity";
+        const elementName = document.createElement("code");
+        elementName.textContent = layer.element;
+        identity.appendChild(elementName);
+        if (layer.id) {
+          const id = document.createElement("code");
+          id.textContent = `#${layer.id}`;
+          identity.appendChild(id);
+        }
+
+        const reorder = document.createElement("span");
+        reorder.className = "asset-layer-reorder";
+        const moveUpButton = document.createElement("button");
+        moveUpButton.type = "button";
+        moveUpButton.className = "asset-layer-reorder-button";
+        moveUpButton.setAttribute("aria-label", `Move element ${layer.number} up`);
+        moveUpButton.innerHTML = '<i data-lucide="chevron-up" aria-hidden="true"></i>';
+        moveUpButton.disabled = layer.number >= data.paintLayerCount;
+        moveUpButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          reorderAssetLayer(asset, layer.number, layer.number + 1, () =>
+            renderAssetDetail(asset.id),
+          );
+        });
+        const moveDownButton = document.createElement("button");
+        moveDownButton.type = "button";
+        moveDownButton.className = "asset-layer-reorder-button";
+        moveDownButton.setAttribute("aria-label", `Move element ${layer.number} down`);
+        moveDownButton.innerHTML = '<i data-lucide="chevron-down" aria-hidden="true"></i>';
+        moveDownButton.disabled = layer.number <= 1;
+        moveDownButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          reorderAssetLayer(asset, layer.number, layer.number - 1, () =>
+            renderAssetDetail(asset.id),
+          );
+        });
+        reorder.append(moveUpButton, moveDownButton);
+
+        item.draggable = true;
+        item.classList.add("asset-layer-draggable");
+        item.addEventListener("dragstart", (event) => {
+          event.dataTransfer.setData("text/plain", String(layer.number));
+          event.dataTransfer.effectAllowed = "move";
+          item.classList.add("is-dragging");
+        });
+        item.addEventListener("dragend", () => {
+          item.classList.remove("is-dragging");
+          for (const otherItem of layerItems.values()) otherItem.classList.remove("is-drag-over");
+        });
+        item.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "move";
+          item.classList.add("is-drag-over");
+        });
+        item.addEventListener("dragleave", () => {
+          item.classList.remove("is-drag-over");
+        });
+        item.addEventListener("drop", (event) => {
+          event.preventDefault();
+          item.classList.remove("is-drag-over");
+          const sourceNumber = Number(event.dataTransfer.getData("text/plain"));
+          if (!Number.isFinite(sourceNumber) || sourceNumber === layer.number) return;
+          reorderAssetLayer(asset, sourceNumber, layer.number, () => renderAssetDetail(asset.id));
+        });
+
+        const details = document.createElement("div");
+        details.className = "asset-layer-details";
+        const paints = document.createElement("div");
+        paints.className = "asset-layer-paints";
+        const positionPopover = (popover, trigger) => {
+          if (!popover.matches(":popover-open")) popover.showPopover();
+          const triggerBounds = trigger.getBoundingClientRect();
+          const popoverBounds = popover.getBoundingClientRect();
+          popover.style.top = `${Math.min(triggerBounds.bottom + 6, window.innerHeight - popoverBounds.height - 8)}px`;
+          popover.style.left = `${Math.max(8, Math.min(triggerBounds.left, window.innerWidth - popoverBounds.width - 8))}px`;
+        };
+        const currentEdits = layerEdits.get(layer.number) || { paints: {}, attrs: {} };
+        let firstColorInput = null;
+        const colorInputsByProperty = new Map();
+        const registerColorInput = (property, input, onSync) => {
+          if (!colorInputsByProperty.has(property)) colorInputsByProperty.set(property, []);
+          colorInputsByProperty.get(property).push({ input, onSync });
+        };
+        const syncColorInputs = (property, nextValue, sourceInput) => {
+          for (const entry of colorInputsByProperty.get(property) || []) {
+            if (entry.input !== sourceInput) entry.input.value = nextValue;
+            entry.onSync?.(nextValue);
+          }
+        };
+        for (const [property, value] of layer.paints) {
+          const editedValue = currentEdits.paints[property] || value;
+          const paint = document.createElement("span");
+          paint.className = "asset-layer-paint";
+          const color = normalizeSvgColor(editedValue);
+          const label = document.createElement("code");
+          label.textContent = color ? property : `${property} ${editedValue}`;
+          paint.appendChild(label);
+          if (color) {
+            const colorInput = document.createElement("input");
+            colorInput.className = "asset-layer-color-input";
+            colorInput.type = "color";
+            colorInput.id = `asset-layer-color-input-${asset.id}-${layer.number}-${property}`;
+            colorInput.value = color;
+            colorInput.setAttribute("aria-label", `Element ${layer.number} ${property} color`);
+            colorInput.addEventListener("click", (event) => event.stopPropagation());
+            colorInput.addEventListener("keydown", (event) => event.stopPropagation());
+            colorInput.addEventListener("input", () => {
+              const nextValue = colorInput.value.toUpperCase();
+              updateAssetLayerEdits(asset.id, layer.number, { paints: { [property]: nextValue } });
+              label.textContent = property;
+              syncColorInputs(property, nextValue, colorInput);
+              onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
+            });
+            paint.appendChild(colorInput);
+            registerColorInput(property, colorInput);
+            if (!firstColorInput) firstColorInput = colorInput;
+          }
+          paints.appendChild(paint);
+        }
+        const opacityEditor = document.createElement("div");
+        opacityEditor.className = "asset-layer-editor asset-layer-opacity-editor";
+        opacityEditor.id = `asset-layer-opacity-editor-${asset.id}-${layer.number}`;
+        opacityEditor.setAttribute("popover", "auto");
+        opacityEditor.setAttribute("role", "dialog");
+        opacityEditor.setAttribute("aria-label", `Edit element ${layer.number} opacity`);
+        const opacityControl = document.createElement("label");
+        opacityControl.className = "asset-layer-opacity-control";
+        opacityControl.textContent = "Opacity";
+        const decrement = document.createElement("button");
+        decrement.type = "button";
+        decrement.className = "asset-layer-opacity-step";
+        decrement.setAttribute("aria-label", "Decrease opacity");
+        decrement.innerHTML = '<i data-lucide="minus" aria-hidden="true"></i>';
+        const opacitySlider = document.createElement("input");
+        opacitySlider.type = "range";
+        opacitySlider.min = "0";
+        opacitySlider.max = "1";
+        opacitySlider.step = "0.01";
+        const opacityInput = document.createElement("input");
+        opacityInput.type = "number";
+        opacityInput.min = "0";
+        opacityInput.max = "1";
+        opacityInput.step = "0.01";
+        opacityInput.value = String(
+          currentEdits.opacity ?? (layer.opacity === "" ? 1 : Number(layer.opacity)),
+        );
+        opacitySlider.value = opacityInput.value;
+        opacityInput.setAttribute("aria-label", `Element ${layer.number} opacity`);
+        opacityInput.addEventListener("click", (event) => event.stopPropagation());
+        opacityInput.addEventListener("keydown", (event) => event.stopPropagation());
+        let attrOpacityInput = null;
+        const setOpacity = (value) => {
+          const nextOpacity = Number(value);
+          if (!Number.isFinite(nextOpacity) || nextOpacity < 0 || nextOpacity > 1) return;
+          opacityInput.value = String(nextOpacity);
+          opacitySlider.value = String(nextOpacity);
+          if (attrOpacityInput) attrOpacityInput.value = String(nextOpacity);
+          updateAssetLayerEdits(asset.id, layer.number, { opacity: nextOpacity });
+          opacityValue.lastChild.textContent = String(nextOpacity);
+          onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
+        };
+        opacityInput.addEventListener("input", () => setOpacity(opacityInput.value));
+        opacitySlider.addEventListener("input", () => setOpacity(opacitySlider.value));
+        decrement.addEventListener("click", () =>
+          setOpacity(Math.max(0, Number(opacityInput.value) - 0.01)),
+        );
+        const increment = document.createElement("button");
+        increment.type = "button";
+        increment.className = "asset-layer-opacity-step";
+        increment.setAttribute("aria-label", "Increase opacity");
+        increment.innerHTML = '<i data-lucide="plus" aria-hidden="true"></i>';
+        increment.addEventListener("click", () =>
+          setOpacity(Math.min(1, Number(opacityInput.value) + 0.01)),
+        );
+        opacityControl.append(decrement, opacitySlider, opacityInput, increment);
+        opacityEditor.appendChild(opacityControl);
+        const opacityValue = document.createElement("button");
+        opacityValue.type = "button";
+        opacityValue.className = "asset-layer-opacity-value";
+        opacityValue.setAttribute("aria-label", `Edit element ${layer.number} opacity`);
+        opacityValue.setAttribute("aria-controls", opacityEditor.id);
+        opacityValue.setAttribute("aria-expanded", "false");
+        opacityValue.title = "Edit opacity";
+        opacityValue.innerHTML = `<i data-lucide="circle-gauge" aria-hidden="true"></i><span>${opacityInput.value}</span>`;
+        opacityValue.addEventListener("click", (event) => {
+          event.stopPropagation();
+          positionPopover(opacityEditor, opacityValue);
+        });
+        opacityEditor.addEventListener("toggle", () =>
+          opacityValue.setAttribute(
+            "aria-expanded",
+            String(opacityEditor.matches(":popover-open")),
+          ),
+        );
+        const layerEditor = document.createElement("div");
+        layerEditor.className = "asset-layer-editor asset-layer-edit-mode";
+        layerEditor.id = `asset-layer-edit-mode-${asset.id}-${layer.number}`;
+        const editorHeader = document.createElement("div");
+        editorHeader.className = "asset-layer-edit-mode-header";
+        const editorTitle = document.createElement("strong");
+        editorTitle.textContent = `Element ${layer.number}`;
+        const closeButton = document.createElement("button");
+        closeButton.type = "button";
+        closeButton.className = "asset-layer-editor-close";
+        closeButton.setAttribute("aria-label", "Close element editor");
+        closeButton.title = "Close element editor";
+        closeButton.innerHTML = '<i data-lucide="x" aria-hidden="true"></i>';
+        editorHeader.append(editorTitle, closeButton);
+        const strokeControls = document.createElement("div");
+        strokeControls.className = "asset-layer-stroke-controls";
+        const currentAttrs = currentEdits.attrs || {};
+        const strokeLabel = document.createElement("label");
+        const strokeInput = document.createElement("input");
+        strokeInput.type = "color";
+        strokeInput.value =
+          normalizeSvgColor(
+            currentEdits.paints.stroke ?? resolveSvgPaint(layer.elementNode, "stroke", data.svg),
+          ) || "#000000";
+        strokeInput.setAttribute("aria-label", `Element ${layer.number} stroke color`);
+        const { field: strokeWidthField } = createSteppedNumberField({
+          value:
+            currentAttrs["stroke-width"] ?? layer.elementNode.getAttribute("stroke-width") ?? "1",
+          step: "0.01",
+          ariaLabel: `Element ${layer.number} stroke width`,
+          onChange: (next) => {
+            if (next < 0) return;
+            updateAssetLayerEdits(asset.id, layer.number, {
+              paints: { stroke: strokeInput.value.toUpperCase() },
+              attrs: { "stroke-width": String(next) },
+            });
+            onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
+          },
+        });
+        strokeInput.addEventListener("input", () => {
+          updateAssetLayerEdits(asset.id, layer.number, {
+            paints: { stroke: strokeInput.value.toUpperCase() },
+          });
+          onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
+        });
+        strokeLabel.append(strokeInput, strokeWidthField);
+        strokeControls.appendChild(strokeLabel);
+        const attributes = document.createElement("dl");
+        attributes.className = "asset-layer-attributes";
+        const dimensions = document.createElement("div");
+        dimensions.className = "asset-layer-dimensions";
+        const dimensionsTitle = document.createElement("strong");
+        dimensionsTitle.textContent = "Dimensions";
+        const dimensionAttributes = document.createElement("dl");
+        dimensionAttributes.className = "asset-layer-attributes asset-layer-dimensions-list";
+        dimensions.append(dimensionsTitle, dimensionAttributes);
+        const elementGeometryNames = new Set(
+          SVG_ELEMENT_GEOMETRY_ATTRIBUTES.get(layer.element) || [],
+        );
+        const appendDimensionAttribute = (name, value) => {
+          const term = document.createElement("dt");
+          term.textContent = name;
+          const description = document.createElement("dd");
+          if (GEOMETRY_ATTRIBUTES.has(name)) {
+            const { field, input } = createGeometryField({
+              value: currentAttrs[name] ?? value,
+              ariaLabel: `Element ${layer.number} ${name}`,
+              onChange: (next) => {
+                updateAssetLayerEdits(asset.id, layer.number, { attrs: { [name]: next } });
+                onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
+              },
+            });
+            geometryInputs.set(`${layer.number}:${name}`, input);
+            description.appendChild(field);
+          } else {
+            const step = value.includes(".") ? "0.01" : "1";
+            const { field } = createSteppedNumberField({
+              value: currentAttrs[name] ?? value,
+              step,
+              ariaLabel: `Element ${layer.number} ${name}`,
+              onChange: (next) => {
+                updateAssetLayerEdits(asset.id, layer.number, { attrs: { [name]: String(next) } });
+                onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
+              },
+            });
+            description.appendChild(field);
+          }
+          dimensionAttributes.append(term, description);
+        };
+        for (const [name, value] of enumerateElementAttributes(layer.element, layer.attributes)) {
+          if (elementGeometryNames.has(name)) {
+            appendDimensionAttribute(name, value);
+            continue;
+          }
+          const term = document.createElement("dt");
+          term.textContent = name;
+          const description = document.createElement("dd");
+          if (name === "stroke") {
+            description.appendChild(strokeControls);
+            attributes.append(term, description);
+            continue;
+          }
+          const isColorAttr = name === "fill" || name === "stroke";
+          const normalizedColor = isColorAttr
+            ? normalizeSvgColor(currentEdits.paints[name] ?? value)
+            : "";
+          if (normalizedColor) {
+            const field = document.createElement("span");
+            field.className = "asset-layer-attr-color-field";
+            const colorInput = document.createElement("input");
+            colorInput.type = "color";
+            colorInput.className = "asset-layer-color-input";
+            colorInput.value = normalizedColor;
+            colorInput.setAttribute("aria-label", `Element ${layer.number} ${name} color`);
+            colorInput.addEventListener("click", (event) => event.stopPropagation());
+            colorInput.addEventListener("keydown", (event) => event.stopPropagation());
+            const valueText = document.createElement("code");
+            valueText.textContent = normalizedColor;
+            colorInput.addEventListener("input", () => {
+              const nextValue = colorInput.value.toUpperCase();
+              updateAssetLayerEdits(asset.id, layer.number, { paints: { [name]: nextValue } });
+              valueText.textContent = nextValue;
+              syncColorInputs(name, nextValue, colorInput);
+              onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
+            });
+            registerColorInput(name, colorInput, (nextValue) => {
+              valueText.textContent = nextValue;
+            });
+            field.append(colorInput, valueText);
+            description.appendChild(field);
+          } else if (name === "opacity") {
+            const initialOpacity = currentEdits.opacity ?? (value === "" ? 1 : Number(value));
+            const { field, input } = createSteppedNumberField({
+              value: String(initialOpacity),
+              step: "0.01",
+              ariaLabel: `Element ${layer.number} opacity`,
+              onChange: (next) => setOpacity(Math.min(1, Math.max(0, next))),
+            });
+            attrOpacityInput = input;
+            description.appendChild(field);
+          } else if (value !== "" && Number.isFinite(Number(value))) {
+            const step = value.includes(".") ? "0.01" : "1";
+            const { field } = createSteppedNumberField({
+              value: currentAttrs[name] ?? value,
+              step,
+              ariaLabel: `Element ${layer.number} ${name}`,
+              onChange: (next) => {
+                updateAssetLayerEdits(asset.id, layer.number, { attrs: { [name]: String(next) } });
+                onEdit?.(layer.number, assetLayerEdits.get(asset.id).get(layer.number));
+              },
+            });
+            description.appendChild(field);
+          } else {
+            description.textContent = value;
+          }
+          attributes.append(term, description);
+        }
+        layerEditor.append(editorHeader, attributes, dimensions);
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "asset-layer-edit-button";
+        editButton.setAttribute("aria-label", `Edit element ${layer.number}`);
+        editButton.setAttribute("aria-controls", layerEditor.id);
+        editButton.setAttribute("aria-expanded", "false");
+        editButton.title = `Edit element ${layer.number}`;
+        editButton.innerHTML = '<i data-lucide="pencil" aria-hidden="true"></i>';
+        editButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          root.hidden = true;
+          editorPanel.replaceChildren(layerEditor);
+          editorPanel.hidden = false;
+          editButton.setAttribute("aria-expanded", "true");
+          if (typeof lucide !== "undefined") lucide.createIcons();
+          editorPanel.scrollIntoView({ block: "nearest" });
+          closeButton.focus();
+        });
+        closeButton.addEventListener("click", () => {
+          editorPanel.hidden = true;
+          editorPanel.replaceChildren();
+          root.hidden = false;
+          editButton.setAttribute("aria-expanded", "false");
+          editButton.focus();
+        });
+        details.appendChild(paints);
+        details.append(opacityValue, editButton, opacityEditor);
+        item.appendChild(selectLabel);
+        item.appendChild(number);
+        item.appendChild(reorder);
+        item.appendChild(identity);
+        item.appendChild(details);
+        layerItems.set(layer.number, item);
+        layerCheckboxes.set(layer.number, selectCheckbox);
+        layerEditButtons.set(layer.number, editButton);
+        if (onHighlight) layerButtons.set(layer.number, number);
+        return item;
+      }
+
+      function renderElementNodes(nodes, container) {
+        for (const node of [...nodes].reverse()) {
+          if (node.type === "group") {
+            const groupItem = document.createElement("li");
+            groupItem.className = "asset-element-group";
+            const header = document.createElement("div");
+            header.className = "asset-element-group-header";
+            const isCollapsed = collapsedGroupsForAsset(asset.id).has(node.element);
+            const collapseButton = document.createElement("button");
+            collapseButton.type = "button";
+            collapseButton.className = "asset-element-group-collapse-button";
+            collapseButton.setAttribute("aria-expanded", String(!isCollapsed));
+            collapseButton.title = isCollapsed ? "Expand group" : "Collapse group";
+            collapseButton.setAttribute(
+              "aria-label",
+              isCollapsed ? "Expand group" : "Collapse group",
+            );
+            collapseButton.innerHTML = `<i data-lucide="${isCollapsed ? "chevron-right" : "chevron-down"}" aria-hidden="true"></i>`;
+            header.appendChild(collapseButton);
+            const tag = document.createElement("code");
+            tag.textContent = "<g>";
+            header.appendChild(tag);
+            const allGroups = Array.from(data.svg.querySelectorAll("g"));
+            const groupKey = allGroups.indexOf(node.element) + 1;
+            const groupEdit = groupKey ? assetGroupEdits.get(asset.id)?.get(groupKey) || {} : {};
+            const groupOpacity = document.createElement("input");
+            groupOpacity.type = "number";
+            groupOpacity.min = "0";
+            groupOpacity.max = "1";
+            groupOpacity.step = "0.01";
+            groupOpacity.value = String(
+              groupEdit.opacity ?? node.element.getAttribute("opacity") ?? 1,
+            );
+            groupOpacity.className = "asset-element-group-opacity";
+            groupOpacity.setAttribute("aria-label", "Group opacity");
+            groupOpacity.title = "Group opacity";
+            groupOpacity.addEventListener("pointerdown", (event) => event.stopPropagation());
+            groupOpacity.addEventListener("input", () => {
+              const next = Number(groupOpacity.value);
+              if (!Number.isFinite(next) || next < 0 || next > 1 || !groupKey) return;
+              if (!assetGroupEdits.has(asset.id)) assetGroupEdits.set(asset.id, new Map());
+              assetGroupEdits.get(asset.id).set(groupKey, { opacity: next });
+              assetModified.add(asset.id);
+              const primaryGroup = document.querySelectorAll("#asset-primary-svg svg g")[
+                groupKey - 1
+              ];
+              if (primaryGroup) primaryGroup.setAttribute("opacity", String(next));
+              applyAssetLayerEdits(document.querySelector("#asset-primary-svg svg"), asset.id);
+              onEdit?.();
+            });
+            header.appendChild(groupOpacity);
+            const nameInput = document.createElement("input");
+            nameInput.type = "text";
+            nameInput.className = "asset-element-group-name";
+            nameInput.value = node.element.getAttribute("id") || "";
+            nameInput.placeholder = "Unnamed group";
+            nameInput.setAttribute("aria-label", "Group name");
+            nameInput.title = "Group name (stored as this <g>'s id attribute)";
+            nameInput.addEventListener("pointerdown", (event) => event.stopPropagation());
+            nameInput.addEventListener("keydown", (event) => event.stopPropagation());
+            nameInput.addEventListener("change", () => {
+              const nextId = sanitizeSvgId(nameInput.value);
+              if (nextId) node.element.setAttribute("id", nextId);
+              else node.element.removeAttribute("id");
+              nameInput.value = nextId;
+            });
+            header.appendChild(nameInput);
+            const addToGroupButton = document.createElement("button");
+            addToGroupButton.type = "button";
+            addToGroupButton.className = "asset-element-group-add-button";
+            addToGroupButton.title = "Add a new element inside this group";
+            addToGroupButton.setAttribute("aria-label", "Add element to this group");
+            addToGroupButton.innerHTML = '<i data-lucide="plus" aria-hidden="true"></i>';
+            addToGroupButton.addEventListener("click", (event) => {
+              event.stopPropagation();
+              collapsedGroupsForAsset(asset.id).delete(node.element);
+              const shape =
+                actionsBar.querySelector(".asset-layer-add-button")?.dataset.shape || "rect";
+              addElement(shape, node.element);
+            });
+            header.appendChild(addToGroupButton);
+            const nestedList = document.createElement("ol");
+            nestedList.className = "asset-element-group-children";
+            nestedList.hidden = isCollapsed;
+            groupItem.classList.toggle("is-collapsed", isCollapsed);
+            collapseButton.addEventListener("click", (event) => {
+              event.stopPropagation();
+              const collapsedSet = collapsedGroupsForAsset(asset.id);
+              const nowCollapsed = !collapsedSet.has(node.element);
+              if (nowCollapsed) collapsedSet.add(node.element);
+              else collapsedSet.delete(node.element);
+              nestedList.hidden = nowCollapsed;
+              groupItem.classList.toggle("is-collapsed", nowCollapsed);
+              collapseButton.setAttribute("aria-expanded", String(!nowCollapsed));
+              collapseButton.title = nowCollapsed ? "Expand group" : "Collapse group";
+              collapseButton.setAttribute(
+                "aria-label",
+                nowCollapsed ? "Expand group" : "Collapse group",
+              );
+              collapseButton.innerHTML = `<i data-lucide="${nowCollapsed ? "chevron-right" : "chevron-down"}" aria-hidden="true"></i>`;
+              if (typeof lucide !== "undefined") lucide.createIcons();
+            });
+            renderElementNodes(node.children, nestedList);
+            groupItem.append(header, nestedList);
+            container.appendChild(groupItem);
+
+            const pendingFocus = assetPendingGroupFocus.get(asset.id);
+            if (pendingFocus) {
+              const groupNumbers = collectElementNumbers(node);
+              if (
+                groupNumbers.length === pendingFocus.size &&
+                groupNumbers.every((number) => pendingFocus.has(number))
+              ) {
+                assetPendingGroupFocus.delete(asset.id);
+                setTimeout(() => {
+                  nameInput.focus();
+                  nameInput.select();
+                }, 0);
+              }
+            }
+          } else {
+            const layer = layerByNumber.get(node.number);
+            if (layer) container.appendChild(renderElementRow(layer));
+          }
         }
       }
-    }
-    renderElementNodes(buildElementTree(data.svg), root);
-    syncSelection();
-    if (selectedLayerNumber !== null) {
-      syncHighlight();
-      layerItems.get(selectedLayerNumber)?.scrollIntoView({ block: "nearest" });
-    }
-    if (typeof lucide !== "undefined") lucide.createIcons();
-  }).catch((error) => {
-    console.error("Failed to render element editor", error);
-    if (root.isConnected && root.dataset.assetId === asset.id) root.textContent = "Element information unavailable";
-  });
+      renderElementNodes(buildElementTree(data.svg), root);
+      syncSelection();
+      if (selectedLayerNumber !== null) {
+        syncHighlight();
+        layerItems.get(selectedLayerNumber)?.scrollIntoView({ block: "nearest" });
+      }
+      if (typeof lucide !== "undefined") lucide.createIcons();
+    })
+    .catch((error) => {
+      console.error("Failed to render element editor", error);
+      if (root.isConnected && root.dataset.assetId === asset.id)
+        root.textContent = "Element information unavailable";
+    });
 
   return controller;
 }
@@ -3054,12 +3391,12 @@ const PROJECT_ICON_SLOTS = [
   { id: "appIcon", label: "App Icon", usage: "PWA launcher and app switchers" },
   { id: "logoMark", label: "Logo Mark", usage: "Compact nav and small brand surfaces" },
   { id: "wordmark", label: "Wordmark", usage: "Headers, login, and marketing bars" },
-  { id: "socialPreview", label: "Social Preview", usage: "Open Graph and shared links" }
+  { id: "socialPreview", label: "Social Preview", usage: "Open Graph and shared links" },
 ];
 
 // Common icon targets used across web, desktop apps, iOS, and Android.
 const COMMON_PREVIEW_SIZES = [
-  16, 20, 24, 29, 32, 40, 48, 64, 72, 96, 120, 128, 144, 152, 167, 180, 192, 256, 384, 512
+  16, 20, 24, 29, 32, 40, 48, 64, 72, 96, 120, 128, 144, 152, 167, 180, 192, 256, 384, 512,
 ];
 
 function logoTypeForAsset(asset) {
@@ -3084,11 +3421,13 @@ function projectRouteHref(projectName) {
 // Maps every color found in any asset SVG to the projects and assets using it, so the
 // project colors list can offer cross-project navigation from a single hover target.
 function collectColorUsageAcrossAssets() {
-  return Promise.all(assetData.map((asset) => (
-    loadAssetColors(asset.source)
-      .then((colors) => ({ asset, colors: Array.isArray(colors) ? colors : [] }))
-      .catch(() => ({ asset, colors: [] }))
-  ))).then((entries) => {
+  return Promise.all(
+    assetData.map((asset) =>
+      loadAssetColors(asset.source)
+        .then((colors) => ({ asset, colors: Array.isArray(colors) ? colors : [] }))
+        .catch(() => ({ asset, colors: [] })),
+    ),
+  ).then((entries) => {
     const usage = new Map();
     for (const { asset, colors } of entries) {
       const project = projectForAsset(asset);
@@ -3114,74 +3453,76 @@ function renderProjectIconColors(projectName) {
   empty.hidden = false;
   empty.textContent = "Loading colors from project icons...";
 
-  collectColorUsageAcrossAssets().then(({ usage, entries }) => {
-    if (!list.isConnected || list.dataset.project !== projectName) return;
-    const projectColors = new Set();
-    for (const { asset, colors } of entries) {
-      if (projectForAsset(asset) !== projectName) continue;
-      for (const color of colors) projectColors.add(String(color).toUpperCase());
-    }
-
-    list.innerHTML = "";
-    if (!projectColors.size) {
-      empty.hidden = false;
-      empty.textContent = "No colors found in this project's icons yet.";
-      return;
-    }
-    empty.hidden = true;
-
-    for (const color of Array.from(projectColors).sort()) {
-      const record = usage.get(color);
-      const item = document.createElement("div");
-      item.className = "project-icon-color";
-
-      const swatch = document.createElement("span");
-      swatch.className = "project-icon-color-swatch";
-      swatch.style.backgroundColor = color;
-      swatch.setAttribute("aria-hidden", "true");
-
-      const value = document.createElement("code");
-      value.className = "project-icon-color-value";
-      value.textContent = color;
-
-      const tooltip = document.createElement("div");
-      tooltip.className = "project-icon-color-tooltip";
-      tooltip.setAttribute("role", "group");
-      tooltip.setAttribute("aria-label", `Projects using ${color}`);
-
-      const heading = document.createElement("p");
-      heading.className = "project-icon-color-tooltip-heading";
-      const projectNames = Array.from(record?.projects.keys() || []).sort();
-      heading.textContent = `${color} · used in ${projectNames.length} project${projectNames.length === 1 ? "" : "s"}`;
-      tooltip.appendChild(heading);
-
-      const links = document.createElement("ul");
-      links.className = "project-icon-color-tooltip-links";
-      for (const name of projectNames) {
-        const assets = record.projects.get(name) || [];
-        const row = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = projectRouteHref(name);
-        link.textContent = name;
-        const count = document.createElement("span");
-        count.className = "project-icon-color-tooltip-count";
-        count.textContent = `${assets.length} icon${assets.length === 1 ? "" : "s"}`;
-        row.append(link, count);
-        links.appendChild(row);
+  collectColorUsageAcrossAssets()
+    .then(({ usage, entries }) => {
+      if (!list.isConnected || list.dataset.project !== projectName) return;
+      const projectColors = new Set();
+      for (const { asset, colors } of entries) {
+        if (projectForAsset(asset) !== projectName) continue;
+        for (const color of colors) projectColors.add(String(color).toUpperCase());
       }
-      tooltip.appendChild(links);
 
-      item.setAttribute("tabindex", "0");
-      item.setAttribute("aria-label", `${color}, used in ${projectNames.join(", ")}`);
-      item.append(swatch, value, tooltip);
-      list.appendChild(item);
-    }
-  }).catch(() => {
-    if (!list.isConnected || list.dataset.project !== projectName) return;
-    list.innerHTML = "";
-    empty.hidden = false;
-    empty.textContent = "Colors unavailable.";
-  });
+      list.innerHTML = "";
+      if (!projectColors.size) {
+        empty.hidden = false;
+        empty.textContent = "No colors found in this project's icons yet.";
+        return;
+      }
+      empty.hidden = true;
+
+      for (const color of Array.from(projectColors).sort()) {
+        const record = usage.get(color);
+        const item = document.createElement("div");
+        item.className = "project-icon-color";
+
+        const swatch = document.createElement("span");
+        swatch.className = "project-icon-color-swatch";
+        swatch.style.backgroundColor = color;
+        swatch.setAttribute("aria-hidden", "true");
+
+        const value = document.createElement("code");
+        value.className = "project-icon-color-value";
+        value.textContent = color;
+
+        const tooltip = document.createElement("div");
+        tooltip.className = "project-icon-color-tooltip";
+        tooltip.setAttribute("role", "group");
+        tooltip.setAttribute("aria-label", `Projects using ${color}`);
+
+        const heading = document.createElement("p");
+        heading.className = "project-icon-color-tooltip-heading";
+        const projectNames = Array.from(record?.projects.keys() || []).sort();
+        heading.textContent = `${color} · used in ${projectNames.length} project${projectNames.length === 1 ? "" : "s"}`;
+        tooltip.appendChild(heading);
+
+        const links = document.createElement("ul");
+        links.className = "project-icon-color-tooltip-links";
+        for (const name of projectNames) {
+          const assets = record.projects.get(name) || [];
+          const row = document.createElement("li");
+          const link = document.createElement("a");
+          link.href = projectRouteHref(name);
+          link.textContent = name;
+          const count = document.createElement("span");
+          count.className = "project-icon-color-tooltip-count";
+          count.textContent = `${assets.length} icon${assets.length === 1 ? "" : "s"}`;
+          row.append(link, count);
+          links.appendChild(row);
+        }
+        tooltip.appendChild(links);
+
+        item.setAttribute("tabindex", "0");
+        item.setAttribute("aria-label", `${color}, used in ${projectNames.join(", ")}`);
+        item.append(swatch, value, tooltip);
+        list.appendChild(item);
+      }
+    })
+    .catch(() => {
+      if (!list.isConnected || list.dataset.project !== projectName) return;
+      list.innerHTML = "";
+      empty.hidden = false;
+      empty.textContent = "Colors unavailable.";
+    });
 }
 
 function sourceRouteHref(projectName, sourcePath) {
@@ -3203,13 +3544,19 @@ function normalizeProjectSteer(projectName) {
 
   const fromManifest = projectMeta.agentSteer;
 
-  const notes = Array.isArray(fromManifest.notes) ? fromManifest.notes.map((item) => String(item).trim()).filter(Boolean) : [];
+  const notes = Array.isArray(fromManifest.notes)
+    ? fromManifest.notes.map((item) => String(item).trim()).filter(Boolean)
+    : [];
   const sources = Array.isArray(fromManifest.sources) ? fromManifest.sources : [];
   const favoriteColors = Array.isArray(fromManifest.favoriteColors)
-    ? fromManifest.favoriteColors.map((color) => String(color).toUpperCase()).filter((color) => /^#[0-9A-F]{6}$/.test(color))
+    ? fromManifest.favoriteColors
+        .map((color) => String(color).toUpperCase())
+        .filter((color) => /^#[0-9A-F]{6}$/.test(color))
     : [];
   const customColors = Array.isArray(fromManifest.customColors)
-    ? fromManifest.customColors.map((color) => String(color).toUpperCase()).filter((color) => /^#[0-9A-F]{6}$/.test(color))
+    ? fromManifest.customColors
+        .map((color) => String(color).toUpperCase())
+        .filter((color) => /^#[0-9A-F]{6}$/.test(color))
     : [];
   return { notes, sources, favoriteColors, customColors };
 }
@@ -3218,7 +3565,7 @@ async function updateProjectFavoriteColor(project, color, selected, custom = fal
   const response = await fetch("/~project-color", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ project, color, selected, custom })
+    body: JSON.stringify({ project, color, selected, custom }),
   });
   const result = await response.json();
   if (!response.ok || result.error) throw new Error(result.error || "Favorite color update failed");
@@ -3227,9 +3574,10 @@ async function updateProjectFavoriteColor(project, color, selected, custom = fal
 
 function normalizeProjectSlots(projectName) {
   const projectMeta = projectMetaByName.get(projectName);
-  const slotMap = projectMeta?.iconSlots && typeof projectMeta.iconSlots === "object"
-    ? projectMeta.iconSlots
-    : {};
+  const slotMap =
+    projectMeta?.iconSlots && typeof projectMeta.iconSlots === "object"
+      ? projectMeta.iconSlots
+      : {};
 
   return PROJECT_ICON_SLOTS.map((slot) => {
     const configured = slotMap[slot.id] || {};
@@ -3239,7 +3587,7 @@ function normalizeProjectSlots(projectName) {
       note: String(configured.note || "").trim(),
       assetId: String(configured.assetId || "").trim(),
       src: String(configured.src || "").trim(),
-      url: String(configured.url || "").trim()
+      url: String(configured.url || "").trim(),
     };
   });
 }
@@ -3252,7 +3600,7 @@ function resolveSlotPreview(slot) {
         sourceType: "asset",
         src: resolveAssetPath(asset.source),
         label: asset.label,
-        href: `#asset/${encodeURIComponent(asset.id)}`
+        href: `#asset/${encodeURIComponent(asset.id)}`,
       };
     }
   }
@@ -3262,7 +3610,7 @@ function resolveSlotPreview(slot) {
       sourceType: "src",
       src: resolveAssetPath(slot.src),
       label: slot.src,
-      href: ""
+      href: "",
     };
   }
 
@@ -3271,7 +3619,7 @@ function resolveSlotPreview(slot) {
       sourceType: "url",
       src: "",
       label: slot.url,
-      href: slot.url
+      href: slot.url,
     };
   }
 
@@ -3279,7 +3627,7 @@ function resolveSlotPreview(slot) {
     sourceType: "empty",
     src: "",
     label: "",
-    href: ""
+    href: "",
   };
 }
 
@@ -3304,9 +3652,7 @@ function projectForAsset(asset) {
 
 function buildProjectAssets(assets) {
   // Seed with all manifest projects so empty ones still render
-  const byProject = new Map(
-    Array.from(projectMetaByName.keys()).map((name) => [name, []])
-  );
+  const byProject = new Map(Array.from(projectMetaByName.keys()).map((name) => [name, []]));
   for (const asset of assets) {
     const project = projectForAsset(asset);
     if (!byProject.has(project)) {
@@ -3334,7 +3680,14 @@ function setMainViewVisibility(route) {
   const assetDetailSection = document.getElementById("asset-detail");
   const sourceDetailSection = document.getElementById("source-detail");
   const projectDetailSection = document.getElementById("project-detail");
-  if (!logosSection || !diagramsSection || !assetDetailSection || !sourceDetailSection || !projectDetailSection) return;
+  if (
+    !logosSection ||
+    !diagramsSection ||
+    !assetDetailSection ||
+    !sourceDetailSection ||
+    !projectDetailSection
+  )
+    return;
 
   const onAssetPage = route.page === "asset";
   const onSourcePage = route.page === "source";
@@ -3389,48 +3742,49 @@ function renderLogos(assets) {
       const emptyLink = document.createElement("a");
       emptyLink.href = projectRouteHref(projectName);
       emptyLink.className = "project-empty-cta";
-      emptyLink.innerHTML = '<i data-lucide="image-plus" aria-hidden="true"></i><span>Add first asset</span>';
+      emptyLink.innerHTML =
+        '<i data-lucide="image-plus" aria-hidden="true"></i><span>Add first asset</span>';
       empty.appendChild(emptyLink);
       groupSection.appendChild(empty);
     } else {
       for (const asset of visibleAssets) {
-      const tile = document.createElement("article");
-      tile.className = "asset-tile";
+        const tile = document.createElement("article");
+        tile.className = "asset-tile";
 
-      const frame = document.createElement("div");
-      frame.className = "logo-frame";
+        const frame = document.createElement("div");
+        frame.className = "logo-frame";
 
-      const img = document.createElement("img");
-      img.src = `../${asset.source}`;
-      img.alt = asset.label;
+        const img = document.createElement("img");
+        img.src = `../${asset.source}`;
+        img.alt = asset.label;
 
-      const title = document.createElement("h3");
-      title.textContent = asset.label;
+        const title = document.createElement("h3");
+        title.textContent = asset.label;
 
-      const idText = document.createElement("p");
-      idText.textContent = asset.id;
+        const idText = document.createElement("p");
+        idText.textContent = asset.id;
 
-      const detailLink = document.createElement("a");
-      detailLink.className = "asset-detail-link";
-      detailLink.href = `#asset/${encodeURIComponent(asset.id)}`;
-      detailLink.textContent = "View details";
+        const detailLink = document.createElement("a");
+        detailLink.className = "asset-detail-link";
+        detailLink.href = `#asset/${encodeURIComponent(asset.id)}`;
+        detailLink.textContent = "View details";
 
-      const iconLink = document.createElement("a");
-      iconLink.className = "project-icon-link";
-      iconLink.href = projectRouteHref(projectName);
-      iconLink.setAttribute("aria-label", `Open project page for ${projectName}`);
-      iconLink.appendChild(img);
-      frame.appendChild(iconLink);
-      tile.prepend(frame);
+        const iconLink = document.createElement("a");
+        iconLink.className = "project-icon-link";
+        iconLink.href = projectRouteHref(projectName);
+        iconLink.setAttribute("aria-label", `Open project page for ${projectName}`);
+        iconLink.appendChild(img);
+        frame.appendChild(iconLink);
+        tile.prepend(frame);
 
-      if (activeGroupingMode !== "project") {
-        tile.appendChild(title);
-        tile.appendChild(idText);
-        tile.appendChild(detailLink);
+        if (activeGroupingMode !== "project") {
+          tile.appendChild(title);
+          tile.appendChild(idText);
+          tile.appendChild(detailLink);
+        }
+        grid.appendChild(tile);
       }
-      grid.appendChild(tile);
-    }
-    groupSection.appendChild(grid);
+      groupSection.appendChild(grid);
     }
 
     groupsRoot.appendChild(groupSection);
@@ -3454,7 +3808,9 @@ function renderAssetDetail(assetId) {
   const gridVisibilityToggle = document.getElementById("asset-grid-visibility-toggle");
   const gridSnapToggle = document.getElementById("asset-grid-snap-toggle");
   const gridSizeInput = document.getElementById("asset-grid-size-input");
-  const viewBoxInputs = ["x", "y", "width", "height"].map((name) => document.getElementById(`asset-viewbox-${name}`));
+  const viewBoxInputs = ["x", "y", "width", "height"].map((name) =>
+    document.getElementById(`asset-viewbox-${name}`),
+  );
   const viewBoxValue = document.getElementById("asset-viewbox-value");
   const viewBoxEditor = document.getElementById("asset-viewbox-editor");
   const viewBoxForm = document.getElementById("asset-viewbox-form");
@@ -3476,7 +3832,41 @@ function renderAssetDetail(assetId) {
   const layerEditorPanel = document.getElementById("asset-layer-editor-panel");
   const layerActions = document.getElementById("asset-layer-actions");
   const sizeGrid = document.getElementById("asset-size-grid");
-  if (!title || !saveButton || !deepLink || !projectLink || !overview || !primaryPreview || !primarySvg || !primaryTooltip || !primaryHandles || !primaryGuides || !primaryCanvas || !previewSizeSelect || !previewSizeListToggle || !colorsSection || !colorsList || !projectColorsList || !customColorsList || !customColorForm || !customColorInput || !customColorAddButton || !highlightStatus || !diagnostics || !layersSection || !layersList || !layerEditorPanel || !layerActions || !sizeGrid || !viewBoxValue || !viewBoxEditor || !viewBoxForm || !viewBoxCancel || viewBoxInputs.some((input) => !input)) return;
+  if (
+    !title ||
+    !saveButton ||
+    !deepLink ||
+    !projectLink ||
+    !overview ||
+    !primaryPreview ||
+    !primarySvg ||
+    !primaryTooltip ||
+    !primaryHandles ||
+    !primaryGuides ||
+    !primaryCanvas ||
+    !previewSizeSelect ||
+    !previewSizeListToggle ||
+    !colorsSection ||
+    !colorsList ||
+    !projectColorsList ||
+    !customColorsList ||
+    !customColorForm ||
+    !customColorInput ||
+    !customColorAddButton ||
+    !highlightStatus ||
+    !diagnostics ||
+    !layersSection ||
+    !layersList ||
+    !layerEditorPanel ||
+    !layerActions ||
+    !sizeGrid ||
+    !viewBoxValue ||
+    !viewBoxEditor ||
+    !viewBoxForm ||
+    !viewBoxCancel ||
+    viewBoxInputs.some((input) => !input)
+  )
+    return;
 
   sizeGrid.innerHTML = "";
   colorsList.textContent = "";
@@ -3546,12 +3936,22 @@ function renderAssetDetail(assetId) {
     const viewBox = assetViewBoxEdits.get(asset.id) || parseSvgViewBox(data.viewBox);
     if (!viewBox) return;
     assetViewBoxEdits.set(asset.id, viewBox);
-    viewBoxInputs.forEach((input, index) => { input.value = String(viewBox[index]); });
+    viewBoxInputs.forEach((input, index) => {
+      input.value = String(viewBox[index]);
+    });
     viewBoxValue.textContent = viewBox.join(" ");
   });
   const updateViewBox = () => {
     const viewBox = viewBoxInputs.map((input) => Number(input.value));
-    if (!Number.isFinite(viewBox[0]) || !Number.isFinite(viewBox[1]) || !Number.isFinite(viewBox[2]) || !Number.isFinite(viewBox[3]) || viewBox[2] <= 0 || viewBox[3] <= 0) return;
+    if (
+      !Number.isFinite(viewBox[0]) ||
+      !Number.isFinite(viewBox[1]) ||
+      !Number.isFinite(viewBox[2]) ||
+      !Number.isFinite(viewBox[3]) ||
+      viewBox[2] <= 0 ||
+      viewBox[3] <= 0
+    )
+      return;
     assetViewBoxEdits.set(asset.id, viewBox);
     viewBoxValue.textContent = viewBox.join(" ");
     const svg = primarySvg.querySelector("svg");
@@ -3564,7 +3964,9 @@ function renderAssetDetail(assetId) {
     updateViewBox();
     viewBoxEditor.hidden = true;
   };
-  viewBoxCancel.onclick = () => { viewBoxEditor.hidden = true; };
+  viewBoxCancel.onclick = () => {
+    viewBoxEditor.hidden = true;
+  };
   document.getElementById("asset-viewbox-edit").onclick = () => {
     viewBoxEditor.hidden = false;
   };
@@ -3582,12 +3984,15 @@ function renderAssetDetail(assetId) {
   fitOption.value = "fit";
   fitOption.textContent = "Fit width";
   fitOption.selected = true;
-  previewSizeSelect.replaceChildren(fitOption, ...previewSizes.map((size) => {
-    const option = document.createElement("option");
-    option.value = String(size);
-    option.textContent = `${size}px`;
-    return option;
-  }));
+  previewSizeSelect.replaceChildren(
+    fitOption,
+    ...previewSizes.map((size) => {
+      const option = document.createElement("option");
+      option.value = String(size);
+      option.textContent = `${size}px`;
+      return option;
+    }),
+  );
   renderAssetPrimarySvg(primarySvg, asset, defaultPreviewSize);
   activePrimaryLayerInteractionCleanup?.();
   const primaryInteractionState = { updateTooltip: () => {} };
@@ -3602,16 +4007,32 @@ function renderAssetDetail(assetId) {
       syncSaveButton();
     },
     (layerNumber) => primaryInteractionState.updateTooltip(layerNumber),
-    (layerNumbers) => setPrimarySvgMultiSelectHighlight(primarySvg, layerNumbers)
+    (layerNumbers) => setPrimarySvgMultiSelectHighlight(primarySvg, layerNumbers),
   );
-  const primaryInteraction = enablePrimaryLayerInteraction(primarySvg, primaryPreview, primaryTooltip, primaryHandles, primaryGuides, asset, layersController, primaryPoints, primaryShapeMode, primaryGrid, gridVisibilityToggle, gridSnapToggle, gridSizeInput, syncSaveButton);
+  const primaryInteraction = enablePrimaryLayerInteraction(
+    primarySvg,
+    primaryPreview,
+    primaryTooltip,
+    primaryHandles,
+    primaryGuides,
+    asset,
+    layersController,
+    primaryPoints,
+    primaryShapeMode,
+    primaryGrid,
+    gridVisibilityToggle,
+    gridSnapToggle,
+    gridSizeInput,
+    syncSaveButton,
+  );
   primaryInteractionState.updateTooltip = primaryInteraction.updateTooltip;
   activePrimaryLayerInteractionCleanup = primaryInteraction.cleanup;
   renderAssetColorList(colorsList, asset, (color, highlighted) => {
     const regions = setPrimarySvgColorHighlight(primarySvg, color, highlighted);
-    highlightStatus.textContent = highlighted && regions.length
-      ? `${describeSvgRegions(regions)} highlighted for ${color}; ${describeSvgLayers(regions)}.`
-      : "";
+    highlightStatus.textContent =
+      highlighted && regions.length
+        ? `${describeSvgRegions(regions)} highlighted for ${color}; ${describeSvgLayers(regions)}.`
+        : "";
   });
   const projectPalette = normalizeProjectSteer(projectName).favoriteColors;
   renderStaticAssetColorList(projectColorsList, projectPalette, "No project favorites");
@@ -3635,20 +4056,25 @@ function renderAssetDetail(assetId) {
     else customColorInput.click();
   };
   customColorInput.onchange = addCustomColor;
-  renderAssetDiagnostics(diagnostics, asset, () => {
-    applyAssetAccessibility(primarySvg.querySelector("svg"), asset.id);
-    assetModified.add(asset.id);
-    syncSaveButton();
-  }, () => {
-    const svg = primarySvg.querySelector("svg");
-    const sourceSize = assetSourceSizeEdits.get(asset.id);
-    if (svg && sourceSize) {
-      svg.setAttribute("width", String(sourceSize.width));
-      svg.setAttribute("height", String(sourceSize.height));
-    }
-    assetModified.add(asset.id);
-    syncSaveButton();
-  });
+  renderAssetDiagnostics(
+    diagnostics,
+    asset,
+    () => {
+      applyAssetAccessibility(primarySvg.querySelector("svg"), asset.id);
+      assetModified.add(asset.id);
+      syncSaveButton();
+    },
+    () => {
+      const svg = primarySvg.querySelector("svg");
+      const sourceSize = assetSourceSizeEdits.get(asset.id);
+      if (svg && sourceSize) {
+        svg.setAttribute("width", String(sourceSize.width));
+        svg.setAttribute("height", String(sourceSize.height));
+      }
+      assetModified.add(asset.id);
+      syncSaveButton();
+    },
+  );
 
   const showCanvasSize = (size) => {
     previewSizeSelect.value = String(size);
@@ -3656,13 +4082,13 @@ function renderAssetDetail(assetId) {
     primaryCanvas.hidden = false;
     sizeGrid.hidden = true;
     previewSizeListToggle.setAttribute("aria-pressed", "false");
-    previewSizeListToggle.innerHTML = '<i data-lucide="grid-2x2" aria-hidden="true"></i>Compare sizes';
+    previewSizeListToggle.innerHTML =
+      '<i data-lucide="grid-2x2" aria-hidden="true"></i>Compare sizes';
     if (typeof lucide !== "undefined") lucide.createIcons();
   };
 
-  previewSizeSelect.onchange = () => showCanvasSize(
-    previewSizeSelect.value === "fit" ? "fit" : Number(previewSizeSelect.value)
-  );
+  previewSizeSelect.onchange = () =>
+    showCanvasSize(previewSizeSelect.value === "fit" ? "fit" : Number(previewSizeSelect.value));
   previewSizeListToggle.onclick = () => {
     const showingList = !sizeGrid.hidden;
     primaryCanvas.hidden = !showingList;
@@ -3714,7 +4140,9 @@ function renderSourceDetail(projectName, sourcePath) {
   if (!title || !meta || !projectLink || !deepLink || !image || !reference || !copyStatus) return;
 
   const projectMeta = projectMetaByName.get(projectName);
-  const source = projectMeta?.agentSteer?.sources?.find((item) => item.kind === "image" && item.src === sourcePath);
+  const source = projectMeta?.agentSteer?.sources?.find(
+    (item) => item.kind === "image" && item.src === sourcePath,
+  );
   projectLink.href = projectRouteHref(projectName);
   projectLink.textContent = `Back to ${projectName}`;
   copyStatus.textContent = "";
@@ -3760,7 +4188,30 @@ function renderProjectDetail(projectName) {
   const renameForm = document.getElementById("project-rename-form");
   const renameInput = document.getElementById("project-rename-input");
   const renameStatus = document.getElementById("project-rename-status");
-  if (!title || !deepLink || !grid || !notesList || !sourcesGrid || !emptyState || !favoriteColorsRoot || !favoriteColorsEmpty || !customColorForm || !customColorInput || !customColorValue || !customColorStatus || !slotsGrid || !promptsRoot || !promptCopyStatus || !docsRoot || !generateButton || !generatePanel || !renameForm || !renameInput || !renameStatus) return;
+  if (
+    !title ||
+    !deepLink ||
+    !grid ||
+    !notesList ||
+    !sourcesGrid ||
+    !emptyState ||
+    !favoriteColorsRoot ||
+    !favoriteColorsEmpty ||
+    !customColorForm ||
+    !customColorInput ||
+    !customColorValue ||
+    !customColorStatus ||
+    !slotsGrid ||
+    !promptsRoot ||
+    !promptCopyStatus ||
+    !docsRoot ||
+    !generateButton ||
+    !generatePanel ||
+    !renameForm ||
+    !renameInput ||
+    !renameStatus
+  )
+    return;
 
   grid.innerHTML = "";
   notesList.innerHTML = "";
@@ -3796,9 +4247,14 @@ function renderProjectDetail(projectName) {
 
   const syncFavoriteSwatches = (color) => {
     const selected = steer.favoriteColors.includes(color);
-    for (const swatch of sourcesGrid.querySelectorAll(`.source-material-swatch[data-color="${color}"]`)) {
+    for (const swatch of sourcesGrid.querySelectorAll(
+      `.source-material-swatch[data-color="${color}"]`,
+    )) {
       swatch.setAttribute("aria-pressed", String(selected));
-      swatch.setAttribute("aria-label", `${selected ? "Remove" : "Select"} ${color} as a project favorite`);
+      swatch.setAttribute(
+        "aria-label",
+        `${selected ? "Remove" : "Select"} ${color} as a project favorite`,
+      );
     }
   };
 
@@ -3830,7 +4286,12 @@ function renderProjectDetail(projectName) {
       remove.addEventListener("click", async () => {
         remove.disabled = true;
         try {
-          const result = await updateProjectFavoriteColor(targetProject, color, false, steer.customColors.includes(color));
+          const result = await updateProjectFavoriteColor(
+            targetProject,
+            color,
+            false,
+            steer.customColors.includes(color),
+          );
           applyFavoriteResult(result, color);
         } catch (error) {
           customColorStatus.textContent = error.message;
@@ -3867,15 +4328,16 @@ function renderProjectDetail(projectName) {
   const projectSlug = String(projectMeta?.slug || slugify(targetProject));
   generatePanel.hidden = true;
   generateButton.setAttribute("aria-expanded", "false");
-  projectSamplePrompts = Array.isArray(projectMeta?.samplePrompts) && projectMeta.samplePrompts.length
-    ? projectMeta.samplePrompts
-    : [
-        `/create-svg-asset\n\nProject: ${targetProject}\nDirectory: assets/svg/${projectSlug}/`,
-        `/create-svg-asset\n\nCreate a minimal geometric mark using the uploaded steering source material.\nBase idea: combine a strong silhouette with one distinctive cutout or negative-space detail.\n\nProject: ${targetProject}\nDirectory: assets/svg/${projectSlug}/`,
-        `/create-svg-asset\n\nCreate an expressive symbol using the uploaded steering source material.\nBase idea: translate the project's core purpose into a modular emblem that remains recognizable at favicon size.\n\nProject: ${targetProject}\nDirectory: assets/svg/${projectSlug}/`
-      ];
+  projectSamplePrompts =
+    Array.isArray(projectMeta?.samplePrompts) && projectMeta.samplePrompts.length
+      ? projectMeta.samplePrompts
+      : [
+          `/create-svg-asset\n\nProject: ${targetProject}\nDirectory: assets/svg/${projectSlug}/`,
+          `/create-svg-asset\n\nCreate a minimal geometric mark using the uploaded steering source material.\nBase idea: combine a strong silhouette with one distinctive cutout or negative-space detail.\n\nProject: ${targetProject}\nDirectory: assets/svg/${projectSlug}/`,
+          `/create-svg-asset\n\nCreate an expressive symbol using the uploaded steering source material.\nBase idea: translate the project's core purpose into a modular emblem that remains recognizable at favicon size.\n\nProject: ${targetProject}\nDirectory: assets/svg/${projectSlug}/`,
+        ];
   projectSamplePrompts = projectSamplePrompts.map((prompt) =>
-    normalizeProjectPrompt(prompt, targetProject, projectSlug)
+    normalizeProjectPrompt(prompt, targetProject, projectSlug),
   );
   activeProjectPromptIndex = 0;
   renderActiveProjectPrompt();
@@ -3884,7 +4346,7 @@ function renderProjectDetail(projectName) {
     [projectMeta?.documentation || `assets/svg/${projectSlug}/README.md`, "Project README"],
     [".github/prompts/create-svg-asset.prompt.md", "Create SVG Asset prompt"],
     [".github/skills/wm-asset-manifest-spec/SKILL.md", "Manifest specification"],
-    [".github/skills/wm-asset-authoring-workflow/SKILL.md", "Authoring workflow"]
+    [".github/skills/wm-asset-authoring-workflow/SKILL.md", "Authoring workflow"],
   ];
   for (const [path, label] of documentationLinks) {
     const item = document.createElement("li");
@@ -4040,7 +4502,10 @@ function renderProjectDetail(projectName) {
           swatch.dataset.color = color;
           swatch.style.setProperty("--swatch-color", color);
           swatch.setAttribute("aria-pressed", String(selected));
-          swatch.setAttribute("aria-label", `${selected ? "Remove" : "Select"} ${color} as a project favorite; ${percentage}% of image`);
+          swatch.setAttribute(
+            "aria-label",
+            `${selected ? "Remove" : "Select"} ${color} as a project favorite; ${percentage}% of image`,
+          );
           swatch.title = color;
           swatch.innerHTML = '<i data-lucide="check" aria-hidden="true"></i>';
           swatch.addEventListener("click", async () => {
@@ -4049,7 +4514,11 @@ function renderProjectDetail(projectName) {
             try {
               const result = await updateProjectFavoriteColor(targetProject, color, shouldSelect);
               applyFavoriteResult(result, color);
-              showToast(shouldSelect ? `${color} added to project favorites.` : `${color} removed from project favorites.`);
+              showToast(
+                shouldSelect
+                  ? `${color} added to project favorites.`
+                  : `${color} removed from project favorites.`,
+              );
             } catch (error) {
               showToast(error.message);
             } finally {
@@ -4088,7 +4557,7 @@ function renderProjectDetail(projectName) {
         const response = await fetch("/~grounding-source", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ project: targetProject, source: source.src, action, filename })
+          body: JSON.stringify({ project: targetProject, source: source.src, action, filename }),
         });
         const result = await response.json();
         if (!response.ok || result.error) throw new Error(result.error || "Image update failed");
@@ -4116,7 +4585,11 @@ function renderProjectDetail(projectName) {
       editor.addEventListener("submit", async (event) => {
         event.preventDefault();
         status.textContent = "Renaming...";
-        try { await mutateSource("rename", input.value); } catch (error) { status.textContent = error.message; }
+        try {
+          await mutateSource("rename", input.value);
+        } catch (error) {
+          status.textContent = error.message;
+        }
       });
       deleteButton.addEventListener("click", async () => {
         if (deleteButton.dataset.confirm !== "true") {
@@ -4133,7 +4606,9 @@ function renderProjectDetail(projectName) {
           return;
         }
         deleteButton.disabled = true;
-        try { await mutateSource("delete"); } catch (error) {
+        try {
+          await mutateSource("delete");
+        } catch (error) {
           deleteButton.disabled = false;
           status.textContent = error.message;
         }
@@ -4283,7 +4758,7 @@ function wireProjectRename() {
       const response = await fetch("/~project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project: form.dataset.project, name: nextName })
+        body: JSON.stringify({ project: form.dataset.project, name: nextName }),
       });
       const result = await response.json();
       if (!response.ok || result.error) throw new Error(result.error || "Project rename failed");
@@ -4304,7 +4779,9 @@ function wireProjectPromptCarousel() {
 
   const move = (offset) => {
     if (!projectSamplePrompts.length) return;
-    activeProjectPromptIndex = (activeProjectPromptIndex + offset + projectSamplePrompts.length) % projectSamplePrompts.length;
+    activeProjectPromptIndex =
+      (activeProjectPromptIndex + offset + projectSamplePrompts.length) %
+      projectSamplePrompts.length;
     status.textContent = "";
     renderActiveProjectPrompt();
   };
@@ -4359,7 +4836,7 @@ function wireGroundingDropZone() {
         const response = await fetch("/~grounding-image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ project, filename: file.name, dataUrl })
+          body: JSON.stringify({ project, filename: file.name, dataUrl }),
         });
         const result = await response.json();
         if (!response.ok || result.error) throw new Error(result.error || "Upload failed");
@@ -4384,7 +4861,9 @@ function wireGroundingDropZone() {
       dropzone.classList.remove("is-dragging");
     });
   }
-  dropzone.addEventListener("drop", (event) => uploadFiles(Array.from(event.dataTransfer?.files || [])));
+  dropzone.addEventListener("drop", (event) =>
+    uploadFiles(Array.from(event.dataTransfer?.files || [])),
+  );
 }
 
 function renderCurrentRoute() {
@@ -4434,7 +4913,9 @@ async function renderDiagrams() {
 
 function wireStickyHeaderOffset() {
   const topbar = document.querySelector(".docs-topbar");
-  const detailHeaders = document.querySelectorAll("#project-detail > .project-detail-header, #asset-detail > .project-detail-header");
+  const detailHeaders = document.querySelectorAll(
+    "#project-detail > .project-detail-header, #asset-detail > .project-detail-header",
+  );
   const assetHeader = document.querySelector("#asset-detail > .project-detail-header");
   if (!topbar || !detailHeaders.length) return;
 
@@ -4442,11 +4923,15 @@ function wireStickyHeaderOffset() {
     const topbarHeight = topbar.getBoundingClientRect().height;
     document.documentElement.style.setProperty("--preview-topbar-height", `${topbarHeight}px`);
     if (assetHeader) {
-      document.documentElement.style.setProperty("--asset-detail-header-height", `${assetHeader.getBoundingClientRect().height}px`);
+      document.documentElement.style.setProperty(
+        "--asset-detail-header-height",
+        `${assetHeader.getBoundingClientRect().height}px`,
+      );
     }
     for (const header of detailHeaders) {
       const isVisible = header.getClientRects().length > 0;
-      const isStuck = isVisible && window.scrollY > 0 && header.getBoundingClientRect().top <= topbarHeight + 1;
+      const isStuck =
+        isVisible && window.scrollY > 0 && header.getBoundingClientRect().top <= topbarHeight + 1;
       header.classList.toggle("is-stuck", isStuck);
     }
   };
@@ -4478,13 +4963,17 @@ function wireNewProjectModal() {
     if (typeof lucide !== "undefined") lucide.createIcons();
   };
 
-  const closeModal = () => { modal.hidden = true; };
+  const closeModal = () => {
+    modal.hidden = true;
+  };
 
   btn.addEventListener("click", openModal);
-  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-  modal.querySelectorAll(".np-close, .np-cancel").forEach((el) =>
-    el.addEventListener("click", closeModal)
-  );
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+  modal
+    .querySelectorAll(".np-close, .np-cancel")
+    .forEach((el) => el.addEventListener("click", closeModal));
   modal.querySelector(".np-done")?.addEventListener("click", (event) => {
     const project = event.currentTarget.dataset.project;
     closeModal();
@@ -4571,7 +5060,7 @@ function wireAssetDetailSidebars() {
       storageKey: "wm-assets-left-sidebar-collapsed",
       collapsedIcon: "panel-left-open",
       expandedIcon: "panel-left-close",
-      label: "asset analysis"
+      label: "asset analysis",
     },
     {
       sidebar: document.getElementById("asset-detail-right-sidebar"),
@@ -4580,11 +5069,19 @@ function wireAssetDetailSidebars() {
       storageKey: "wm-assets-right-sidebar-collapsed",
       collapsedIcon: "panel-right-open",
       expandedIcon: "panel-right-close",
-      label: "element editor"
-    }
+      label: "element editor",
+    },
   ];
 
-  for (const { sidebar, toggle, content, storageKey, collapsedIcon, expandedIcon, label } of sidebars) {
+  for (const {
+    sidebar,
+    toggle,
+    content,
+    storageKey,
+    collapsedIcon,
+    expandedIcon,
+    label,
+  } of sidebars) {
     if (!sidebar || !toggle || !content) continue;
     const setCollapsed = (collapsed) => {
       sidebar.classList.toggle("is-collapsed", collapsed);
@@ -4622,7 +5119,7 @@ async function init() {
 
   const [assetManifest, specs] = await Promise.all([
     loadJson("../manifests/assets.json"),
-    loadJson("./spec-index.json")
+    loadJson("./spec-index.json"),
   ]);
 
   diagramData = specs.diagrams ?? [];
@@ -4632,7 +5129,7 @@ async function init() {
   projectMetaByName = new Map(
     projectSteer
       .filter((project) => project && project.name)
-      .map((project) => [String(project.name).trim(), project])
+      .map((project) => [String(project.name).trim(), project]),
   );
   renderLogos(assetData);
   await renderDiagrams();

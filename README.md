@@ -52,9 +52,22 @@ npm run graph           # Explore the Nx project and task graph
 npm run build           # Build every package through Nx
 npm run typecheck       # Check Node packages with native TypeScript 7
 npm run test:toolchain  # Verify native CLI and Nx compiler API compatibility
+npm run lint            # Lint JavaScript/TypeScript with Oxlint
+npm run lint:fix        # Apply safe Oxlint fixes
+npm run format          # Format supported source/config/docs with Oxfmt
+npm run format:check    # Check formatting without writing files
 ```
 
+Oxlint and Oxfmt are root development tools configured by `.oxlintrc.json`
+and `.oxfmtrc.json`. Generated bundles, build outputs, and captures are excluded;
+Oxfmt also leaves the npm-managed lockfile untouched. The Code quality workflow
+runs both checks on pull requests and pushes to `main`, including docs-only changes.
+
 ### Dependency and Compiler Upgrades
+
+The preview app owns `@wintermuted/ui-theme` and `lucide` in
+`packages/preview-app/package.json`. Root workspace installs hoist them into
+`node_modules`, preserving the preview's existing stylesheet path and local icon lookup.
 
 Nx and `@nx/js` are kept at the same stable version. If `nx migrate` cannot
 retrieve provenance metadata from the configured registry, update the package

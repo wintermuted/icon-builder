@@ -322,9 +322,7 @@
           "#F0E6DA",
           "#9E7E69"
         ],
-        "customColors": [
-          "#257375"
-        ]
+        "customColors": ["#257375"]
       },
       "slug": "solar-punk",
       "documentation": "assets/svg/solar-punk/README.md",
@@ -387,10 +385,7 @@
       "source": "assets/svg/wintermuted-brand/wm-spark.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks"
-      ],
+      "groups": ["Wintermuted", "Marks"],
       "variants": [
         {
           "size": 64,
@@ -416,10 +411,7 @@
       "source": "assets/svg/game-of-life/gol-mark.svg",
       "project": "Conway's Game of Life",
       "logoType": "Logomark",
-      "groups": [
-        "Game of Life",
-        "Marks"
-      ],
+      "groups": ["Game of Life", "Marks"],
       "variants": [
         {
           "size": 64,
@@ -445,10 +437,7 @@
       "source": "assets/svg/solar-punk/test-project-mark.svg",
       "project": "Solar Punk",
       "logoType": "Logomark",
-      "groups": [
-        "Test Project",
-        "Marks"
-      ],
+      "groups": ["Test Project", "Marks"],
       "variants": [
         {
           "size": 64,
@@ -474,10 +463,7 @@
       "source": "assets/svg/solar-punk/solar-punk-mark.svg",
       "project": "Solar Punk",
       "logoType": "Logomark",
-      "groups": [
-        "Solar Punk",
-        "Marks"
-      ],
+      "groups": ["Solar Punk", "Marks"],
       "variants": [
         {
           "size": 64,
@@ -503,10 +489,7 @@
       "source": "assets/svg/solar-punk/solar-punk-emblem.svg",
       "project": "Solar Punk",
       "logoType": "Logomark",
-      "groups": [
-        "Solar Punk",
-        "Marks"
-      ],
+      "groups": ["Solar Punk", "Marks"],
       "variants": [
         {
           "size": 64,
@@ -532,10 +515,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark.svg",
       "project": "Wintermuted Brand",
       "logoType": "Combination Mark",
-      "groups": [
-        "Wintermuted",
-        "Wordmarks"
-      ],
+      "groups": ["Wintermuted", "Wordmarks"],
       "variants": [
         {
           "size": 64,
@@ -561,11 +541,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-no-outline-no-cube.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -591,11 +567,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-no-outline-large-cube.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -621,11 +593,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-no-outline-large-cube-extracted-blocks.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -651,11 +619,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-cube-stroked.svg",
       "project": "Wintermuted Brand",
       "logoType": "Combination Mark",
-      "groups": [
-        "Wintermuted",
-        "Wordmarks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Wordmarks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -681,11 +645,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-cube-outline-white.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -711,11 +671,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-cube-outline-white-large.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -741,11 +697,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-earth-water-block.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -771,11 +723,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-earth-water-block-rgb-sides.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -801,11 +749,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-earth-water-block-rgb-all-faces.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -831,11 +775,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-earth-water-block-rgb-flat-faces.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -861,11 +801,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-muted-rgb-01.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -891,11 +827,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-muted-rgb-02.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -921,11 +853,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-muted-rgb-03.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -951,11 +879,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-muted-rgb-04.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -981,11 +905,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-mark-muted-rgb-05.svg",
       "project": "Wintermuted Brand",
       "logoType": "Logomark",
-      "groups": [
-        "Wintermuted",
-        "Marks",
-        "Explorations"
-      ],
+      "groups": ["Wintermuted", "Marks", "Explorations"],
       "variants": [
         {
           "size": 64,
@@ -1011,10 +931,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-wrap-wide-balanced.svg",
       "project": "Wintermuted Brand",
       "logoType": "Wordmark",
-      "groups": [
-        "Wintermuted",
-        "Wordmarks"
-      ],
+      "groups": ["Wintermuted", "Wordmarks"],
       "variants": [
         {
           "size": 64,
@@ -1040,10 +957,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-wrap-wide-horizontal.svg",
       "project": "Wintermuted Brand",
       "logoType": "Wordmark",
-      "groups": [
-        "Wintermuted",
-        "Wordmarks"
-      ],
+      "groups": ["Wintermuted", "Wordmarks"],
       "variants": [
         {
           "size": 64,
@@ -1069,10 +983,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-wrap-wide-tall.svg",
       "project": "Wintermuted Brand",
       "logoType": "Wordmark",
-      "groups": [
-        "Wintermuted",
-        "Wordmarks"
-      ],
+      "groups": ["Wintermuted", "Wordmarks"],
       "variants": [
         {
           "size": 64,
@@ -1098,10 +1009,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-wrap-wide-heavy.svg",
       "project": "Wintermuted Brand",
       "logoType": "Wordmark",
-      "groups": [
-        "Wintermuted",
-        "Wordmarks"
-      ],
+      "groups": ["Wintermuted", "Wordmarks"],
       "variants": [
         {
           "size": 64,
@@ -1127,10 +1035,7 @@
       "source": "assets/svg/wintermuted-brand/wm-wintermuted-wrap-wide-max.svg",
       "project": "Wintermuted Brand",
       "logoType": "Wordmark",
-      "groups": [
-        "Wintermuted",
-        "Wordmarks"
-      ],
+      "groups": ["Wintermuted", "Wordmarks"],
       "variants": [
         {
           "size": 64,
@@ -1156,10 +1061,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-icon.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "UI Theme"
-      ],
+      "groups": ["Wintermuted UI Theme", "UI Theme"],
       "variants": [
         {
           "size": 64,
@@ -1185,10 +1087,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-components-grid.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "Concept Iterations"
-      ],
+      "groups": ["Wintermuted UI Theme", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1214,10 +1113,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-components-grid-grayscale.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "Concept Iterations"
-      ],
+      "groups": ["Wintermuted UI Theme", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1243,10 +1139,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-components-grid-mono.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "Concept Iterations"
-      ],
+      "groups": ["Wintermuted UI Theme", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1272,10 +1165,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-components-grid-mono-inverted.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "Concept Iterations"
-      ],
+      "groups": ["Wintermuted UI Theme", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1301,10 +1191,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-components-grid-solarized-dark.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "Concept Iterations"
-      ],
+      "groups": ["Wintermuted UI Theme", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1330,10 +1217,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-components-grid-solarized-light.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "Concept Iterations"
-      ],
+      "groups": ["Wintermuted UI Theme", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1359,10 +1243,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-icon-flat.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "Concept Iterations"
-      ],
+      "groups": ["Wintermuted UI Theme", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1388,10 +1269,7 @@
       "source": "assets/svg/wintermuted-ui-theme/wm-ui-theme-app-shell.svg",
       "project": "Wintermuted UI Theme",
       "logoType": "Glyph",
-      "groups": [
-        "Wintermuted UI Theme",
-        "Concept Iterations"
-      ],
+      "groups": ["Wintermuted UI Theme", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1417,10 +1295,7 @@
       "source": "assets/svg/sub-killer-savings/sub-killer-savings-v1.svg",
       "project": "Sub Killer Savings",
       "logoType": "Logo",
-      "groups": [
-        "Sub Killer Savings",
-        "Concept Iterations"
-      ],
+      "groups": ["Sub Killer Savings", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1446,10 +1321,7 @@
       "source": "assets/svg/sub-killer-savings/sub-killer-savings-v2.svg",
       "project": "Sub Killer Savings",
       "logoType": "Logo",
-      "groups": [
-        "Sub Killer Savings",
-        "Concept Iterations"
-      ],
+      "groups": ["Sub Killer Savings", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1475,10 +1347,7 @@
       "source": "assets/svg/sub-killer-savings/sub-killer-savings-v3.svg",
       "project": "Sub Killer Savings",
       "logoType": "Logo",
-      "groups": [
-        "Sub Killer Savings",
-        "Concept Iterations"
-      ],
+      "groups": ["Sub Killer Savings", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1504,10 +1373,7 @@
       "source": "assets/svg/sub-killer-savings/sub-killer-savings-v4.svg",
       "project": "Sub Killer Savings",
       "logoType": "Logo",
-      "groups": [
-        "Sub Killer Savings",
-        "Concept Iterations"
-      ],
+      "groups": ["Sub Killer Savings", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1533,10 +1399,7 @@
       "source": "assets/svg/sub-killer-savings/sub-killer-savings-v5.svg",
       "project": "Sub Killer Savings",
       "logoType": "Logo",
-      "groups": [
-        "Sub Killer Savings",
-        "Concept Iterations"
-      ],
+      "groups": ["Sub Killer Savings", "Concept Iterations"],
       "variants": [
         {
           "size": 64,
@@ -1562,9 +1425,7 @@
       "source": "assets/svg/wm-assets-workflows/wm-assets-workflows-icon.svg",
       "project": "wm-assets-workflows",
       "logoType": "Glyph",
-      "groups": [
-        "wm-assets-workflows"
-      ],
+      "groups": ["wm-assets-workflows"],
       "variants": [
         {
           "size": 64,
@@ -1590,9 +1451,7 @@
       "source": "assets/svg/json-resume-wintermuted/json-resume-wintermuted-icon.svg",
       "project": "json-resume-wintermuted",
       "logoType": "Glyph",
-      "groups": [
-        "json-resume-wintermuted"
-      ],
+      "groups": ["json-resume-wintermuted"],
       "variants": [
         {
           "size": 64,
@@ -1618,9 +1477,7 @@
       "source": "assets/svg/json-resume-wintermuted/json-resume-wintermuted-icon-grayscale.svg",
       "project": "json-resume-wintermuted",
       "logoType": "Glyph",
-      "groups": [
-        "json-resume-wintermuted"
-      ],
+      "groups": ["json-resume-wintermuted"],
       "variants": [
         {
           "size": 64,
@@ -1646,9 +1503,7 @@
       "source": "assets/svg/json-resume-wintermuted/json-resume-wintermuted-icon-grayscale-document.svg",
       "project": "json-resume-wintermuted",
       "logoType": "Glyph",
-      "groups": [
-        "json-resume-wintermuted"
-      ],
+      "groups": ["json-resume-wintermuted"],
       "variants": [
         {
           "size": 64,
@@ -1674,9 +1529,7 @@
       "source": "assets/svg/json-resume-wintermuted/json-resume-wintermuted-icon-grayscale-json.svg",
       "project": "json-resume-wintermuted",
       "logoType": "Glyph",
-      "groups": [
-        "json-resume-wintermuted"
-      ],
+      "groups": ["json-resume-wintermuted"],
       "variants": [
         {
           "size": 64,
@@ -1702,9 +1555,7 @@
       "source": "assets/svg/json-resume-wintermuted/json-resume-wintermuted-icon-grayscale-profile.svg",
       "project": "json-resume-wintermuted",
       "logoType": "Glyph",
-      "groups": [
-        "json-resume-wintermuted"
-      ],
+      "groups": ["json-resume-wintermuted"],
       "variants": [
         {
           "size": 64,
@@ -1730,9 +1581,7 @@
       "source": "assets/svg/json-resume-wintermuted/json-resume-wintermuted-icon-grayscale-person-json.svg",
       "project": "json-resume-wintermuted",
       "logoType": "Glyph",
-      "groups": [
-        "json-resume-wintermuted"
-      ],
+      "groups": ["json-resume-wintermuted"],
       "variants": [
         {
           "size": 64,
@@ -1758,9 +1607,7 @@
       "source": "assets/svg/json-resume-wintermuted/json-resume-wintermuted-icon-grayscale-document-json.svg",
       "project": "json-resume-wintermuted",
       "logoType": "Glyph",
-      "groups": [
-        "json-resume-wintermuted"
-      ],
+      "groups": ["json-resume-wintermuted"],
       "variants": [
         {
           "size": 64,
@@ -1786,9 +1633,7 @@
       "source": "assets/svg/wm-assets-workflows/wm-assets-workflows-icon-grayscale.svg",
       "project": "wm-assets-workflows",
       "logoType": "Glyph",
-      "groups": [
-        "wm-assets-workflows"
-      ],
+      "groups": ["wm-assets-workflows"],
       "variants": [
         {
           "size": 64,
@@ -1814,9 +1659,7 @@
       "source": "assets/svg/wm-assets-workflows/wm-assets-workflows-icon-mono.svg",
       "project": "wm-assets-workflows",
       "logoType": "Glyph",
-      "groups": [
-        "wm-assets-workflows"
-      ],
+      "groups": ["wm-assets-workflows"],
       "variants": [
         {
           "size": 64,
@@ -1842,9 +1685,7 @@
       "source": "assets/svg/wm-assets-workflows/wm-assets-workflows-icon-mono-inverted.svg",
       "project": "wm-assets-workflows",
       "logoType": "Glyph",
-      "groups": [
-        "wm-assets-workflows"
-      ],
+      "groups": ["wm-assets-workflows"],
       "variants": [
         {
           "size": 64,

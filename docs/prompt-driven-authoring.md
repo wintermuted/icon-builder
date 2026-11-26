@@ -85,15 +85,15 @@ When the agent generates SVG, it should follow these rules:
 
 These align with `@wintermuted/ui-theme` tokens:
 
-| Role | Light value | Dark value |
-|------|-------------|------------|
-| Background | `#F8FAFC` | `#101828` |
-| Background alt | `#F1F5F9` | `#0F172A` |
-| Accent teal | `#5EEAD4` | `#5EEAD4` |
-| Accent indigo | `#818CF8` | `#A5B4FC` |
-| Accent purple | `#C084FC` | `#D8B4FE` |
-| Neutral white | `#FFFFFF` | — |
-| Text primary | `#1E293B` | `#F8FAFC` |
+| Role           | Light value | Dark value |
+| -------------- | ----------- | ---------- |
+| Background     | `#F8FAFC`   | `#101828`  |
+| Background alt | `#F1F5F9`   | `#0F172A`  |
+| Accent teal    | `#5EEAD4`   | `#5EEAD4`  |
+| Accent indigo  | `#818CF8`   | `#A5B4FC`  |
+| Accent purple  | `#C084FC`   | `#D8B4FE`  |
+| Neutral white  | `#FFFFFF`   | —          |
+| Text primary   | `#1E293B`   | `#F8FAFC`  |
 
 ## After Generating an SVG
 

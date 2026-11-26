@@ -34,7 +34,7 @@ async function build() {
         id: `${entry.name.replace(/\.md$/, "")}-${index + 1}`,
         title: blocks.length > 1 ? `${title} (${index + 1})` : title,
         source: `specs/${entry.name}`,
-        code
+        code,
       });
     });
   }

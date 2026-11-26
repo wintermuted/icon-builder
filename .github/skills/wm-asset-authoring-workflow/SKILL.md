@@ -23,13 +23,13 @@ This repo follows a Copilot Chat-driven loop:
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npm run build:specs` | Parse `specs/*.md` Mermaid blocks → `preview/spec-index.json` |
-| `npm run preview` | Ensure deps + build specs, then serve at `http://localhost:4178/preview/index.html` |
-| `npm run generate:png` | Run Pillow script → `outputs/png/logo-sheet.png` |
-| `npm run capture` | Playwright headless capture → `outputs/screenshots/preview-light.png` + `preview-dark.png` |
-| `npm run workflow:logo` | Run `build:specs + generate:png + capture` in sequence |
+| Command                 | Purpose                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| `npm run build:specs`   | Parse `specs/*.md` Mermaid blocks → `preview/spec-index.json`                              |
+| `npm run preview`       | Ensure deps + build specs, then serve at `http://localhost:4178/preview/index.html`        |
+| `npm run generate:png`  | Run Pillow script → `outputs/png/logo-sheet.png`                                           |
+| `npm run capture`       | Playwright headless capture → `outputs/screenshots/preview-light.png` + `preview-dark.png` |
+| `npm run workflow:logo` | Run `build:specs + generate:png + capture` in sequence                                     |
 
 ## Starting the Preview Server
 

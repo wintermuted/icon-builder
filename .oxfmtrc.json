@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "node_modules/**",
+    ".nx/**",
+    "dist/**",
+    "outputs/**",
+    "package-lock.json",
+    "preview/app.js",
+    "preview/spec-index.json"
+  ]
+}
