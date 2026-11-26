@@ -1,0 +1,240 @@
+.wm-range-number-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--wm-color-text-muted);
+}
+
+.wm-range-number-control input {
+  width: 3.7rem;
+  min-width: 0;
+}
+
+.wm-range-number-control input[type="range"] {
+  width: 7rem;
+}
+
+.wm-range-number-control button {
+  display: inline-grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  border: 1px solid var(--wm-color-border);
+  border-radius: var(--wm-radius-xs);
+  place-items: center;
+  color: var(--wm-color-text-muted);
+  background: var(--wm-color-surface-strong);
+  cursor: pointer;
+}
+
+.wm-range-number-control button svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.wm-range-number-control button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wm-reorder-controls {
+  display: inline-grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 1px;
+}
+
+.wm-reorder-controls button {
+  display: inline-grid;
+  width: 1.3rem;
+  height: 0.8rem;
+  padding: 0;
+  border: 1px solid var(--wm-color-border);
+  border-radius: 2px;
+  place-items: center;
+  color: var(--wm-color-text-muted);
+  background: var(--wm-color-surface-strong);
+  cursor: pointer;
+}
+
+.wm-reorder-controls button svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.wm-reorder-controls button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wm-selectable-list-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.3rem 0.4rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--wm-radius-xs);
+  background: var(--wm-color-surface-strong);
+}
+
+.wm-selectable-list-item[draggable="true"] {
+  cursor: grab;
+}
+.wm-selectable-list-item.is-active {
+  background: var(--wm-color-surface-solid);
+  box-shadow: inset 0 0 0 1px var(--wm-color-border-strong);
+}
+.wm-selectable-list-item.is-multi-selected {
+  background: color-mix(in oklab, var(--wm-color-accent) 12%, var(--wm-color-surface-strong));
+  box-shadow: inset 0 0 0 1px var(--wm-color-accent);
+}
+.wm-selectable-list-item.is-selected {
+  box-shadow: inset 0 0 0 2px var(--wm-color-accent);
+}
+.wm-selectable-list-item.is-dragging {
+  opacity: 0.5;
+}
+.wm-selectable-list-item.is-drag-over {
+  box-shadow: inset 0 2px 0 var(--wm-color-accent);
+}
+
+.wm-selectable-list-item:focus-visible,
+.wm-reorder-controls button:focus-visible,
+.wm-range-number-control button:focus-visible {
+  outline: 2px solid var(--wm-color-accent);
+  outline-offset: -2px;
+}
+
+.wm-anchored-popover {
+  position: fixed;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.55rem;
+  overflow: auto;
+  border: 1px solid var(--wm-color-border-strong);
+  border-radius: var(--wm-radius-xs);
+  box-shadow: var(--wm-shadow-md);
+  color: var(--wm-color-text);
+  background: var(--wm-color-surface-solid);
+}
+.wm-anchored-popover:not(:popover-open) {
+  display: none;
+}
+
+.wm-split-button {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+.wm-split-button > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--wm-color-border-strong);
+  border-radius: var(--wm-radius-xs) 0 0 var(--wm-radius-xs);
+  color: var(--wm-color-text);
+  background: var(--wm-color-surface-strong);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.wm-split-button > button svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.wm-split-button-menu {
+  position: relative;
+}
+.wm-split-button-menu summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  min-height: 1.85rem;
+  padding: 0.3rem;
+  border: 1px solid var(--wm-color-border-strong);
+  border-left: 0;
+  border-radius: 0 var(--wm-radius-xs) var(--wm-radius-xs) 0;
+  color: var(--wm-color-text);
+  background: var(--wm-color-surface-strong);
+  list-style: none;
+  cursor: pointer;
+}
+.wm-split-button-menu summary::-webkit-details-marker {
+  display: none;
+}
+.wm-split-button-menu summary svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+.wm-split-button > button:hover,
+.wm-split-button > button:focus-visible,
+.wm-split-button-menu summary:hover,
+.wm-split-button-menu[open] summary,
+.wm-split-button-menu summary:focus-visible {
+  color: var(--wm-color-accent);
+  border-color: var(--wm-color-accent);
+}
+.wm-split-button > button:focus-visible,
+.wm-split-button-menu summary:focus-visible {
+  outline: 2px solid var(--wm-color-accent);
+  outline-offset: 2px;
+}
+.wm-split-button > button:disabled,
+.wm-split-button-menu summary[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.wm-split-button-options {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  display: grid;
+  min-width: 8.5rem;
+  padding: 0.25rem;
+  border: 1px solid var(--wm-color-border-strong);
+  border-radius: var(--wm-radius-xs);
+  background: var(--wm-color-surface-overlay, var(--wm-color-surface-solid));
+  box-shadow: var(--wm-shadow-md);
+}
+.wm-split-button-option {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.35rem 0.45rem;
+  border: 0;
+  border-radius: 2px;
+  color: var(--wm-color-text);
+  background: transparent;
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+.wm-split-button-option:hover,
+.wm-split-button-option:focus-visible {
+  color: var(--wm-color-accent);
+  background: var(--wm-color-surface-strong);
+}
+.wm-split-button-option:focus-visible {
+  outline: 2px solid var(--wm-color-accent);
+  outline-offset: -2px;
+}
+.wm-split-button-option:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.wm-split-button-option svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.wm-selectable-list-item[hidden],
+.wm-reorder-controls[hidden],
+.wm-split-button[hidden] {
+  display: none;
+}

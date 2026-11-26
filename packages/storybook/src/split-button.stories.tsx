@@ -1,0 +1,43 @@
+import { useState } from "react";
+import { useArgs } from "storybook/preview-api";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { SplitButton, type SplitButtonProps } from "@wm-asset-workflows/ui-components";
+
+function SplitExample(args: SplitButtonProps) {
+  const [lastAction, setLastAction] = useState<string | null>(null);
+  return (
+    <div>
+      <SplitButton {...args} onAction={(value) => setLastAction(value)} />
+      <p role="status">{lastAction ? `Added ${lastAction}` : "Choose a shape, then add it."}</p>
+    </div>
+  );
+}
+const meta = {
+  title: "Shared/SplitButton",
+  component: SplitButton,
+  args: {
+    actionLabel: "Add element",
+    menuLabel: "Choose shape",
+    value: "rect",
+    options: [
+      { value: "rect", label: "Rectangle", icon: "Square" },
+      { value: "circle", label: "Circle", icon: "Circle" },
+      { value: "path", label: "Path", icon: "PenLine" },
+    ],
+  },
+  argTypes: {
+    options: { control: false },
+    onAction: { control: false },
+    onValueChange: { control: false },
+    buttonProps: { control: false },
+  },
+  render: function Render(args) {
+    const [, updateArgs] = useArgs();
+    return <SplitExample {...args} onValueChange={(value) => updateArgs({ value })} />;
+  },
+} satisfies Meta<typeof SplitButton>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+export const Default: Story = {};
+export const Disabled: Story = { args: { disabled: true } };
+export const Empty: Story = { args: { options: [], value: undefined } };

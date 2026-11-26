@@ -2,7 +2,9 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronDown,
+  ChevronUp,
   CircleCheck,
+  Circle,
   Check,
   Copy,
   Grid2x2,
@@ -11,14 +13,19 @@ import {
   Info,
   Link,
   Moon,
+  Minus,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
   Pencil,
+  PenLine,
+  Pentagon,
   Plus,
   Save,
   Sparkles,
+  Spline,
+  Square,
   Sun,
   Trash2,
   X,
@@ -39,7 +46,9 @@ const icons = {
   ArrowLeft,
   ArrowRight,
   ChevronDown,
+  ChevronUp,
   CircleCheck,
+  Circle,
   Check,
   Copy,
   Github,
@@ -49,20 +58,27 @@ const icons = {
   Info,
   Link,
   Moon,
+  Minus,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
   Pencil,
+  PenLine,
+  Pentagon,
   Plus,
   Save,
   Sparkles,
+  Spline,
+  Square,
   Sun,
   Trash2,
   X,
 };
 
-export function Icon({ name }: { name: keyof typeof icons }) {
+export type IconName = keyof typeof icons;
+
+export function Icon({ name }: { name: IconName }) {
   const Component = icons[name];
   return <Component aria-hidden="true" />;
 }

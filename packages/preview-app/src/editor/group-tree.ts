@@ -129,7 +129,7 @@ export function createGroupTree(
         }
       } else {
         const layer = context.layerByNumber.get(node.number);
-        if (layer) container.appendChild(context.renderElementRow(layer));
+        if (layer) context.renderElementRow(layer, container);
       }
     }
   }

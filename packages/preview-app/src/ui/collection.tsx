@@ -1,6 +1,13 @@
 import { buildProjectAssets, projectRouteHref, primaryProjectAsset } from "../project/model.js";
 import { appState } from "../app-state.js";
-import { Icon } from "@wm-asset-workflows/ui-components";
+import {
+  EmptyState,
+  Icon,
+  IconActionButton,
+  PreviewCard,
+  PreviewSurface,
+  ResponsiveGrid,
+} from "@wm-asset-workflows/ui-components";
 import { AssetPalette } from "./palette.js";
 import { showToast } from "../app-shell.js";
 import type { Asset } from "../types.js";
@@ -36,26 +43,28 @@ export function Collection({ onNewProject }: { onNewProject(): void }) {
                 </p>
               </div>
               {asset ? (
-                <div className="asset-grid">
-                  <article className="asset-tile">
-                    <div className="logo-frame">
-                      <a
-                        className="project-icon-link"
-                        href={projectRouteHref(name)}
-                        aria-label={`Open project page for ${name}`}
-                      >
-                        <img src={`../${asset.source}`} alt={asset.label} />
-                      </a>
-                    </div>
-                  </article>
-                </div>
+                <ResponsiveGrid className="asset-grid">
+                  <PreviewCard
+                    preview={
+                      <PreviewSurface className="logo-frame">
+                        <a
+                          className="project-icon-link"
+                          href={projectRouteHref(name)}
+                          aria-label={`Open project page for ${name}`}
+                        >
+                          <img src={`../${asset.source}`} alt={asset.label} />
+                        </a>
+                      </PreviewSurface>
+                    }
+                  />
+                </ResponsiveGrid>
               ) : (
-                <div className="project-empty-state">
+                <EmptyState className="project-empty-state">
                   <a href={projectRouteHref(name)} className="project-empty-cta">
                     <Icon name="ImagePlus" />
                     <span>Add first asset</span>
                   </a>
-                </div>
+                </EmptyState>
               )}
             </section>
           );
@@ -78,31 +87,33 @@ export function AssetCard({ asset }: { asset: Asset }) {
     }
   };
   return (
-    <article className="asset-tile">
-      <a className="asset-preview-link" href={href}>
-        <div className="logo-frame">
-          <img src={`../${asset.source}`} alt={asset.label} />
+    <PreviewCard
+      preview={
+        <a className="asset-preview-link" href={href}>
+          <PreviewSurface className="logo-frame">
+            <img src={`../${asset.source}`} alt={asset.label} />
+          </PreviewSurface>
+        </a>
+      }
+      title={asset.label}
+      titleHref={href}
+      footer={
+        <div className="asset-tile-footer">
+          <p>{asset.id}</p>
+          <IconActionButton
+            className="asset-copy-link btn btn-sm"
+            icon="Copy"
+            label={`Copy ${asset.label} deep link`}
+            title="Copy asset deep link"
+            onClick={copyLink}
+          />
         </div>
-      </a>
-      <a className="asset-title-link" href={href}>
-        <h3>{asset.label}</h3>
-      </a>
+      }
+    >
       <div className="asset-colors" aria-label={`Colors used in ${asset.label}`}>
         <span className="asset-colors-label">Colors</span>
         <AssetPalette asset={asset} />
       </div>
-      <div className="asset-tile-footer">
-        <p>{asset.id}</p>
-        <button
-          type="button"
-          className="asset-copy-link btn btn-sm"
-          aria-label={`Copy ${asset.label} deep link`}
-          title="Copy asset deep link"
-          onClick={copyLink}
-        >
-          <Icon name="Copy" />
-        </button>
-      </div>
-    </article>
+    </PreviewCard>
   );
 }

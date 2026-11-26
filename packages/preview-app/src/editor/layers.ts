@@ -11,6 +11,7 @@ import { showToast } from "../app-shell.js";
 import type { Asset, LayerController } from "../types.js";
 import { createLayerRow } from "./layer-row.js";
 import { createGroupTree } from "./group-tree.js";
+import type { EditorPresentation } from "./presentation.js";
 
 export function renderAssetLayers(
   root,
@@ -22,7 +23,9 @@ export function renderAssetLayers(
   onSelect,
   onMultiSelectChange,
   onRefresh: () => void,
+  presentation: EditorPresentation,
 ) {
+  const revision = presentation.revision;
   root.textContent = "Loading...";
   root.dataset.assetId = asset.id;
   editorPanel.hidden = true;
@@ -43,7 +46,12 @@ export function renderAssetLayers(
 
   loadAssetSvgData(asset.source)
     .then((data) => {
-      if (!root.isConnected || root.dataset.assetId !== asset.id) return;
+      if (
+        !root.isConnected ||
+        root.dataset.assetId !== asset.id ||
+        revision !== presentation.revision
+      )
+        return;
       root.textContent = "";
       const pendingSelection = assetPendingElementSelection.get(asset.id);
       if (pendingSelection !== undefined) assetPendingElementSelection.delete(asset.id);
@@ -103,6 +111,7 @@ export function renderAssetLayers(
           syncSelection();
         },
         (shape) => addElement(shape, data.svg),
+        presentation,
       );
       function syncSelection() {
         for (const [layerNumber, item] of layerItems) {
@@ -186,6 +195,7 @@ export function renderAssetLayers(
       };
       const layerByNumber = new Map(data.paintLayers.map((entry) => [entry.number, entry]));
       const layerRowController = createLayerRow({
+        presentation,
         onRefresh,
         onHighlight,
         get hoveredLayerNumber() {
@@ -236,7 +246,11 @@ export function renderAssetLayers(
     })
     .catch((error) => {
       console.error("Failed to render element editor", error);
-      if (root.isConnected && root.dataset.assetId === asset.id)
+      if (
+        root.isConnected &&
+        root.dataset.assetId === asset.id &&
+        revision === presentation.revision
+      )
         root.textContent = "Element information unavailable";
     });
 

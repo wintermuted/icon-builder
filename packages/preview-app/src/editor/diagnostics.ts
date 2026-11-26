@@ -1,8 +1,18 @@
 import { parseSvgViewBox } from "../svg/geometry.js";
 import { assetSourceSizeEdits, assetAccessibilityEdits } from "../svg/editor-state.js";
 import { loadAssetSvgData } from "../svg/analysis.js";
+import { createElement } from "react";
+import { EditableValue, PropertyList } from "@wm-asset-workflows/ui-components";
+import type { EditorPresentation } from "./presentation.js";
 
-export function renderAssetSourceSizeEditor(body, root, asset, data, onChange) {
+export function renderAssetSourceSizeEditor(
+  body,
+  root,
+  asset,
+  data,
+  onChange,
+  presentation: EditorPresentation,
+) {
   const sourceViewBox = parseSvgViewBox(data.viewBox);
   const sourceSize = assetSourceSizeEdits.get(asset.id) || {
     width: Number.isFinite(Number(data.width)) ? Number(data.width) : sourceViewBox?.[2],
@@ -10,22 +20,12 @@ export function renderAssetSourceSizeEditor(body, root, asset, data, onChange) {
   };
   assetSourceSizeEdits.set(asset.id, sourceSize);
   const summary = document.createElement("div");
-  summary.className = "asset-accessibility-summary";
+  summary.style.display = "contents";
   summary.dataset.sourceSizeSummary = "";
-  const label = document.createElement("span");
-  label.textContent = "Source size";
-  const value = document.createElement("code");
-  value.textContent =
+  const formattedValue =
     Number.isFinite(sourceSize.width) && Number.isFinite(sourceSize.height)
       ? `${sourceSize.width} × ${sourceSize.height}`
       : "Not defined";
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.className = "asset-accessibility-edit";
-  editButton.setAttribute("aria-label", "Edit source size");
-  editButton.title = "Edit source size";
-  editButton.innerHTML = '<i data-lucide="pencil" aria-hidden="true"></i>';
-  summary.append(label, value, editButton);
 
   const editor = document.createElement("div");
   editor.className = "asset-accessibility-editor";
@@ -63,14 +63,26 @@ export function renderAssetSourceSizeEditor(body, root, asset, data, onChange) {
   actions.append(cancel, apply);
   form.append(heading, widthLabel, heightLabel, actions);
   editor.appendChild(form);
+  presentation.mount(
+    summary,
+    createElement(EditableValue, {
+      label: "Source size",
+      value: formattedValue,
+      editLabel: "Edit source size",
+      className: "asset-accessibility-summary",
+      editButtonProps: { className: "asset-accessibility-edit" },
+      onEdit: () => {
+        widthInput.value = Number.isFinite(sourceSize.width) ? String(sourceSize.width) : "";
+        heightInput.value = Number.isFinite(sourceSize.height) ? String(sourceSize.height) : "";
+        editor.hidden = false;
+        widthInput.focus();
+      },
+    }),
+  );
+  const value = summary.querySelector("code");
+  if (!value) throw new Error("Source size summary did not mount.");
   body.insertBefore(summary, root);
   body.insertBefore(editor, root);
-  editButton.addEventListener("click", () => {
-    widthInput.value = Number.isFinite(sourceSize.width) ? String(sourceSize.width) : "";
-    heightInput.value = Number.isFinite(sourceSize.height) ? String(sourceSize.height) : "";
-    editor.hidden = false;
-    widthInput.focus();
-  });
   cancel.addEventListener("click", () => {
     editor.hidden = true;
   });
@@ -85,13 +97,25 @@ export function renderAssetSourceSizeEditor(body, root, asset, data, onChange) {
   });
 }
 
-export function renderAssetDiagnostics(root, asset, onAccessibilityChange, onSourceSizeChange) {
+export function renderAssetDiagnostics(
+  root,
+  asset,
+  onAccessibilityChange,
+  onSourceSizeChange,
+  presentation: EditorPresentation,
+) {
+  const revision = presentation.revision;
   root.textContent = "Loading...";
   root.dataset.assetId = asset.id;
 
   loadAssetSvgData(asset.source)
     .then((data) => {
-      if (!root.isConnected || root.dataset.assetId !== asset.id) return;
+      if (
+        !root.isConnected ||
+        root.dataset.assetId !== asset.id ||
+        revision !== presentation.revision
+      )
+        return;
       root.textContent = "";
       const accessibility = assetAccessibilityEdits.get(asset.id) || {
         title: data.accessibleName === "Not defined" ? "" : data.accessibleName,
@@ -103,20 +127,11 @@ export function renderAssetDiagnostics(root, asset, onAccessibilityChange, onSou
       body
         ?.querySelectorAll("[data-source-size-editor], [data-source-size-summary]")
         .forEach((element) => element.remove());
-      if (body) renderAssetSourceSizeEditor(body, root, asset, data, onSourceSizeChange);
+      if (body)
+        renderAssetSourceSizeEditor(body, root, asset, data, onSourceSizeChange, presentation);
       const summary = document.createElement("div");
-      summary.className = "asset-accessibility-summary";
-      const summaryLabel = document.createElement("span");
-      summaryLabel.textContent = "Accessibility";
-      const summaryValue = document.createElement("code");
-      summaryValue.textContent = accessibility.title || "No title or description";
-      const editButton = document.createElement("button");
-      editButton.type = "button";
-      editButton.className = "asset-accessibility-edit";
-      editButton.setAttribute("aria-label", "Edit accessible title and description");
-      editButton.title = "Edit accessible title and description";
-      editButton.innerHTML = '<i data-lucide="pencil" aria-hidden="true"></i>';
-      summary.append(summaryLabel, summaryValue, editButton);
+      summary.style.display = "contents";
+      summary.dataset.accessibilityEditor = "";
 
       const editor = document.createElement("div");
       editor.className = "asset-accessibility-editor";
@@ -148,19 +163,30 @@ export function renderAssetDiagnostics(root, asset, onAccessibilityChange, onSou
       actions.append(cancelButton, applyButton);
       form.append(heading, titleLabel, descriptionLabel, actions);
       editor.appendChild(form);
+      presentation.mount(
+        summary,
+        createElement(EditableValue, {
+          label: "Accessibility",
+          value: accessibility.title || "No title or description",
+          editLabel: "Edit accessible title and description",
+          className: "asset-accessibility-summary",
+          editButtonProps: { className: "asset-accessibility-edit" },
+          onEdit: () => {
+            titleInput.value = accessibility.title;
+            descriptionInput.value = accessibility.description;
+            editor.hidden = false;
+            titleInput.focus();
+          },
+        }),
+      );
+      const summaryValue = summary.querySelector("code");
+      if (!summaryValue) throw new Error("Accessibility summary did not mount.");
       body?.insertBefore(summary, root);
       body?.insertBefore(editor, root);
 
-      const openEditor = () => {
-        titleInput.value = accessibility.title;
-        descriptionInput.value = accessibility.description;
-        editor.hidden = false;
-        titleInput.focus();
-      };
       const closeEditor = () => {
         editor.hidden = true;
       };
-      editButton.addEventListener("click", openEditor);
       cancelButton.addEventListener("click", closeEditor);
       form.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -190,18 +216,22 @@ export function renderAssetDiagnostics(root, asset, onAccessibilityChange, onSou
           data.byteSize < 1024 ? `${data.byteSize} B` : `${(data.byteSize / 1024).toFixed(1)} KB`,
         ],
       ];
-      for (const [label, value] of diagnostics) {
-        const term = document.createElement("dt");
-        term.textContent = label;
-        const description = document.createElement("dd");
-        description.textContent = value;
-        root.appendChild(term);
-        root.appendChild(description);
-      }
+      presentation.mount(
+        root,
+        createElement(PropertyList, {
+          items: diagnostics.map(([label, value]) => ({ key: label, label, value })),
+          gap: "0.45rem 0.9rem",
+        }),
+      );
       if (typeof lucide !== "undefined") lucide.createIcons();
     })
-    .catch(() => {
-      if (root.isConnected && root.dataset.assetId === asset.id)
+    .catch((error) => {
+      console.error("Failed to render asset diagnostics", error);
+      if (
+        root.isConnected &&
+        root.dataset.assetId === asset.id &&
+        revision === presentation.revision
+      )
         root.textContent = "Diagnostics unavailable";
     });
 }

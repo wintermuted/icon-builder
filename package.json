@@ -21,7 +21,7 @@
     "format:check": "oxfmt --check .",
     "test:toolchain": "node --test scripts/node/typescript-toolchain.test.mjs",
     "test:file-size": "node --test scripts/node/file-size.test.mjs",
-    "test:preview": "node --test scripts/node/ensure-deps.test.mjs packages/preview-app/test/preview-editor.test.mjs packages/preview-app/test/vite-server.test.mjs",
+    "test:preview": "node --test --test-concurrency=1 scripts/node/ensure-deps.test.mjs packages/preview-app/test/preview-editor.test.mjs packages/preview-app/test/shared-components.test.mjs packages/preview-app/test/shared-layouts.test.mjs packages/preview-app/test/shared-primitives.test.mjs packages/preview-app/test/vite-server.test.mjs",
     "install:deps": "node scripts/node/install-deps.mjs",
     "preview": "npm run ensure:deps && nx run preview-app:serve",
     "storybook": "nx run storybook:serve",

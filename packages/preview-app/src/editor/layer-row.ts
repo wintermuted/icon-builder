@@ -6,10 +6,19 @@ import { updateAssetLayerEdits } from "../svg/apply-edits.js";
 import { assetLayerEdits } from "../svg/editor-state.js";
 import { SVG_ELEMENT_GEOMETRY_ATTRIBUTES, GEOMETRY_ATTRIBUTES } from "../svg/geometry.js";
 import type { LayerBindings } from "../controller-types.js";
+import { createElement } from "react";
+import {
+  PropertyList,
+  ReorderControls,
+  SelectableListItem,
+  type PropertyListItem,
+} from "@wm-asset-workflows/ui-components";
+import { nativeControl } from "./presentation.js";
 
 export function createLayerRow(
   context: Pick<
     LayerBindings,
+    | "presentation"
     | "onHighlight"
     | "hoveredLayerNumber"
     | "syncHighlight"
@@ -31,9 +40,20 @@ export function createLayerRow(
     | "onRefresh"
   >,
 ) {
-  function renderElementRow(layer) {
-    const item = document.createElement("li");
-    item.value = layer.number;
+  function renderElementRow(layer, container: HTMLElement) {
+    const contents = document.createElement("span");
+    contents.style.display = "contents";
+    context.presentation.mount(
+      container,
+      createElement(SelectableListItem, {
+        value: layer.number,
+        className: "asset-layer-draggable",
+        draggable: true,
+        children: nativeControl(contents),
+      }),
+    );
+    const item = container.lastElementChild;
+    if (!(item instanceof HTMLLIElement)) throw new Error("SelectableListItem did not mount.");
     let toggleSelection;
     if (context.onHighlight) {
       item.addEventListener("mouseenter", () => {
@@ -106,28 +126,26 @@ export function createLayerRow(
     }
 
     const reorder = document.createElement("span");
-    reorder.className = "asset-layer-reorder";
-    const moveUpButton = document.createElement("button");
-    moveUpButton.type = "button";
-    moveUpButton.className = "asset-layer-reorder-button";
-    moveUpButton.setAttribute("aria-label", `Move element ${layer.number} up`);
-    moveUpButton.innerHTML = '<i data-lucide="chevron-up" aria-hidden="true"></i>';
-    moveUpButton.disabled = layer.number >= context.data.paintLayerCount;
-    moveUpButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      reorderAssetLayer(context.asset, layer.number, layer.number + 1, () => context.onRefresh());
-    });
-    const moveDownButton = document.createElement("button");
-    moveDownButton.type = "button";
-    moveDownButton.className = "asset-layer-reorder-button";
-    moveDownButton.setAttribute("aria-label", `Move element ${layer.number} down`);
-    moveDownButton.innerHTML = '<i data-lucide="chevron-down" aria-hidden="true"></i>';
-    moveDownButton.disabled = layer.number <= 1;
-    moveDownButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      reorderAssetLayer(context.asset, layer.number, layer.number - 1, () => context.onRefresh());
-    });
-    reorder.append(moveUpButton, moveDownButton);
+    reorder.style.display = "contents";
+    context.presentation.mount(
+      reorder,
+      createElement(ReorderControls, {
+        label: `element ${layer.number}`,
+        className: "asset-layer-reorder",
+        buttonClassName: "asset-layer-reorder-button",
+        upDisabled: layer.number >= context.data.paintLayerCount,
+        downDisabled: layer.number <= 1,
+        stopPropagation: true,
+        onMoveUp: () =>
+          reorderAssetLayer(context.asset, layer.number, layer.number + 1, () =>
+            context.onRefresh(),
+          ),
+        onMoveDown: () =>
+          reorderAssetLayer(context.asset, layer.number, layer.number - 1, () =>
+            context.onRefresh(),
+          ),
+      }),
+    );
 
     item.draggable = true;
     item.classList.add("asset-layer-draggable");
@@ -158,6 +176,7 @@ export function createLayerRow(
     });
 
     const layerPaintControlsController = createLayerPaintControls({
+      presentation: context.presentation,
       layerEdits: context.layerEdits,
       layer,
       asset: context.asset,
@@ -178,17 +197,9 @@ export function createLayerRow(
     layerPaintControlsController.opacityValue.innerHTML = `<i data-lucide="circle-gauge" aria-hidden="true"></i><span>${layerPaintControlsController.opacityInput.value}</span>`;
     layerPaintControlsController.opacityValue.addEventListener("click", (event) => {
       event.stopPropagation();
-      layerPaintControlsController.positionPopover(
-        layerPaintControlsController.opacityEditor,
-        layerPaintControlsController.opacityValue,
-      );
+      const popover = layerPaintControlsController.opacityEditor;
+      if (!popover.matches(":popover-open")) popover.showPopover();
     });
-    layerPaintControlsController.opacityEditor.addEventListener("toggle", () =>
-      layerPaintControlsController.opacityValue.setAttribute(
-        "aria-expanded",
-        String(layerPaintControlsController.opacityEditor.matches(":popover-open")),
-      ),
-    );
     const layerEditor = document.createElement("div");
     layerEditor.className = "asset-layer-editor asset-layer-edit-mode";
     layerEditor.id = `asset-layer-edit-mode-${context.asset.id}-${layer.number}`;
@@ -216,6 +227,7 @@ export function createLayerRow(
       ) || "#000000";
     strokeInput.setAttribute("aria-label", `Element ${layer.number} stroke color`);
     const { field: strokeWidthField } = createSteppedNumberField({
+      presentation: context.presentation,
       value: currentAttrs["stroke-width"] ?? layer.elementNode.getAttribute("stroke-width") ?? "1",
       step: "0.01",
       ariaLabel: `Element ${layer.number} stroke width`,
@@ -236,20 +248,21 @@ export function createLayerRow(
     });
     strokeLabel.append(strokeInput, strokeWidthField);
     strokeControls.appendChild(strokeLabel);
-    const attributes = document.createElement("dl");
-    attributes.className = "asset-layer-attributes";
+    const attributes = document.createElement("div");
+    attributes.style.display = "contents";
+    const attributeItems: PropertyListItem[] = [];
     const dimensions = document.createElement("div");
     dimensions.className = "asset-layer-dimensions";
     const dimensionsTitle = document.createElement("strong");
     dimensionsTitle.textContent = "Dimensions";
-    const dimensionAttributes = document.createElement("dl");
-    dimensionAttributes.className = "asset-layer-attributes asset-layer-dimensions-list";
+    const dimensionAttributes = document.createElement("div");
+    dimensionAttributes.style.display = "contents";
+    const dimensionItems: PropertyListItem[] = [];
     dimensions.append(dimensionsTitle, dimensionAttributes);
     const elementGeometryNames = new Set(SVG_ELEMENT_GEOMETRY_ATTRIBUTES.get(layer.element) || []);
     const appendDimensionAttribute = (name, value) => {
-      const term = document.createElement("dt");
-      term.textContent = name;
-      const description = document.createElement("dd");
+      const description = document.createElement("span");
+      description.style.display = "contents";
       if (GEOMETRY_ATTRIBUTES.has(name)) {
         const { field, input } = createGeometryField({
           value: currentAttrs[name] ?? value,
@@ -264,6 +277,7 @@ export function createLayerRow(
       } else {
         const step = value.includes(".") ? "0.01" : "1";
         const { field } = createSteppedNumberField({
+          presentation: context.presentation,
           value: currentAttrs[name] ?? value,
           step,
           ariaLabel: `Element ${layer.number} ${name}`,
@@ -276,19 +290,18 @@ export function createLayerRow(
         });
         description.appendChild(field);
       }
-      dimensionAttributes.append(term, description);
+      dimensionItems.push({ key: name, label: name, value: nativeControl(description) });
     };
     for (const [name, value] of enumerateElementAttributes(layer.element, layer.attributes)) {
       if (elementGeometryNames.has(name)) {
         appendDimensionAttribute(name, value);
         continue;
       }
-      const term = document.createElement("dt");
-      term.textContent = name;
-      const description = document.createElement("dd");
+      const description = document.createElement("span");
+      description.style.display = "contents";
       if (name === "stroke") {
         description.appendChild(strokeControls);
-        attributes.append(term, description);
+        attributeItems.push({ key: name, label: name, value: nativeControl(description) });
         continue;
       }
       const isColorAttr = name === "fill" || name === "stroke";
@@ -323,6 +336,7 @@ export function createLayerRow(
         const initialOpacity =
           layerPaintControlsController.currentEdits.opacity ?? (value === "" ? 1 : Number(value));
         const { field, input } = createSteppedNumberField({
+          presentation: context.presentation,
           value: String(initialOpacity),
           step: "0.01",
           ariaLabel: `Element ${layer.number} opacity`,
@@ -334,6 +348,7 @@ export function createLayerRow(
       } else if (value !== "" && Number.isFinite(Number(value))) {
         const step = value.includes(".") ? "0.01" : "1";
         const { field } = createSteppedNumberField({
+          presentation: context.presentation,
           value: currentAttrs[name] ?? value,
           step,
           ariaLabel: `Element ${layer.number} ${name}`,
@@ -348,8 +363,22 @@ export function createLayerRow(
       } else {
         description.textContent = value;
       }
-      attributes.append(term, description);
+      attributeItems.push({ key: name, label: name, value: nativeControl(description) });
     }
+    context.presentation.mount(
+      attributes,
+      createElement(PropertyList, {
+        className: "asset-layer-attributes",
+        items: attributeItems,
+      }),
+    );
+    context.presentation.mount(
+      dimensionAttributes,
+      createElement(PropertyList, {
+        className: "asset-layer-attributes asset-layer-dimensions-list",
+        items: dimensionItems,
+      }),
+    );
     layerEditor.append(editorHeader, attributes, dimensions);
     const editButton = document.createElement("button");
     editButton.type = "button";
@@ -380,13 +409,9 @@ export function createLayerRow(
     layerPaintControlsController.details.append(
       layerPaintControlsController.opacityValue,
       editButton,
-      layerPaintControlsController.opacityEditor,
+      layerPaintControlsController.opacityHost,
     );
-    item.appendChild(selectLabel);
-    item.appendChild(number);
-    item.appendChild(reorder);
-    item.appendChild(identity);
-    item.appendChild(layerPaintControlsController.details);
+    contents.append(selectLabel, number, reorder, identity, layerPaintControlsController.details);
     context.layerItems.set(layer.number, item);
     context.layerCheckboxes.set(layer.number, selectCheckbox);
     context.layerEditButtons.set(layer.number, editButton);

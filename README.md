@@ -83,12 +83,69 @@ The React entrypoint is `packages/preview-app/src/main.tsx`; TSX components unde
 `ui/` render the shell, project collection, project/source pages, dialogs, and editor
 scaffold. The SVG editor retains imperative controllers for the mutable SVG
 document and its element controls, mounted and cleaned up by `AssetPage`.
-Shared icons, collapsible editor sidebars, the preview error boundary, and Mermaid
-diagrams live in `@wm-asset-workflows/ui-components`. Import them from the package
-entrypoint; Vite consumes its TSX source directly without a separate library build.
+Shared components live in `@wm-asset-workflows/ui-components`: icons, icon action
+buttons, inline rename forms, toasts, dialogs, file dropzones, prompt carousels,
+preview cards, collapsible editor sidebars, the preview error boundary, and Mermaid
+diagrams. Import them from the package entrypoint; Vite consumes its TSX source
+directly without a separate library build.
+The package also exports `PageHeader`, `ResponsiveGrid`, `SplitLayout`,
+`ActionGroup`, `FormField`, `StatusMessage`, `EmptyState`, `ResourceLinkList`,
+`ToggleButton`, and `AppFrame`. Headers and frames compose caller-owned content;
+grids accept item widths/gaps and auto-fit/auto-fill modes. Split layouts retain
+caller-provided pane wrappers and collapse at 680px (`compact`), 720px (`medium`),
+or below 900px (`wide`).
+`FormField` associates its input/select/textarea with labels, hints, and errors
+without taking over its value or ref. `ToggleButton` is controlled and can forward
+native button refs; omit `onPressedChange` when an existing DOM controller owns it.
+`ActionGroup` does not impose toolbar semantics. `StatusMessage` defaults to polite
+live text without a status role; error messages use alerts. Resource links receive
+prepared URLs and secure new-tab attributes, not application routing logic.
 Diagram components receive their data and Mermaid renderer through props rather
-than accessing application state or browser globals. Consumers provide the
-existing `preview/styles.css` classes; the package does not import app styles.
+than accessing application state or browser globals. API calls, routing, project
+prompt preparation, uploads, and the toast event adapter remain in `preview-app`.
+`InlineRename` is controlled by its caller; `FileDropzone` emits selected files;
+`PreviewCard` composes header, preview, title, body, and footer slots without an
+application asset model. `Dialog` owns focus trapping/restoration and dismissal.
+`Toast` optionally auto-dismisses through `onDismiss`; change `resetKey` to restart
+its timer when repeating the same message. `PromptCarousel` handles navigation and
+clipboard feedback; its optional `idPrefix` preserves application DOM hooks.
+
+`NumberStepper` supports controlled values or native uncontrolled inputs, forwards
+input refs/handlers, and bounds button increments with fractional steps.
+`PropertyList` renders semantic definition lists with caller-owned value controls.
+`EditableValue` composes a label, compact code value, and edit action; its caller
+owns editing and persistence. `PreviewSurface` contains images with configurable
+height and width. `CodeBlock` preserves text and optionally wraps long lines;
+clipboard actions remain separate. The app's imperative SVG controllers mount
+shared React presentation through route-owned portals, retaining their native
+controls and cleaning up presentation on refresh or navigation.
+
+`RangeNumberControl` coordinates a range slider, numeric input, and bounded
+increment/decrement actions. It supports controlled values or forwarded native
+input refs for existing controllers. `ReorderControls` emits directional actions
+with caller-owned boundary rules. `SelectableListItem` is a semantic list item
+with independent active, selected, marked, and drag states; callers provide its
+selection controls and drag handlers.
+`AnchoredPopover` uses the native popover lifecycle, clamps to its `anchorRef`
+and viewport, and repositions on scrolling, resizing, or content changes.
+Give it an accessible name and connect its ID to the trigger's `popoverTarget`
+or existing native controller. `SplitButton` separates option selection from its
+primary action, supports controlled/default selections, and handles keyboard
+navigation, Escape, outside clicks, and disabled/empty choices. These components
+do not interpret SVG shapes, reorder models, or persist edits.
+
+React is a peer dependency; `@wintermuted/ui-theme` is a direct dependency of
+`ui-components`. Consumers load the global theme once, followed by the package
+stylesheet:
+
+```tsx
+import "@wintermuted/ui-theme/index.css";
+import "@wm-asset-workflows/ui-components/styles.css";
+```
+
+The extracted controls and layout primitives own their styles in the package. Existing
+sidebar, diagram, and error-boundary layouts still use `preview/styles.css`;
+the shared package does not import that app stylesheet.
 If the Mermaid CDN is unavailable, navigation and editing remain usable; only
 nonempty diagram sections show an unavailable-renderer alert.
 The entrypoint composes modules under `packages/preview-app/src/`:
@@ -101,7 +158,9 @@ CI verifies the 500/501-line JS/TS/TSX boundary and browser editing against Vite
 production output, served under a nested PR-preview prefix. Local browser
 regressions use Vite's dev middleware without running a build. They use a
 deterministic SVG/manifest fixture, real React/Lucide, and a Mermaid stub (diagram
-rendering is not the subject of these editing tests). A separate integration test
+rendering is not the subject of these editing tests). Test files run sequentially
+to keep their Vite middleware servers from competing for a WebSocket port.
+A separate integration test
 exercises the real Vite configuration, repository data, and backend API.
 Chromium must already be installed.
 
@@ -131,8 +190,9 @@ reports the unavailable assets instead of hiding all results.
 
 ### Storybook publishing
 
-The catalog covers all five shared React components with controls, generated
-API docs, and a Light/Dark toolbar. Stories reuse the app theme and stylesheet,
+The catalog covers all twelve shared React components with controls, generated
+API docs, and a Light/Dark toolbar. Stories load the theme, shared component styles,
+and the remaining app layout stylesheet,
 not its entrypoint or backend. Mermaid is bundled so diagram examples work
 without a CDN. Sidebar stories use separate storage keys to avoid changing
 the app's persisted sidebar preferences.
@@ -144,7 +204,8 @@ alongside the app at `/icon-builder/preview/`. PR deployments include both at
 The existing Pages workflow builds and typechecks the workspace, stages
 `dist/storybook/` into the same artifact, and health-checks both surfaces.
 CI also renders the staged catalog at production and nested PR prefixes before
-deployment, including all 11 stories and generated Docs.
+deployment, including all 72 stories, 32 generated Docs pages, and interactive
+checks for the extracted controls and layout primitives.
 Closing a PR removes its entire preview directory, including Storybook.
 
 Vite uses relative asset URLs and an isolated Storybook configuration, so the
@@ -155,8 +216,9 @@ same static catalog works at production and nested PR paths. Add stories under
 
 The preview app owns `@wintermuted/ui-theme`, `lucide`, React, React DOM, Vite,
 its React plugin, and React typings in `packages/preview-app/package.json`.
-The `ui-components` workspace owns Lucide React and declares React as a peer
-dependency so consumers share their React runtime. npm may hoist or nest workspace dependencies;
+The `ui-components` workspace owns Lucide React and the Wintermuted theme as direct
+dependencies, and declares React as a peer dependency so consumers share their
+runtime. npm may hoist or nest workspace dependencies;
 the dependency check resolves Vite from the owning package rather than assuming
 a root-level binary. The theme is bundled by Vite and the SVG editor uses the
 existing Lucide DOM adapter.

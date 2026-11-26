@@ -1,4 +1,12 @@
-import { EditorSidebar, Icon } from "@wm-asset-workflows/ui-components";
+import {
+  ActionGroup,
+  EditorSidebar,
+  EditableValue,
+  FormField,
+  Icon,
+  IconActionButton,
+  StatusMessage,
+} from "@wm-asset-workflows/ui-components";
 
 export function AnalysisPanel() {
   return (
@@ -26,15 +34,12 @@ export function AnalysisPanel() {
                   defaultValue="#257375"
                   aria-label="Choose asset palette color"
                 />
-                <button
-                  type="button"
+                <IconActionButton
                   id="asset-custom-color-add"
                   className="asset-color-add-button"
-                  aria-label="Add asset palette color"
-                  title="Add asset palette color"
-                >
-                  <Icon name="Plus" />
-                </button>
+                  icon="Plus"
+                  label="Add asset palette color"
+                />
               </form>
             </div>
           </div>
@@ -42,10 +47,9 @@ export function AnalysisPanel() {
             <span className="asset-color-group-label">Project palette</span>
             <div id="asset-project-colors" className="asset-colors-list" />
           </div>
-          <p
+          <StatusMessage
             id="asset-color-highlight-status"
             className="asset-color-highlight-status"
-            aria-live="polite"
           />
         </div>
       </details>
@@ -61,25 +65,25 @@ export function AnalysisPanel() {
           className="asset-detail-disclosure-body"
           aria-labelledby="asset-detail-diagnostics-heading"
         >
-          <div className="asset-viewbox-summary">
-            <span>ViewBox</span>
-            <code id="asset-viewbox-value">Loading...</code>
-            <button
-              id="asset-viewbox-edit"
-              type="button"
-              className="asset-viewbox-edit"
-              aria-label="Edit ViewBox"
-              title="Edit ViewBox"
-            >
-              <Icon name="Pencil" />
-            </button>
-          </div>
+          <EditableValue
+            className="asset-viewbox-summary"
+            label="ViewBox"
+            value="Loading..."
+            valueProps={{ id: "asset-viewbox-value" }}
+            editLabel="Edit ViewBox"
+            editButtonProps={{ id: "asset-viewbox-edit", className: "asset-viewbox-edit" }}
+          />
           <div id="asset-viewbox-editor" className="asset-viewbox-editor" hidden>
             <form id="asset-viewbox-form">
               <strong>Edit ViewBox</strong>
               {(["x", "y", "width", "height"] as const).map((name) => (
-                <label key={name}>
-                  {name === "width" ? "W" : name === "height" ? "H" : name.toUpperCase()}
+                <FormField
+                  key={name}
+                  controlId={`asset-viewbox-${name}`}
+                  className="asset-viewbox-field"
+                  label={name === "width" ? "W" : name === "height" ? "H" : name.toUpperCase()}
+                  inline
+                >
                   <input
                     id={`asset-viewbox-${name}`}
                     type="number"
@@ -87,17 +91,23 @@ export function AnalysisPanel() {
                     min={name === "width" || name === "height" ? "0.01" : undefined}
                     aria-label={`ViewBox ${name === "x" || name === "y" ? name.toUpperCase() : name}`}
                   />
-                </label>
+                </FormField>
               ))}
-              <div className="asset-viewbox-actions">
+              <ActionGroup
+                className="asset-viewbox-actions"
+                gap="0.4rem"
+                align="stretch"
+                justify="flex-end"
+                wrap={false}
+              >
                 <button type="button" id="asset-viewbox-cancel">
                   Cancel
                 </button>
                 <button type="submit">Apply</button>
-              </div>
+              </ActionGroup>
             </form>
           </div>
-          <dl id="asset-detail-diagnostics" />
+          <div id="asset-detail-diagnostics" />
         </div>
       </details>
     </EditorSidebar>

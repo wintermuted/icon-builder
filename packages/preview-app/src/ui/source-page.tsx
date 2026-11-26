@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { appState } from "../app-state.js";
 import { projectRouteHref, resolveAssetPath } from "../project/model.js";
-import { Icon } from "@wm-asset-workflows/ui-components";
+import {
+  CodeBlock,
+  Icon,
+  PageHeader,
+  PreviewSurface,
+  SplitLayout,
+  StatusMessage,
+} from "@wm-asset-workflows/ui-components";
 
 export function SourcePage({
   projectName,
@@ -27,18 +34,21 @@ export function SourcePage({
   };
   return (
     <section id="source-detail" className="source-detail-page">
-      <header className="project-detail-header">
-        <a
-          id="source-project-link"
-          href={projectRouteHref(projectName)}
-          className="asset-back-link"
-        >
-          Back to {projectName}
-        </a>
-        <div className="project-detail-title-row">
-          <h3 id="source-detail-title">
-            {source ? source.title || "Source Image" : "Source image not found"}
-          </h3>
+      <PageHeader
+        className="project-detail-header"
+        titleRowClassName="project-detail-title-row"
+        title={source ? source.title || "Source Image" : "Source image not found"}
+        titleId="source-detail-title"
+        navigation={
+          <a
+            id="source-project-link"
+            href={projectRouteHref(projectName)}
+            className="asset-back-link"
+          >
+            Back to {projectName}
+          </a>
+        }
+        actions={
           <a
             id="source-deep-link"
             className="project-deep-link"
@@ -48,15 +58,27 @@ export function SourcePage({
           >
             <Icon name="Link" />
           </a>
-        </div>
-        <p id="source-detail-meta" className="asset-detail-meta">
-          {source
-            ? `${projectName} · ${source.src}`
-            : "This source may have been renamed or removed."}
-        </p>
-      </header>
-      <div className="source-detail-layout">
-        <div className="source-detail-preview">
+        }
+        meta={
+          <p id="source-detail-meta" className="asset-detail-meta">
+            {source
+              ? `${projectName} · ${source.src}`
+              : "This source may have been renamed or removed."}
+          </p>
+        }
+      />
+      <SplitLayout
+        className="source-detail-layout"
+        primarySize="1.4fr"
+        secondarySize="0.8fr"
+        secondaryMinWidth="260px"
+      >
+        <PreviewSurface
+          className="source-detail-preview"
+          maxImageHeight="70vh"
+          imageWidth="100%"
+          style={{ minHeight: 0 }}
+        >
           {source && (
             <img
               id="source-detail-image"
@@ -64,20 +86,20 @@ export function SourcePage({
               alt={source.alt || source.title || "Steering source image"}
             />
           )}
-        </div>
+        </PreviewSurface>
         <div className="source-detail-reference">
           <h4>Prompt Reference</h4>
           <p>Use this reference when asking an agent to inspect or build from this image.</p>
-          <pre id="source-prompt-reference">{reference}</pre>
+          <CodeBlock id="source-prompt-reference">{reference}</CodeBlock>
           <button id="source-copy-reference" type="button" className="btn btn-sm" onClick={copy}>
             <Icon name="Copy" />
             Copy Reference
           </button>
-          <p id="source-copy-status" className="project-copy-status" aria-live="polite">
+          <StatusMessage id="source-copy-status" className="project-copy-status">
             {status}
-          </p>
+          </StatusMessage>
         </div>
-      </div>
+      </SplitLayout>
     </section>
   );
 }

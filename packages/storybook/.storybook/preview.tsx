@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { Preview } from "@storybook/react-vite";
 import "@wintermuted/ui-theme/index.css";
+import "@wm-asset-workflows/ui-components/styles.css";
 import "../../../preview/styles.css";
 
 const preview: Preview = {
@@ -25,7 +26,7 @@ const preview: Preview = {
         document.documentElement.setAttribute("data-theme", context.globals.theme);
       }, [context.globals.theme]);
       return (
-        <div className="preview-shell">
+        <div className="wm-app-frame-body">
           <Story />
         </div>
       );

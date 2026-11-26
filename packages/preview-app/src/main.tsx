@@ -22,6 +22,7 @@ import { PreviewBoundary } from "@wm-asset-workflows/ui-components";
 import { appState } from "./app-state.js";
 import { loadJson } from "./app-shell.js";
 import "@wintermuted/ui-theme/index.css";
+import "@wm-asset-workflows/ui-components/styles.css";
 import "../../../preview/styles.css";
 
 // Only the SVG editor's imperative controls use Lucide's DOM adapter.

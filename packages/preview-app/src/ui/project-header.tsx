@@ -1,19 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { projectRouteHref } from "../project/model.js";
-import { Icon } from "@wm-asset-workflows/ui-components";
+import {
+  Icon,
+  IconActionButton,
+  InlineRename,
+  PageHeader,
+} from "@wm-asset-workflows/ui-components";
 
 export function ProjectHeader({ name, found }: { name: string; found: boolean }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (editing) {
-      input.current?.focus();
-      input.current?.select();
-    }
-  }, [editing]);
   const rename = async (event: React.FormEvent) => {
     event.preventDefault();
     setBusy(true);
@@ -34,8 +32,12 @@ export function ProjectHeader({ name, found }: { name: string; found: boolean })
     }
   };
   return (
-    <header className="project-detail-header">
-      <div className="project-detail-title-row">
+    <PageHeader
+      className="project-detail-header"
+      titleRowClassName="project-detail-title-row"
+      title={found ? name : "Project not found"}
+      titleId="project-detail-title"
+      leading={
         <a
           href="#logos"
           className="project-title-action"
@@ -44,64 +46,49 @@ export function ProjectHeader({ name, found }: { name: string; found: boolean })
         >
           <Icon name="ArrowLeft" />
         </a>
-        <h3 id="project-detail-title">{found ? name : "Project not found"}</h3>
-        <button
-          id="project-rename-button"
-          type="button"
-          className="project-title-action"
-          aria-label="Rename project"
-          title="Rename project"
-          disabled={!found}
-          onClick={() => setEditing(true)}
-        >
-          <Icon name="Pencil" />
-        </button>
-        <a
-          id="project-deep-link"
-          className="project-deep-link"
-          href={window.location.href}
-          title="Project deep link"
-          aria-label={`${name} project deep link`}
-        >
-          <Icon name="Link" />
-        </a>
-      </div>
-      <form
+      }
+      actions={
+        <>
+          <IconActionButton
+            id="project-rename-button"
+            className="project-title-action"
+            icon="Pencil"
+            label="Rename project"
+            disabled={!found}
+            onClick={() => setEditing(true)}
+          />
+          <a
+            id="project-deep-link"
+            className="project-deep-link"
+            href={window.location.href}
+            title="Project deep link"
+            aria-label={`${name} project deep link`}
+          >
+            <Icon name="Link" />
+          </a>
+        </>
+      }
+    >
+      <InlineRename
         id="project-rename-form"
         className="project-rename-form"
         data-project={name}
-        hidden={!editing}
+        open={editing}
+        value={value}
+        label="Project name"
+        busy={busy}
+        onValueChange={setValue}
         onSubmit={rename}
-      >
-        <input
-          ref={input}
-          id="project-rename-input"
-          className="wm-input"
-          type="text"
-          aria-label="Project name"
-          required
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-        />
-        <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
-          Save
-        </button>
-        <button
-          id="project-rename-cancel"
-          type="button"
-          className="btn btn-sm"
-          onClick={() => {
-            setEditing(false);
-            setStatus("");
-            setValue(name);
-          }}
-        >
-          Cancel
-        </button>
-        <p id="project-rename-status" aria-live="polite">
-          {status}
-        </p>
-      </form>
-    </header>
+        onCancel={() => {
+          setEditing(false);
+          setStatus("");
+          setValue(name);
+        }}
+        inputProps={{ id: "project-rename-input", required: true }}
+        cancelButtonProps={{ id: "project-rename-cancel" }}
+        status={status}
+        statusProps={{ id: "project-rename-status" }}
+      />
+    </PageHeader>
   );
 }
