@@ -20,6 +20,8 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "test:toolchain": "node --test scripts/node/typescript-toolchain.test.mjs",
+    "test:file-size": "node --test scripts/node/file-size.test.mjs",
+    "test:preview": "node --test scripts/node/preview-editor.test.mjs",
     "install:deps": "node scripts/node/install-deps.mjs",
     "preview": "npm run ensure:deps && nx run preview-server:serve",
     "ensure:deps": "node scripts/node/ensure-deps.mjs",

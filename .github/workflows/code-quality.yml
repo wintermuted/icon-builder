@@ -31,5 +31,19 @@ jobs:
       - name: Lint with Oxlint
         run: npm run lint
 
+      - name: Verify the source file length boundary
+        run: npm run test:file-size
+
       - name: Check formatting with Oxfmt
         run: npm run format:check
+
+      - name: Build the real browser bundle
+        run: npm run nx -- run preview-app:build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify preview editor behavior
+        run: npm run test:preview
+        env:
+          PREVIEW_TEST_BUNDLE: "1"

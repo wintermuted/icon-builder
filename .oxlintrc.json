@@ -3,5 +3,8 @@
   "categories": {
     "correctness": "error"
   },
+  "rules": {
+    "eslint/max-lines": ["error", { "max": 500, "skipBlankLines": false, "skipComments": false }]
+  },
   "ignorePatterns": ["node_modules/**", ".nx/**", "dist/**", "outputs/**", "preview/app.js"]
 }

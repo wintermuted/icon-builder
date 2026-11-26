@@ -135,7 +135,7 @@ export function showToast(message) {
 function decodeHashSegment(value) {
   try {
     return decodeURIComponent(value);
-  } catch (_error) {
+  } catch {
     return value;
   }
 }
