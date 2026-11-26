@@ -1,5 +1,0 @@
-import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t}from"./iframe-Dp-O5ltd.js";import{ot as n,t as r}from"./src-CXCu7fA9.js";var i,a,o,s,c;function l(){return(l=e((()=>{r(),i=t(),a={id:`shared-icon`,title:`Shared/Display/Icon`,component:n,args:{name:`Sparkles`},argTypes:{name:{control:`select`,options:[`ArrowLeft`,`ArrowRight`,`ChevronDown`,`CircleCheck`,`Check`,`Copy`,`Github`,`Grid2x2`,`ImagePlus`,`ImageUp`,`Info`,`Link`,`Moon`,`PanelLeftClose`,`PanelLeftOpen`,`PanelRightClose`,`PanelRightOpen`,`Pencil`,`Plus`,`Save`,`Sparkles`,`Sun`,`Trash2`,`X`]}},render:e=>(0,i.jsxs)(`button`,{className:`btn`,type:`button`,children:[(0,i.jsx)(n,{...e}),(0,i.jsx)(`span`,{children:e.name})]})},o={},s={args:{name:`Github`}},c=[`Default`,`Github`],o.parameters={...o.parameters,docs:{...o.parameters?.docs,source:{originalSource:`{}`,...o.parameters?.docs?.source}}},s.parameters={...s.parameters,docs:{...s.parameters?.docs,source:{originalSource:`{
-  args: {
-    name: "Github"
-  }
-}`,...s.parameters?.docs?.source}}}})))()}l();export{o as Default,s as Github,c as __namedExportsOrder,a as default};
