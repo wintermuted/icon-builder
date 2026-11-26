@@ -25,6 +25,10 @@
       "dependsOn": [
         "build",
         {
+          "projects": ["preview-app"],
+          "target": "build"
+        },
+        {
           "projects": ["workflows"],
           "target": "build-specs"
         }

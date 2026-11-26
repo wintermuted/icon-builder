@@ -307,15 +307,77 @@ test("React project creation retains slug generation, focus, and API payloads", 
     true,
   );
   await page.locator("#new-project-btn").click();
-  await page.locator("#np-name").fill("New Project");
+  await page.locator("#np-name").fill(" New Project ");
+  let completeRequest;
+  const pending = new Promise((resolve) => (completeRequest = resolve));
+  await page.route("**/~scaffold", async (route) => {
+    await pending;
+    await route.continue();
+  });
   const count = server.requests.length;
+  const request = page.waitForRequest((request) => request.url().endsWith("/~scaffold"));
   await page.locator("#np-form button[type=submit]").click();
+  await request;
+  await page.locator("#np-name").fill("Changed while pending");
+  completeRequest();
   await page.locator("#np-success-name").filter({ hasText: "New Project" }).waitFor();
+  assert.equal(await page.locator("#np-success-name").textContent(), "New Project");
   assert.deepEqual(
     server.requests.slice(count).find((item) => item.path === "/~scaffold").payload,
     { name: "New Project", slug: "new-project" },
   );
+  assert.equal(
+    await page.locator(".np-done").evaluate((element) => element === document.activeElement),
+    true,
+  );
+  for (const key of ["Tab", "Shift+Tab"]) {
+    for (let count = 0; count < 8; count++) {
+      await page.keyboard.press(key);
+      assert.equal(
+        await page
+          .locator("#new-project-modal")
+          .evaluate((element) => element.contains(document.activeElement)),
+        true,
+      );
+    }
+  }
+  await page.locator("#new-project-btn").evaluate((element) => element.focus());
+  await page.keyboard.press("Tab");
+  assert.equal(
+    await page
+      .locator("#new-project-modal")
+      .evaluate((element) => element.contains(document.activeElement)),
+    true,
+  );
+  await page.route("**/manifests/assets.json", async (route) => {
+    const response = await route.fetch();
+    const manifest = await response.json();
+    manifest.projects.push({ name: "New Project", slug: "new-project" });
+    await route.fulfill({ json: manifest });
+  });
+  await page.locator(".np-done").click();
+  await page.locator("#project-detail-title").filter({ hasText: "New Project" }).waitFor();
+  assert.equal(new URL(page.url()).hash, "#project/New%20Project");
 });
+
+for (const [failure, status, body] of [
+  ["missing", 404, "Not found"],
+  ["malformed", 200, "<svg><broken"],
+]) {
+  test(`project colors retain valid assets when another SVG is ${failure}`, async () => {
+    await page.route("**/assets/svg/other.svg", (route) =>
+      route.fulfill({ status, body, contentType: "image/svg+xml" }),
+    );
+    await page.evaluate(() => (window.location.hash = "project/Fixture%20Project"));
+    await page.locator(".project-icon-colors [role=status]").waitFor();
+    assert.match(
+      await page.locator(".project-icon-colors [role=status]").textContent(),
+      /Colors unavailable for 1 asset: Other asset/,
+    );
+    const colors = await page.locator(".project-icon-color-value").allTextContents();
+    assert.deepEqual(colors.sort(), ["#112233", "#445566", "#778899"]);
+  });
+}
 
 test("React prompt carousel and source rename form reset across routes", async () => {
   await page.evaluate(() => (window.location.hash = "project/Fixture%20Project"));

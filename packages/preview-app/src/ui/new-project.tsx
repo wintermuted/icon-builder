@@ -17,6 +17,7 @@ export function NewProject({ onClose }: { onClose(): void }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ScaffoldResult | null>(null);
   const nameInput = useRef<HTMLInputElement>(null);
+  const doneButton = useRef<HTMLButtonElement>(null);
   const previousFocus = useRef(document.activeElement);
   const modal = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -30,7 +31,10 @@ export function NewProject({ onClose }: { onClose(): void }) {
         ).filter((element) => element.getClientRects().length);
         const first = targets[0],
           last = targets.at(-1);
-        if (event.shiftKey && document.activeElement === first) {
+        if (!modal.current?.contains(document.activeElement)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first)?.focus();
+        } else if (event.shiftKey && document.activeElement === first) {
           event.preventDefault();
           last?.focus();
         } else if (!event.shiftKey && document.activeElement === last) {
@@ -46,10 +50,14 @@ export function NewProject({ onClose }: { onClose(): void }) {
       if (focus instanceof HTMLElement) focus.focus();
     };
   }, [onClose]);
+  useEffect(() => {
+    if (result) doneButton.current?.focus();
+  }, [result]);
   const create = async (event: React.FormEvent) => {
     event.preventDefault();
+    const submittedName = name.trim();
     const directory = slugify(slug || name);
-    if (!name.trim() || !directory) {
+    if (!submittedName || !directory) {
       setError("Project name and slug are required.");
       return;
     }
@@ -59,10 +67,12 @@ export function NewProject({ onClose }: { onClose(): void }) {
       const response = await fetch("/~scaffold", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), slug: directory }),
+        body: JSON.stringify({ name: submittedName, slug: directory }),
       });
       const value = await response.json();
       if (!response.ok || value.error) throw new Error(value.error || "Scaffold failed");
+      setName(submittedName);
+      setSlug(directory);
       setResult(value);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
@@ -220,6 +230,7 @@ export function NewProject({ onClose }: { onClose(): void }) {
             </div>
             <div className="np-actions">
               <button
+                ref={doneButton}
                 type="button"
                 className="btn btn-sm np-done"
                 onClick={() => {

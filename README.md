@@ -105,11 +105,17 @@ retain the existing short reload-suppression window.
 `preview/index.html` is a thin Vite entry; application CSS and the theme are imported
 by `main.tsx`. `preview/styles.css` remains the authored application stylesheet.
 `preview-app:build` writes HTML and hashed JS/CSS to `dist/preview-app/`.
+Its Nx cache includes the external preview HTML, stylesheet, and favicon source.
+`preview-server:serve` builds that app output and the spec index before serving
+the production bundle. The compatibility `scripts/node/build-spec-index.mjs`
+entrypoint explicitly rebuilds the index using the compiled workflows package.
 Relative asset URLs support both the Pages root and nested PR previews.
 Pages copies that output alongside canonical SVGs, the manifest, and the spec index;
 the capture workflow serves it through the backend's `--built` mode.
 Pages artifacts are named per workflow run attempt, and deployment waits for API
 visibility so reruns cannot collide with an earlier attempt's artifact.
+Project color analysis retains valid SVG colors when another asset fails and
+reports the unavailable assets instead of hiding all results.
 
 ### Dependency and Compiler Upgrades
 

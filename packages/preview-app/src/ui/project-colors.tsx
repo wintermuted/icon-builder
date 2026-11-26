@@ -131,6 +131,13 @@ export function ProjectIconColors({ projectName }: { projectName: string }) {
             );
           })}
       </div>
+      {!!data?.failedAssets.length && (
+        <p role="status">
+          Colors unavailable for {data.failedAssets.length} asset
+          {data.failedAssets.length === 1 ? "" : "s"}:{" "}
+          {data.failedAssets.map((asset) => asset.label).join(", ")}.
+        </p>
+      )}
       <p
         id="project-icon-colors-empty"
         className="project-icon-colors-empty"

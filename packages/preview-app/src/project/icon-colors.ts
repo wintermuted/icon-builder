@@ -9,11 +9,23 @@ interface ColorUsage {
 }
 
 export async function collectColorUsageAcrossAssets() {
-  const entries = await Promise.all(
-    appState.assetData.map(async (asset) => {
+  const assets = appState.assetData;
+  const results = await Promise.allSettled(
+    assets.map(async (asset) => {
       return { asset, colors: await loadAssetColors(asset.source) };
     }),
   );
+  const entries: { asset: Asset; colors: string[] }[] = [];
+  const failedAssets: Asset[] = [];
+  for (const [index, result] of results.entries()) {
+    if (result.status === "fulfilled") {
+      entries.push(result.value);
+    } else {
+      const asset = assets[index];
+      failedAssets.push(asset);
+      console.error(`Colors unavailable for ${asset.source}`, result.reason);
+    }
+  }
   const usage = new Map<string, ColorUsage>();
   for (const { asset, colors } of entries) {
     const project = projectForAsset(asset);
@@ -29,5 +41,5 @@ export async function collectColorUsageAcrossAssets() {
       record.projects.set(project, projectAssets);
     }
   }
-  return { usage, entries };
+  return { usage, entries, failedAssets };
 }

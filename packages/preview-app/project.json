@@ -7,7 +7,13 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["production", "^production"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/preview/index.html",
+        "{workspaceRoot}/preview/styles.css",
+        "{workspaceRoot}/assets/svg/wintermuted-brand/wm-wintermuted-mark.svg"
+      ],
       "outputs": ["{workspaceRoot}/dist/preview-app"],
       "options": {
         "command": "npm run build --workspace @wm-asset-workflows/preview-app"
