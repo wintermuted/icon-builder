@@ -8,8 +8,10 @@ import { test } from "node:test";
 const metadata = JSON.parse(await readFile("node_modules/oxlint/package.json", "utf8"));
 const cli = resolve("node_modules/oxlint", metadata.bin.oxlint);
 const config = resolve(".oxlintrc.json");
-function lint(path) {
-  const result = spawnSync(process.execPath, [cli, "--config", config, path], { encoding: "utf8" });
+function lint(...paths) {
+  const result = spawnSync(process.execPath, [cli, "--config", config, ...paths], {
+    encoding: "utf8",
+  });
   if (result.error) throw result.error;
   return result;
 }
@@ -22,6 +24,7 @@ for (const extension of ["js", "ts"]) {
       const lines = Array.from({ length: 500 }, (_, index) =>
         index % 2 === 0 ? "" : "// This comment counts toward the limit.",
       );
+      lines[0] = "export const boundary = 1;";
       await writeFile(path, lines.join("\n"));
       const allowed = lint(path);
       assert.equal(allowed.status, 0, allowed.stdout + allowed.stderr);
@@ -36,6 +39,6 @@ for (const extension of ["js", "ts"]) {
 }
 
 test("the generated preview bundle remains excluded from the source line limit", () => {
-  const result = lint(resolve("preview/app.js"));
+  const result = lint(resolve("preview/app.js"), resolve("scripts/node/ensure-deps.mjs"));
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
