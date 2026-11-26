@@ -14,7 +14,7 @@ description: >
 
 The manifest is the central catalog consumed by:
 
-- The browser preview app (`preview/app.js`) to render logo tiles
+- The React preview app (`packages/preview-app/src/main.tsx`, bundled by Vite) to render logo tiles
 - The PNG generator (`scripts/python/generate_images.py`) to produce output sheets
 
 ### Schema

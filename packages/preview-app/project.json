@@ -8,9 +8,16 @@
       "executor": "nx:run-commands",
       "cache": true,
       "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/preview/app.js"],
+      "outputs": ["{workspaceRoot}/dist/preview-app"],
       "options": {
-        "command": "esbuild packages/preview-app/src/app.ts --bundle --format=esm --platform=browser --target=es2022 --outfile=preview/app.js"
+        "command": "npm run build --workspace @wm-asset-workflows/preview-app"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "npm run dev --workspace @wm-asset-workflows/preview-app"
       }
     }
   },

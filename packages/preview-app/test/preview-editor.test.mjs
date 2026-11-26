@@ -24,22 +24,18 @@ after(async () => {
 beforeEach(async () => {
   context = await browser.newContext({ viewport: { width: 1440, height: 1024 } });
   page = await context.newPage();
-  page.setDefaultTimeout(5000);
+  page.setDefaultTimeout(10000);
   errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.route("https://unpkg.com/lucide@*/**", (route) =>
-    route.fulfill({
-      path: "node_modules/lucide/dist/umd/lucide.js",
-      contentType: "text/javascript",
-    }),
-  );
   await page.route("https://cdn.jsdelivr.net/**", (route) =>
     route.fulfill({
-      body: "window.mermaid = { initialize() {}, async run() {} };",
+      body: "window.mermaid = { initialize() {}, async render() { return { svg: '<svg></svg>' }; } };",
       contentType: "text/javascript",
     }),
   );
-  await page.goto(`${server.url}/preview/index.html#asset/fixture`);
+  await page.goto(`${server.url}/preview/index.html#asset/fixture`, {
+    waitUntil: "domcontentloaded",
+  });
   try {
     await page.locator("#asset-detail-layers .asset-layer-number").first().waitFor();
   } catch (error) {
@@ -195,7 +191,10 @@ test("attribute and opacity editing, reorder, and saving preserve serialized edi
   );
   assert.equal(await page.locator("#asset-primary-svg #first").getAttribute("x"), "33");
   const count = server.requests.length;
-  await page.locator("#asset-save-button").click();
+  await Promise.all([
+    page.waitForResponse((response) => response.url().endsWith("/~asset")),
+    page.locator("#asset-save-button").click(),
+  ]);
   await page.waitForFunction(() => document.querySelector("#asset-save-button").disabled);
   const saved = server.requests.slice(count).find((item) => item.path === "/~asset");
   assert.ok(saved);
@@ -241,7 +240,10 @@ test("project and source routes preserve prompts, slots, and color mutation payl
     "#asset/fixture",
   );
   const count = server.requests.length;
-  await page.locator('.source-material-swatch[data-color="#445566"]').click();
+  await Promise.all([
+    page.waitForResponse((response) => response.url().endsWith("/~project-color")),
+    page.locator('.source-material-swatch[data-color="#445566"]').click(),
+  ]);
   const changed = server.requests.slice(count).find((item) => item.path === "/~project-color");
   assert.deepEqual(changed.payload, {
     project: "Fixture Project",
@@ -255,4 +257,90 @@ test("project and source routes preserve prompts, slots, and color mutation payl
     await page.locator("#source-prompt-reference").textContent(),
     /Repository file: assets\/svg\/steering.svg/,
   );
+});
+
+test("React sidebar and theme updates preserve the active editor document", async () => {
+  await selectLayer(1);
+  await page.keyboard.press("ArrowRight");
+  const transform = await page.locator("#asset-primary-svg #first").getAttribute("transform");
+  await page.locator("#asset-detail-left-sidebar-toggle").click();
+  assert.equal(
+    await page.locator("#asset-detail-left-sidebar-content").evaluate((element) => element.inert),
+    true,
+  );
+  await page.locator("#theme-toggle").click();
+  assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+  assert.equal(
+    await page.locator("#asset-primary-svg #first").getAttribute("transform"),
+    transform,
+  );
+  await page.locator("#asset-detail-left-sidebar-toggle").click();
+  assert.equal(
+    await page.locator("#asset-detail-left-sidebar-content").evaluate((element) => element.inert),
+    false,
+  );
+  await selectLayer(1);
+  await selectLayer(1);
+  await page.keyboard.press("ArrowRight");
+  assert.match(
+    await page.locator("#asset-primary-svg #first").getAttribute("transform"),
+    /translate\(2 0\)/,
+  );
+});
+
+test("React project creation retains slug generation, focus, and API payloads", async () => {
+  await page.evaluate(() => (window.location.hash = "logos"));
+  await page.locator("#new-project-btn").click();
+  await page.locator("#np-name").fill("New Project");
+  assert.equal(await page.locator("#np-slug").inputValue(), "new-project");
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator("#new-project-modal").count(), 0);
+  assert.equal(
+    await page
+      .locator("#new-project-btn")
+      .evaluate((element) => element === document.activeElement),
+    true,
+  );
+  await page.locator("#new-project-btn").click();
+  await page.locator("#np-name").fill("New Project");
+  const count = server.requests.length;
+  await page.locator("#np-form button[type=submit]").click();
+  await page.locator("#np-success-name").filter({ hasText: "New Project" }).waitFor();
+  assert.deepEqual(
+    server.requests.slice(count).find((item) => item.path === "/~scaffold").payload,
+    { name: "New Project", slug: "new-project" },
+  );
+});
+
+test("React prompt carousel and source rename form reset across routes", async () => {
+  await page.evaluate(() => (window.location.hash = "project/Fixture%20Project"));
+  await page.locator("#project-generate-new").click();
+  assert.equal(await page.locator("#project-prompt-count").textContent(), "1 of 2");
+  await page.locator("#project-prompt-next").click();
+  assert.match(await page.locator("#project-sample-prompt").textContent(), /geometric variation/);
+  await page.getByLabel("Rename Reference", { exact: true }).click();
+  assert.equal(
+    await page
+      .getByLabel("Image name", { exact: true })
+      .evaluate((element) => element === document.activeElement),
+    true,
+  );
+  await page.evaluate(() => (window.location.hash = "logos"));
+  await page.locator("#new-project-btn").waitFor();
+  await page.evaluate(() => (window.location.hash = "project/Fixture%20Project"));
+  await page.locator("#project-detail-title").waitFor();
+  assert.equal(await page.locator("#project-generate-panel").isVisible(), false);
+  assert.equal(await page.locator("#project-prompt-count").textContent(), "1 of 2");
+});
+
+test("invalid startup data produces a visible React error instead of leaving a loading screen", async () => {
+  await page.route("**/manifests/assets.json", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ assets: {} }),
+    }),
+  );
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("heading", { name: "Preview failed", exact: true }).waitFor();
+  assert.match(await page.getByRole("alert").textContent(), /map/);
 });

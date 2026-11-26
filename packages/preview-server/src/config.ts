@@ -7,6 +7,7 @@ export function parseServerArgs(argv = process.argv.slice(2)) {
   return {
     port: portIndex >= 0 ? Number(argv[portIndex + 1]) : 4178,
     quiet: argv.includes("--quiet"),
+    built: argv.includes("--built"),
   };
 }
 
@@ -34,11 +35,21 @@ export const RELOAD_SNIPPET = `<script>
 })();
 </script>`;
 
-export async function serveStaticFile(req, res, { root, reloadSnippet = RELOAD_SNIPPET }) {
+export async function serveStaticFile(
+  req,
+  res,
+  { root, built = false, reloadSnippet = RELOAD_SNIPPET },
+) {
   const rawPath = (req.url || "/").split("?")[0];
   const requestPath = rawPath === "/" ? "/preview/index.html" : rawPath;
   const safePath = normalize(requestPath).replace(/^\.+/, "");
-  const filePath = join(root, safePath);
+  const fileRoot =
+    built &&
+    safePath.replaceAll("\\", "/").startsWith("/preview/") &&
+    !safePath.endsWith("spec-index.json")
+      ? join(root, "dist/preview-app")
+      : root;
+  const filePath = join(fileRoot, safePath);
   const body = await readFile(filePath);
   const ext = extname(filePath).toLowerCase();
   const contentType = MIME[ext] || "application/octet-stream";

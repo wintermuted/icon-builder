@@ -38,19 +38,17 @@ npm run preview
 # → http://localhost:4178/preview/index.html
 ```
 
-This installs missing dependencies and rebuilds the spec index first. The preview page loads `@wintermuted/ui-theme` directly from `node_modules`, so an unthemed page almost always means dependencies were never installed.
+This installs missing dependencies and starts Vite, which imports `@wintermuted/ui-theme` into the React app and rebuilds the spec index on startup. TSX/CSS changes use Fast Refresh; spec changes regenerate the index.
 
 Custom port:
 
 ```bash
-npx nx run preview-server:serve -- --port 5000
+npm run dev --workspace @wm-asset-workflows/preview-app -- --port 5000
 ```
 
 ## Stopping the Preview Server
 
-```bash
-lsof -ti :4178 | xargs kill -9
-```
+Press Ctrl+C in the terminal running the preview.
 
 ## Adding a New Logo or Glyph
 

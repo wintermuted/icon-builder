@@ -8,7 +8,6 @@
     "outputs/**",
     "package-lock.json",
     "manifests/assets.json",
-    "preview/app.js",
     "preview/spec-index.json"
   ]
 }

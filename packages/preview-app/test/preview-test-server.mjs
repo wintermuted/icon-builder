@@ -1,10 +1,11 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { stripTypeScriptTypes } from "node:module";
 import { resolve, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createServer as createViteServer } from "vite";
+import react from "@vitejs/plugin-react";
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
+const root = fileURLToPath(new URL("../../../", import.meta.url));
 const fixtureSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
 <title>Editor fixture</title>
 <rect id="first" x="20" y="20" width="50" height="50" fill="#112233"/>
@@ -22,7 +23,7 @@ const project = {
   name: "Fixture Project",
   slug: "fixture-project",
   primaryAssetId: "fixture",
-  samplePrompts: ["Draw a mark"],
+  samplePrompts: ["Draw a mark", "Make a geometric variation"],
   iconSlots: { favicon: { assetId: "fixture" } },
   agentSteer: {
     notes: ["Keep the mark editable"],
@@ -47,9 +48,22 @@ const contentTypes = {
 };
 
 export async function startPreviewTestServer({ bundle = false } = {}) {
+  const prefix = bundle ? "/previews/pr-14" : "";
   const requests = [];
+  const vite = bundle
+    ? null
+    : await createViteServer({
+        root,
+        configFile: false,
+        plugins: [react()],
+        publicDir: false,
+        server: { middlewareMode: true, hmr: false },
+        appType: "mpa",
+      });
   const server = createServer(async (request, response) => {
-    const pathname = new URL(request.url, "http://localhost").pathname;
+    const rawPath = new URL(request.url, "http://localhost").pathname;
+    const pathname =
+      prefix && rawPath.startsWith(`${prefix}/`) ? rawPath.slice(prefix.length) : rawPath;
     try {
       if (request.method === "POST") {
         let body = "";
@@ -57,9 +71,15 @@ export async function startPreviewTestServer({ bundle = false } = {}) {
         const payload = JSON.parse(body);
         requests.push({ path: pathname, payload });
         const result =
-          pathname === "/~asset"
-            ? { source: "assets/svg/fixture.svg" }
-            : { favoriteColors: ["#112233", "#445566"], customColors: [] };
+          pathname === "/~scaffold"
+            ? {
+                svgDir: "assets/svg/new-project/",
+                groundingDir: "assets/svg/new-project/grounding/",
+                documentation: "assets/svg/new-project/README.md",
+              }
+            : pathname === "/~asset"
+              ? { source: "assets/svg/fixture.svg" }
+              : { favoriteColors: ["#112233", "#445566"], customColors: [] };
         response.writeHead(200, { "Content-Type": "application/json" });
         response.end(JSON.stringify(result));
         return;
@@ -83,21 +103,21 @@ export async function startPreviewTestServer({ bundle = false } = {}) {
         );
         return;
       }
-      const sourceModule = !bundle && pathname.startsWith("/preview/") && pathname.endsWith(".js");
-      const relative = sourceModule
-        ? `packages/preview-app/src/${pathname.slice("/preview/".length).replace(/\.js$/, ".ts")}`
+      if (vite) {
+        vite.middlewares(request, response, () => response.writeHead(404).end());
+        return;
+      }
+      const relative = pathname.startsWith("/preview/")
+        ? `dist/preview-app${pathname}`
         : pathname.slice(1);
       const path = resolve(root, relative);
       if (!path.startsWith(resolve(root) + sep)) {
         response.writeHead(403).end();
         return;
       }
-      let content = await readFile(path, "utf8");
-      if (sourceModule) content = stripTypeScriptTypes(content, { mode: "strip" });
+      const content = await readFile(path);
       response.writeHead(200, {
-        "Content-Type": sourceModule
-          ? "text/javascript"
-          : contentTypes[extname(path)] || "text/plain",
+        "Content-Type": contentTypes[extname(path)] || "application/octet-stream",
       });
       response.end(content);
     } catch (error) {
@@ -112,11 +132,12 @@ export async function startPreviewTestServer({ bundle = false } = {}) {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", accept);
   });
-  const url = `http://127.0.0.1:${server.address().port}`;
+  const url = `http://127.0.0.1:${server.address().port}${prefix}`;
   return {
     url,
     requests,
     async close() {
+      await vite?.close();
       server.closeAllConnections();
       await new Promise((accept, reject) =>
         server.close((error) => (error ? reject(error) : accept())),
