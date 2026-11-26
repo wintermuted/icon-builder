@@ -3,7 +3,8 @@ import mermaid from "mermaid";
 import { Diagram } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/Diagram",
+  id: "shared-diagram",
+  title: "Shared/Display/Diagram",
   component: Diagram,
   args: {
     id: "storybook-diagram",

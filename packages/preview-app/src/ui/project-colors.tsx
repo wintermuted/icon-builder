@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { collectColorUsageAcrossAssets } from "../project/icon-colors.js";
 import { projectForAsset, projectRouteHref } from "../project/model.js";
-import { Icon } from "@wm-asset-workflows/ui-components";
+import {
+  EmptyState,
+  Icon,
+  ResourceLinkList,
+  StatusMessage,
+} from "@wm-asset-workflows/ui-components";
 
 export function FavoriteColors({
   favorites,
@@ -42,13 +47,14 @@ export function FavoriteColors({
           </div>
         ))}
       </div>
-      <p
+      <EmptyState
         id="project-favorite-colors-empty"
         className="project-favorite-colors-empty"
+        compact
         hidden={!!favorites.length}
       >
         Select image swatches or add a custom color.
-      </p>
+      </EmptyState>
     </>
   );
 }
@@ -113,41 +119,51 @@ export function ProjectIconColors({ projectName }: { projectName: string }) {
                   <p className="project-icon-color-tooltip-heading">
                     {color} · used in {names.length} project{names.length === 1 ? "" : "s"}
                   </p>
-                  <ul className="project-icon-color-tooltip-links">
-                    {names.map((name) => {
+                  <ResourceLinkList
+                    className="project-icon-color-tooltip-links"
+                    items={names.map((name) => {
                       const count = projects?.get(name)?.length || 0;
-                      return (
-                        <li key={name}>
-                          <a href={projectRouteHref(name)}>{name}</a>
+                      return {
+                        href: projectRouteHref(name),
+                        label: name,
+                        metadata: (
                           <span className="project-icon-color-tooltip-count">
                             {count} icon{count === 1 ? "" : "s"}
                           </span>
-                        </li>
-                      );
+                        ),
+                      };
                     })}
-                  </ul>
+                  />
                 </div>
               </div>
             );
           })}
       </div>
       {!!data?.failedAssets.length && (
-        <p role="status">
+        <StatusMessage role="status">
           Colors unavailable for {data.failedAssets.length} asset
           {data.failedAssets.length === 1 ? "" : "s"}:{" "}
           {data.failedAssets.map((asset) => asset.label).join(", ")}.
-        </p>
+        </StatusMessage>
       )}
-      <p
-        id="project-icon-colors-empty"
-        className="project-icon-colors-empty"
-        hidden={!!colors.size}
-      >
-        {error ||
-          (data
-            ? "No colors found in this project's icons yet."
-            : "Loading colors from project icons...")}
-      </p>
+      {error || !data ? (
+        <StatusMessage
+          id="project-icon-colors-empty"
+          className="project-icon-colors-empty"
+          hidden={!!colors.size}
+        >
+          {error || "Loading colors from project icons..."}
+        </StatusMessage>
+      ) : (
+        <EmptyState
+          id="project-icon-colors-empty"
+          className="project-icon-colors-empty"
+          compact
+          hidden={!!colors.size}
+        >
+          No colors found in this project's icons yet.
+        </EmptyState>
+      )}
     </div>
   );
 }

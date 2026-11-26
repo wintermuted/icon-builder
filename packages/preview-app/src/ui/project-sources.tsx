@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { sourceRouteHref, resolveAssetPath } from "../project/model.js";
 import { showToast } from "../app-shell.js";
-import { Icon } from "@wm-asset-workflows/ui-components";
+import {
+  ActionGroup,
+  FileDropzone,
+  Icon,
+  IconActionButton,
+  InlineRename,
+  PreviewCard,
+  StatusMessage,
+} from "@wm-asset-workflows/ui-components";
 import type { SteeringSource } from "../types.js";
 
 interface Props {
@@ -17,16 +25,9 @@ export function ProjectSource({ source, projectName, favorites, onFavorite }: Pr
   const [status, setStatus] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
   const title = source.title || "Source Material";
   const kind = (source.kind || "text").toLowerCase();
   const href = sourceRouteHref(projectName, source.src);
-  useEffect(() => {
-    if (editing) {
-      input.current?.focus();
-      input.current?.select();
-    }
-  }, [editing]);
   useEffect(() => {
     if (!confirming) return;
     const timeout = window.setTimeout(() => setConfirming(false), 4000);
@@ -65,8 +66,7 @@ export function ProjectSource({ source, projectName, favorites, onFavorite }: Pr
   };
   if (kind !== "image")
     return (
-      <article className="source-material-card">
-        <h5>{title}</h5>
+      <PreviewCard className="source-material-card" header={<h5>{title}</h5>}>
         {kind === "url" ? (
           <a href={source.url} target="_blank" rel="noopener noreferrer">
             {source.url || "Open URL"}
@@ -78,59 +78,59 @@ export function ProjectSource({ source, projectName, favorites, onFavorite }: Pr
         ) : (
           <p>{source.text || ""}</p>
         )}
-      </article>
+      </PreviewCard>
     );
   return (
-    <article className="source-material-card">
-      <div className="source-material-header">
-        <h5>
-          <a href={href}>{title}</a>
-        </h5>
-        <div className="source-material-actions">
-          <button
-            type="button"
-            className="source-material-action"
-            aria-label={`Copy deep link for ${title}`}
-            title="Copy deep link"
-            onClick={copy}
-          >
-            <Icon name="Link" />
-          </button>
-          <button
-            type="button"
-            className="source-material-action"
-            aria-label={`Rename ${title}`}
-            title="Rename image"
-            onClick={() => setEditing(true)}
-          >
-            <Icon name="Pencil" />
-          </button>
-          <button
-            type="button"
-            className={`source-material-action source-material-delete${confirming ? " is-confirming" : ""}`}
-            disabled={busy}
-            aria-label={`${confirming ? "Confirm removal of" : "Remove"} ${title}`}
-            title={confirming ? "Click again to confirm removal" : "Remove image"}
-            onClick={() => {
-              if (confirming) void mutate("delete");
-              else setConfirming(true);
-            }}
-          >
-            <Icon name="Trash2" />
-          </button>
+    <PreviewCard
+      className="source-material-card"
+      header={
+        <div className="source-material-header">
+          <h5>
+            <a href={href}>{title}</a>
+          </h5>
+          <ActionGroup className="source-material-actions" gap="0.2rem" wrap={false}>
+            <IconActionButton
+              className="source-material-action"
+              icon="Link"
+              label={`Copy deep link for ${title}`}
+              title="Copy deep link"
+              onClick={copy}
+            />
+            <IconActionButton
+              className="source-material-action"
+              icon="Pencil"
+              label={`Rename ${title}`}
+              title="Rename image"
+              onClick={() => setEditing(true)}
+            />
+            <IconActionButton
+              className={`source-material-action source-material-delete${confirming ? " is-confirming" : ""}`}
+              icon="Trash2"
+              disabled={busy}
+              label={`${confirming ? "Confirm removal of" : "Remove"} ${title}`}
+              title={confirming ? "Click again to confirm removal" : "Remove image"}
+              onClick={() => {
+                if (confirming) void mutate("delete");
+                else setConfirming(true);
+              }}
+            />
+          </ActionGroup>
         </div>
-      </div>
-      <a
-        className="source-material-image-link"
-        href={href}
-        aria-label={`Open ${title} source page`}
-      >
-        <img
-          className="source-material-image"
-          src={resolveAssetPath(source.src || source.url || "")}
-          alt={source.alt || source.title || "Source image"}
-        />
-      </a>
+      }
+      preview={
+        <a
+          className="source-material-image-link"
+          href={href}
+          aria-label={`Open ${title} source page`}
+        >
+          <img
+            className="source-material-image"
+            src={resolveAssetPath(source.src || source.url || "")}
+            alt={source.alt || source.title || "Source image"}
+          />
+        </a>
+      }
+    >
       {!!source.palette?.length && (
         <div className="source-material-palette">
           <p className="source-material-palette-label">Project favorites</p>
@@ -154,39 +154,25 @@ export function ProjectSource({ source, projectName, favorites, onFavorite }: Pr
           </div>
         </div>
       )}
-      <form
+      <InlineRename
         className="source-material-editor"
-        hidden={!editing}
+        open={editing}
+        value={name}
+        label="Image name"
+        busy={busy}
+        onValueChange={setName}
         onSubmit={(event) => {
           event.preventDefault();
           void mutate("rename");
         }}
-      >
-        <input
-          ref={input}
-          className="wm-input source-material-name-input"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          aria-label="Image name"
-        />
-        <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
-          Save
-        </button>
-        <button
-          type="button"
-          className="btn btn-sm"
-          onClick={() => {
-            setEditing(false);
-            setStatus("");
-          }}
-        >
-          Cancel
-        </button>
-      </form>
-      <p className="source-material-status" aria-live="polite">
-        {status}
-      </p>
-    </article>
+        onCancel={() => {
+          setEditing(false);
+          setStatus("");
+        }}
+        inputProps={{ className: "wm-input source-material-name-input" }}
+      />
+      <StatusMessage className="source-material-status">{status}</StatusMessage>
+    </PreviewCard>
   );
 }
 
@@ -231,7 +217,6 @@ function FavoriteSwatch({
 
 export function GroundingUpload({ projectName }: { projectName: string }) {
   const [status, setStatus] = useState("");
-  const [dragging, setDragging] = useState(false);
   const timeout = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timeout.current), []);
   const upload = async (files: File[]) => {
@@ -261,35 +246,18 @@ export function GroundingUpload({ projectName }: { projectName: string }) {
   };
   return (
     <>
-      <label
+      <FileDropzone
         id="project-grounding-dropzone"
-        className={`project-grounding-dropzone${dragging ? " is-dragging" : ""}`}
-        onDragEnter={(event) => {
-          event.preventDefault();
-          setDragging(true);
-        }}
-        onDragOver={(event) => event.preventDefault()}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(event) => {
-          event.preventDefault();
-          setDragging(false);
-          void upload(Array.from(event.dataTransfer.files));
-        }}
-      >
-        <input
-          id="project-grounding-input"
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          multiple
-          onChange={(event) => void upload(Array.from(event.target.files || []))}
-        />
-        <Icon name="ImageUp" />
-        <span>Drop images here or choose files</span>
-        <small>PNG, JPEG, WebP, or GIF</small>
-      </label>
-      <p id="project-grounding-status" className="project-grounding-status" aria-live="polite">
+        inputId="project-grounding-input"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        multiple
+        label="Drop images here or choose files"
+        hint="PNG, JPEG, WebP, or GIF"
+        onFilesSelected={(files) => void upload(files)}
+      />
+      <StatusMessage id="project-grounding-status" className="project-grounding-status">
         {status}
-      </p>
+      </StatusMessage>
     </>
   );
 }

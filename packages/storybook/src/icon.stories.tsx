@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Icon } from "@wm-asset-workflows/ui-components";
 
 const meta = {
-  title: "Shared/Icon",
+  id: "shared-icon",
+  title: "Shared/Display/Icon",
   component: Icon,
   args: { name: "Sparkles" },
   argTypes: {

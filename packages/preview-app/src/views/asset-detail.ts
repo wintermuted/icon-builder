@@ -32,8 +32,10 @@ import { applyAssetLayerEdits, applyAssetAccessibility } from "../svg/apply-edit
 import { enablePrimaryLayerInteraction } from "../canvas/interactions.js";
 import { renderAssetColorList, renderStaticAssetColorList } from "../editor/colors.js";
 import { renderAssetDiagnostics } from "../editor/diagnostics.js";
+import type { EditorPresentation } from "../editor/presentation.js";
 
-export function renderAssetDetail(assetId) {
+export function renderAssetDetail(assetId, presentation: EditorPresentation) {
+  presentation.clear();
   const title = document.getElementById("asset-detail-title");
   const saveButton = document.getElementById("asset-save-button");
   const deepLink = document.getElementById("asset-deep-link");
@@ -252,8 +254,9 @@ export function renderAssetDetail(assetId) {
     (layerNumber) => primaryInteractionState.updateTooltip(layerNumber),
     (layerNumbers) => setPrimarySvgMultiSelectHighlight(primarySvg, layerNumbers),
     () => {
-      if (primarySvg.isConnected) renderAssetDetail(asset.id);
+      if (primarySvg.isConnected) renderAssetDetail(asset.id, presentation);
     },
+    presentation,
   );
   const primaryInteraction = enablePrimaryLayerInteraction(
     primarySvg,
@@ -320,6 +323,7 @@ export function renderAssetDetail(assetId) {
       assetModified.add(asset.id);
       syncSaveButton();
     },
+    presentation,
   );
 
   const showCanvasSize = (size) => {

@@ -7,6 +7,7 @@ import type {
   ProjectSteer,
   SvgData,
 } from "./types.js";
+import type { EditorPresentation } from "./editor/presentation.js";
 
 type Point = { x: number; y: number };
 type Gesture = { pointerId: number; startX: number; startY: number };
@@ -97,6 +98,7 @@ export interface CanvasBindings {
 }
 
 export interface LayerBindings {
+  presentation: EditorPresentation;
   asset: Asset;
   data: SvgData;
   layer: PaintLayer;
@@ -120,7 +122,7 @@ export interface LayerBindings {
   syncSelection(): void;
   selectLayer(layer: number, options?: { additive?: boolean }): void;
   addElement(shape: string, container: SVGElement): void;
-  renderElementRow(layer: PaintLayer): HTMLLIElement;
+  renderElementRow(layer: PaintLayer, container: HTMLElement): void;
 }
 
 export interface ProjectSourceBindings {

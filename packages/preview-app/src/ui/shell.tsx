@@ -1,40 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { getRouteFromHash, applyThemeFromQuery } from "../app-shell.js";
 import { Collection } from "./collection.js";
-import { Diagrams, Icon } from "@wm-asset-workflows/ui-components";
+import { AppFrame, Diagrams, Icon, Toast } from "@wm-asset-workflows/ui-components";
 import { appState } from "../app-state.js";
 import { AssetPage } from "./asset-page.js";
 import { ProjectPage } from "./project-page.js";
 import { SourcePage } from "./source-page.js";
 import { NewProject } from "./new-project.js";
 
-function Toast() {
-  const [message, setMessage] = useState("");
+function AppToast() {
+  const [notice, setNotice] = useState({ message: "", revision: 0 });
+  const dismiss = useCallback(() => setNotice((notice) => ({ ...notice, message: "" })), []);
   useEffect(() => {
-    let timeout: number;
     const show = (event: Event) => {
       if (!(event instanceof CustomEvent)) return;
-      window.clearTimeout(timeout);
-      setMessage(String(event.detail));
-      timeout = window.setTimeout(() => setMessage(""), 2400);
+      setNotice((notice) => ({ message: String(event.detail), revision: notice.revision + 1 }));
     };
     window.addEventListener("preview-toast", show);
-    return () => {
-      window.removeEventListener("preview-toast", show);
-      window.clearTimeout(timeout);
-    };
+    return () => window.removeEventListener("preview-toast", show);
   }, []);
   return (
-    <div
-      id="app-toast"
-      className="app-toast"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-      hidden={!message}
-    >
-      {message}
-    </div>
+    <Toast id="app-toast" message={notice.message} resetKey={notice.revision} onDismiss={dismiss} />
   );
 }
 
@@ -92,91 +78,98 @@ export function PreviewApp() {
     setTheme(next);
   };
   return (
-    <>
-      <header className="docs-topbar">
-        <div className="docs-topbar-inner">
-          <div className="docs-topbar-brand">
-            <h1 className="preview-brand-title">
-              <img
-                className="preview-brand-icon"
-                src="../assets/svg/wintermuted-brand/wm-wintermuted-mark-cube-outline-white.svg"
-                alt="Wintermuted mark"
-              />
-              <span>Agentic Icon Builder</span>
-            </h1>
+    <AppFrame
+      bodyClassName="preview-shell"
+      mainClassName="preview-content"
+      header={
+        <header className="docs-topbar">
+          <div className="docs-topbar-inner">
+            <div className="docs-topbar-brand">
+              <h1 className="preview-brand-title">
+                <img
+                  className="preview-brand-icon"
+                  src="../assets/svg/wintermuted-brand/wm-wintermuted-mark-cube-outline-white.svg"
+                  alt="Wintermuted mark"
+                />
+                <span>Agentic Icon Builder</span>
+              </h1>
+            </div>
+            <nav className="docs-topbar-nav wm-app-nav-nowrap" aria-label="Primary navigation">
+              {(
+                [
+                  ["logos", "Home"],
+                  ["diagrams", "About"],
+                ] as const
+              ).map(([tab, label]) => (
+                <a
+                  key={tab}
+                  className={`docs-topbar-link-devdocs${route.tab === tab ? " is-active" : ""}`}
+                  href={`#${tab}`}
+                  data-preview-tab={tab}
+                  aria-current={route.tab === tab ? "page" : undefined}
+                >
+                  {label}
+                </a>
+              ))}
+            </nav>
           </div>
-          <nav className="docs-topbar-nav wm-app-nav-nowrap" aria-label="Primary navigation">
-            {(
-              [
-                ["logos", "Home"],
-                ["diagrams", "About"],
-              ] as const
-            ).map(([tab, label]) => (
-              <a
-                key={tab}
-                className={`docs-topbar-link-devdocs${route.tab === tab ? " is-active" : ""}`}
-                href={`#${tab}`}
-                data-preview-tab={tab}
-                aria-current={route.tab === tab ? "page" : undefined}
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-        </div>
-      </header>
-      <Toast />
-      <div className="preview-shell">
-        <main className="preview-content">
-          {route.page === "asset" ? (
-            <AssetPage key={route.assetId} assetId={route.assetId} />
-          ) : route.page === "project" ? (
-            <ProjectPage key={route.projectName} projectName={route.projectName} />
-          ) : route.page === "source" ? (
-            <SourcePage
-              key={`${route.projectName}/${route.sourcePath}`}
-              projectName={route.projectName}
-              sourcePath={route.sourcePath}
-            />
-          ) : (
-            <>
-              <Collection onNewProject={() => setNewProject(true)} />
-              <Diagrams
-                theme={theme}
-                diagrams={appState.diagramData}
-                renderer={typeof mermaid === "undefined" ? undefined : mermaid}
-              />
-            </>
-          )}
-        </main>
-      </div>
-      {newProject && <NewProject onClose={closeModal} />}
-      <footer className="app-footer">
-        <div className="app-footer-inner">
-          <a
-            className="docs-topbar-github app-footer-github"
-            href="https://github.com/wintermuted/wm-asset-workflows"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="View source on GitHub"
-          >
-            <Icon name="Github" />
-            <span>wintermuted/wm-asset-workflows</span>
-          </a>
-          <div className="docs-topbar-actions app-footer-actions">
-            <button
-              id="theme-toggle"
-              type="button"
-              className="docs-topbar-toggle"
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-              onClick={toggleTheme}
+        </header>
+      }
+      overlays={
+        <>
+          <AppToast />
+          {newProject && <NewProject onClose={closeModal} />}
+        </>
+      }
+      footer={
+        <footer className="app-footer">
+          <div className="app-footer-inner">
+            <a
+              className="docs-topbar-github app-footer-github"
+              href="https://github.com/wintermuted/wm-asset-workflows"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="View source on GitHub"
             >
-              <Icon name={theme === "dark" ? "Sun" : "Moon"} />
-              <span>{theme === "dark" ? "Light" : "Dark"}</span>
-            </button>
+              <Icon name="Github" />
+              <span>wintermuted/wm-asset-workflows</span>
+            </a>
+            <div className="docs-topbar-actions app-footer-actions">
+              <button
+                id="theme-toggle"
+                type="button"
+                className="docs-topbar-toggle"
+                aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+                onClick={toggleTheme}
+              >
+                <Icon name={theme === "dark" ? "Sun" : "Moon"} />
+                <span>{theme === "dark" ? "Light" : "Dark"}</span>
+              </button>
+            </div>
           </div>
-        </div>
-      </footer>
-    </>
+        </footer>
+      }
+    >
+      {route.page === "asset" ? (
+        <AssetPage key={route.assetId} assetId={route.assetId} />
+      ) : route.page === "project" ? (
+        <ProjectPage key={route.projectName} projectName={route.projectName} />
+      ) : route.page === "source" ? (
+        <SourcePage
+          key={`${route.projectName}/${route.sourcePath}`}
+          projectName={route.projectName}
+          sourcePath={route.sourcePath}
+        />
+      ) : (
+        <>
+          <Collection onNewProject={() => setNewProject(true)} />
+          <Diagrams
+            theme={theme}
+            diagrams={appState.diagramData}
+            renderer={typeof mermaid === "undefined" ? undefined : mermaid}
+          />
+        </>
+      )}
+    </AppFrame>
   );
 }

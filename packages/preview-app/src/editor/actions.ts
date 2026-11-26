@@ -1,5 +1,19 @@
 import { assetLayerSelections, assetCollapsedGroups } from "../svg/editor-state.js";
 import { NEW_ELEMENT_SHAPES } from "../svg/geometry.js";
+import { createElement } from "react";
+import { SplitButton, type IconName } from "@wm-asset-workflows/ui-components";
+import type { EditorPresentation } from "./presentation.js";
+import type { SvgData } from "../types.js";
+
+const shapeIcons: Record<string, IconName> = {
+  rect: "Square",
+  circle: "Circle",
+  ellipse: "Circle",
+  line: "Minus",
+  polyline: "Spline",
+  polygon: "Pentagon",
+  path: "PenLine",
+};
 
 export function assetLayerSelection(assetId) {
   if (!assetLayerSelections.has(assetId)) assetLayerSelections.set(assetId, new Set());
@@ -11,55 +25,59 @@ export function collapsedGroupsForAsset(assetId) {
   return assetCollapsedGroups.get(assetId);
 }
 
-export function renderAssetLayerActions(actionsBar, data, onCombine, onClear, onAdd) {
+export function renderAssetLayerActions(
+  actionsBar: HTMLElement,
+  data: Pick<SvgData, "paintLayerCount">,
+  onCombine: () => void,
+  onClear: () => void,
+  onAdd: (shape: string) => void,
+  presentation: EditorPresentation,
+) {
   actionsBar.replaceChildren();
   actionsBar.hidden = false;
-
-  const addGroup = document.createElement("div");
-  addGroup.className = "asset-layer-add-group";
 
   let selectedShape = NEW_ELEMENT_SHAPES[0].value;
   const getShape = () =>
     NEW_ELEMENT_SHAPES.find(({ value }) => value === selectedShape) || NEW_ELEMENT_SHAPES[0];
 
-  const addButton = document.createElement("button");
-  addButton.type = "button";
-  addButton.className = "asset-layer-add-button";
-  addButton.dataset.shape = selectedShape;
-  addButton.title = "Add a new rectangle at the topmost layer";
-  addButton.innerHTML = '<i data-lucide="square" aria-hidden="true"></i><span>Add element</span>';
-  addButton.addEventListener("click", () => onAdd(selectedShape));
-
-  const shapeMenu = document.createElement("details");
-  shapeMenu.className = "asset-layer-shape-menu";
-  const shapeMenuToggle = document.createElement("summary");
-  shapeMenuToggle.setAttribute("aria-label", "Change element shape");
-  shapeMenuToggle.title = "Change element shape";
-  shapeMenuToggle.innerHTML = '<i data-lucide="chevron-down" aria-hidden="true"></i>';
-  const shapeMenuList = document.createElement("div");
-  shapeMenuList.className = "asset-layer-shape-options";
-  for (const { value, label, icon } of NEW_ELEMENT_SHAPES) {
-    const option = document.createElement("button");
-    option.type = "button";
-    option.className = "asset-layer-shape-option";
-    option.dataset.shape = value;
-    option.innerHTML = `<i data-lucide="${icon}" aria-hidden="true"></i><span>${label}</span>`;
-    option.addEventListener("click", () => {
-      selectedShape = value;
-      const shape = getShape();
-      addButton.dataset.shape = selectedShape;
-      addButton.title = `Add a new ${shape.label.toLowerCase()} at the topmost layer`;
-      const icon = document.createElement("i");
-      icon.dataset.lucide = shape.icon;
-      icon.setAttribute("aria-hidden", "true");
-      addButton.querySelector("[data-lucide], svg")?.replaceWith(icon);
-      if (typeof lucide !== "undefined") lucide.createIcons();
-      shapeMenu.open = false;
-    });
-    shapeMenuList.appendChild(option);
-  }
-  shapeMenu.append(shapeMenuToggle, shapeMenuList);
-  addGroup.append(addButton, shapeMenu);
+  presentation.mount(
+    actionsBar,
+    createElement(SplitButton, {
+      options: NEW_ELEMENT_SHAPES.map(({ value, label }) => ({
+        value,
+        label,
+        icon: shapeIcons[value],
+      })),
+      actionLabel: "Add element",
+      menuLabel: "Change element shape",
+      className: "asset-layer-add-group",
+      buttonProps: {
+        className: "asset-layer-add-button",
+        title: "Add a new rectangle at the topmost layer",
+      },
+      menuClassName: "asset-layer-shape-menu",
+      optionsClassName: "asset-layer-shape-options",
+      optionClassName: "asset-layer-shape-option",
+      onAction: onAdd,
+      onValueChange: (value) => {
+        selectedShape = value;
+        const button = actionsBar.querySelector<HTMLButtonElement>(".asset-layer-add-button");
+        if (!button) throw new Error("Shape selection button is unavailable.");
+        button.dataset.shape = value;
+        button.title = `Add a new ${getShape().label.toLowerCase()} at the topmost layer`;
+      },
+    }),
+  );
+  presentation.afterMount(() => {
+    const addButton = actionsBar.querySelector<HTMLButtonElement>(".asset-layer-add-button");
+    if (!addButton) throw new Error("SplitButton did not mount.");
+    addButton.dataset.shape = selectedShape;
+    actionsBar
+      .querySelectorAll<HTMLButtonElement>(".asset-layer-shape-option")
+      .forEach((button) => {
+        button.dataset.shape = button.dataset.value;
+      });
+  });
 
   const combineGroup = document.createElement("div");
   combineGroup.className = "asset-layer-combine-group";
@@ -87,6 +105,6 @@ export function renderAssetLayerActions(actionsBar, data, onCombine, onClear, on
   combineButton.addEventListener("click", onCombine);
 
   combineGroup.append(status, clearButton, combineButton);
-  actionsBar.append(addGroup, combineGroup);
+  actionsBar.appendChild(combineGroup);
   return { status, combineButton, clearButton, getShape };
 }

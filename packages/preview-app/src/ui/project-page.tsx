@@ -8,7 +8,13 @@ import {
   resolveSlotPreview,
 } from "../project/model.js";
 import { showToast } from "../app-shell.js";
-import { Icon } from "@wm-asset-workflows/ui-components";
+import {
+  EmptyState,
+  Icon,
+  ResponsiveGrid,
+  SplitLayout,
+  StatusMessage,
+} from "@wm-asset-workflows/ui-components";
 import { ProjectSource, GroundingUpload } from "./project-sources.js";
 import { FavoriteColors, ProjectIconColors } from "./project-colors.js";
 import { ProjectHeader } from "./project-header.js";
@@ -39,7 +45,13 @@ export function ProjectPage({ projectName }: { projectName: string }) {
     <section id="project-detail" className="project-detail-page">
       <ProjectHeader name={projectName} found={found} />
       {found && (
-        <div className="project-workspace">
+        <SplitLayout
+          className="project-workspace"
+          primarySize="0.9fr"
+          secondarySize="1.1fr"
+          collapseAt="wide"
+          stackGap="0"
+        >
           <div className="project-workspace-guidance">
             <details className="project-grounding-section project-collapsible-card" open>
               <summary>
@@ -49,18 +61,23 @@ export function ProjectPage({ projectName }: { projectName: string }) {
               <div className="project-collapsible-body" aria-labelledby="project-grounding-heading">
                 <p>Upload reference images that should steer the design of generated assets.</p>
                 <GroundingUpload projectName={projectName} />
-                <p
+                <EmptyState
                   id="project-steer-empty"
+                  compact
                   className={`project-steer-empty${steer.notes.length || steer.sources.length ? " is-hidden" : ""}`}
                 >
                   No steering source material has been added for this project yet.
-                </p>
+                </EmptyState>
                 <ul id="project-steer-notes" className="project-steer-notes">
                   {steer.notes.map((note, index) => (
                     <li key={index}>{note}</li>
                   ))}
                 </ul>
-                <div id="project-steer-sources" className="project-steer-sources">
+                <ResponsiveGrid
+                  id="project-steer-sources"
+                  className="project-steer-sources"
+                  gap="0.7rem"
+                >
                   {steer.sources.map((source, index) => (
                     <ProjectSource
                       key={source.src || index}
@@ -70,7 +87,7 @@ export function ProjectPage({ projectName }: { projectName: string }) {
                       onFavorite={updateColor}
                     />
                   ))}
-                </div>
+                </ResponsiveGrid>
               </div>
             </details>
             <details className="project-colors-section project-collapsible-card" open>
@@ -120,13 +137,12 @@ export function ProjectPage({ projectName }: { projectName: string }) {
                   </form>
                 </div>
                 <FavoriteColors favorites={steer.favoriteColors} onRemove={remove} />
-                <p
+                <StatusMessage
                   id="project-custom-color-status"
                   className="project-custom-color-status"
-                  aria-live="polite"
                 >
                   {status}
-                </p>
+                </StatusMessage>
                 <ProjectIconColors projectName={projectName} />
               </div>
             </details>
@@ -138,7 +154,7 @@ export function ProjectPage({ projectName }: { projectName: string }) {
                 <Icon name="ChevronDown" />
               </summary>
               <div className="project-collapsible-body" aria-labelledby="project-slots-heading">
-                <div id="project-icon-slots" className="project-icon-slots">
+                <ResponsiveGrid id="project-icon-slots" className="project-icon-slots" gap="0.7rem">
                   {normalizeProjectSlots(projectName).map((slot) => {
                     const preview = resolveSlotPreview(slot);
                     const image = (
@@ -168,19 +184,21 @@ export function ProjectPage({ projectName }: { projectName: string }) {
                               {preview.label}
                             </a>
                           ) : (
-                            <p className="icon-slot-empty">No source assigned</p>
+                            <EmptyState className="icon-slot-empty" compact>
+                              No source assigned
+                            </EmptyState>
                           )}
                           {slot.note && <p className="icon-slot-note">{slot.note}</p>}
                         </div>
                       </article>
                     );
                   })}
-                </div>
+                </ResponsiveGrid>
               </div>
             </details>
             <ProjectAssets project={meta || { name: projectName }} assets={assets} />
           </div>
-        </div>
+        </SplitLayout>
       )}
     </section>
   );

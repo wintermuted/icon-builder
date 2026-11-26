@@ -1,14 +1,18 @@
 import { useRef, useState } from "react";
 import { normalizeProjectPrompt, slugify } from "../app-shell.js";
 import { resolveAssetPath } from "../project/model.js";
-import { Icon } from "@wm-asset-workflows/ui-components";
+import {
+  Icon,
+  PromptCarousel,
+  ResourceLinkList,
+  ResponsiveGrid,
+  SplitLayout,
+} from "@wm-asset-workflows/ui-components";
 import type { Project, Asset } from "../types.js";
 import { AssetCard } from "./collection.js";
 
 export function ProjectAssets({ project, assets }: { project: Project; assets: Asset[] }) {
   const [open, setOpen] = useState(false);
-  const [index, setIndex] = useState(0);
-  const [status, setStatus] = useState("");
   const details = useRef<HTMLDetailsElement>(null);
   const copyButton = useRef<HTMLButtonElement>(null);
   const slug = project.slug || slugify(project.name);
@@ -26,18 +30,6 @@ export function ProjectAssets({ project, assets }: { project: Project; assets: A
     [".github/skills/wm-asset-manifest-spec/SKILL.md", "Manifest specification"],
     [".github/skills/wm-asset-authoring-workflow/SKILL.md", "Authoring workflow"],
   ];
-  const move = (offset: number) => {
-    setIndex((index + offset + prompts.length) % prompts.length);
-    setStatus("");
-  };
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(prompts[index]);
-      setStatus("Prompt copied.");
-    } catch {
-      setStatus("Copy failed. Select the prompt and copy it manually.");
-    }
-  };
   return (
     <div className="project-assets-section-shell">
       <details ref={details} className="project-assets-section project-collapsible-card" open>
@@ -47,84 +39,35 @@ export function ProjectAssets({ project, assets }: { project: Project; assets: A
         </summary>
         <div className="project-collapsible-body" aria-labelledby="project-assets-heading">
           <div id="project-generate-panel" className="project-generate-panel" hidden={!open}>
-            <div className="project-guidance-grid">
+            <SplitLayout
+              className="project-guidance-grid"
+              primarySize="1.5fr"
+              secondaryMinWidth="190px"
+              collapseAt="compact"
+            >
               <div>
                 <h5 id="project-prompts-heading">Sample Prompts</h5>
-                <div id="project-sample-prompts" className="project-sample-prompts">
-                  <pre id="project-sample-prompt" className="project-prompt-sample">
-                    {prompts[index]}
-                  </pre>
-                  <div className="project-prompt-controls">
-                    <div className="project-prompt-navigation">
-                      <button
-                        id="project-prompt-previous"
-                        type="button"
-                        className="btn btn-sm"
-                        aria-label="Previous sample prompt"
-                        title="Previous sample prompt"
-                        disabled={prompts.length < 2}
-                        onClick={() => move(-1)}
-                      >
-                        <Icon name="ArrowLeft" />
-                      </button>
-                      <span
-                        id="project-prompt-count"
-                        className="project-prompt-count"
-                        aria-live="polite"
-                      >
-                        {index + 1} of {prompts.length}
-                      </span>
-                      <button
-                        id="project-prompt-next"
-                        type="button"
-                        className="btn btn-sm"
-                        aria-label="Next sample prompt"
-                        title="Next sample prompt"
-                        disabled={prompts.length < 2}
-                        onClick={() => move(1)}
-                      >
-                        <Icon name="ArrowRight" />
-                      </button>
-                    </div>
-                    <button
-                      ref={copyButton}
-                      id="project-prompt-copy"
-                      type="button"
-                      className="btn btn-sm"
-                      onClick={copy}
-                    >
-                      <Icon name="Copy" />
-                      Copy Prompt
-                    </button>
-                  </div>
-                  <p
-                    id="project-prompt-copy-status"
-                    className="project-prompt-copy-status"
-                    aria-live="polite"
-                  >
-                    {status}
-                  </p>
-                </div>
+                <PromptCarousel idPrefix="project" prompts={prompts} copyButtonRef={copyButton} />
               </div>
               <div>
                 <h5>Documentation</h5>
-                <ul id="project-documentation-links" className="project-documentation-links">
-                  {docs.map(([path, label]) => (
-                    <li key={path}>
-                      <a href={resolveAssetPath(path)} target="_blank" rel="noopener noreferrer">
-                        {label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+                <ResourceLinkList
+                  id="project-documentation-links"
+                  className="project-documentation-links"
+                  items={docs.map(([path, label]) => ({
+                    href: resolveAssetPath(path),
+                    label,
+                    external: true,
+                  }))}
+                />
               </div>
-            </div>
+            </SplitLayout>
           </div>
-          <div id="project-asset-grid" className="asset-grid">
+          <ResponsiveGrid id="project-asset-grid" className="asset-grid">
             {assets.map((asset) => (
               <AssetCard key={asset.id} asset={asset} />
             ))}
-          </div>
+          </ResponsiveGrid>
         </div>
       </details>
       <button

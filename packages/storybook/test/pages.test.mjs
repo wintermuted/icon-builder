@@ -4,6 +4,10 @@ import { createServer } from "node:http";
 import { extname, resolve, sep } from "node:path";
 import { after, before, test } from "node:test";
 import { chromium } from "playwright";
+import { verifySharedInteractions } from "./shared-interactions.mjs";
+import { verifyLayoutInteractions } from "./layout-interactions.mjs";
+import { verifyPrimitiveInteractions } from "./primitive-interactions.mjs";
+import { verifyEditorControlInteractions } from "./editor-control-interactions.mjs";
 
 const root = resolve(process.env.STORYBOOK_SITE_DIR ?? "dist/storybook");
 const types = {
@@ -65,7 +69,25 @@ for (const prefix of ["/icon-builder/storybook/", "/icon-builder/previews/pr-42/
       assert.equal(indexResponse.status(), 200);
       const index = await indexResponse.json();
       const stories = Object.values(index.entries).filter((entry) => entry.type === "story");
-      assert.equal(stories.length, 11);
+      assert.equal(stories.length, 73);
+      const docs = Object.values(index.entries).filter((entry) => entry.type === "docs");
+      assert.equal(docs.length, 32);
+      assert.deepEqual([...new Set(docs.map((entry) => entry.title.split("/")[1]))].sort(), [
+        "Controls",
+        "Display",
+        "Feedback",
+        "Layout",
+        "Overlays",
+      ]);
+      for (const entry of [...stories, ...docs]) {
+        const [namespace, group, component, extra] = entry.title.split("/");
+        assert.equal(namespace, "Shared");
+        assert.ok(group && component && !extra, `Grouped component title: ${entry.title}`);
+        assert.ok(
+          entry.id.startsWith(`shared-${component.toLowerCase()}--`),
+          `Preserved story/Docs URL: ${entry.id}`,
+        );
+      }
       for (const entry of stories) {
         await page.goto(`${base}iframe.html?id=${entry.id}&viewMode=story`);
         await page.locator("#storybook-root > *").first().waitFor();
@@ -83,11 +105,17 @@ for (const prefix of ["/icon-builder/storybook/", "/icon-builder/previews/pr-42/
           await page.getByRole("alert").waitFor();
         }
       }
-      await page.goto(`${base}?path=/docs/shared-icon--docs`);
-      await page
-        .frameLocator("#storybook-preview-iframe")
-        .getByRole("heading", { name: "Icon", exact: true })
-        .waitFor();
+      for (const entry of docs) {
+        await page.goto(`${base}?path=/docs/${entry.id}`);
+        await page
+          .frameLocator("#storybook-preview-iframe")
+          .getByRole("heading", { name: entry.title.split("/").at(-1), exact: true })
+          .waitFor();
+      }
+      await verifySharedInteractions(page, base);
+      await verifyLayoutInteractions(page, base);
+      await verifyPrimitiveInteractions(page, base);
+      await verifyEditorControlInteractions(page, base);
       assert.deepEqual(errors, [], "No uncaught runtime errors at a nested Pages path");
     } finally {
       await context.close();
