@@ -64,7 +64,7 @@ export function Diagrams({
 }: {
   theme: string;
   diagrams: readonly DiagramSpec[];
-  renderer: MermaidRenderer;
+  renderer?: MermaidRenderer;
 }) {
   return (
     <section id="diagrams" className="card">
@@ -72,13 +72,24 @@ export function Diagrams({
         <h3>Markdown Diagram Specs</h3>
       </div>
       <div className="card-body">
+        {!renderer && diagrams.length > 0 && (
+          <p role="alert">
+            Diagrams unavailable: Mermaid failed to load. Reload the page to retry.
+          </p>
+        )}
         <div id="diagram-grid" className="asset-grid">
-          {diagrams.map((item, index) => (
-            <article key={item.id} className="asset-tile">
-              <h3>{item.title}</h3>
-              <Diagram id={`diagram-${index}`} code={item.code} theme={theme} renderer={renderer} />
-            </article>
-          ))}
+          {renderer &&
+            diagrams.map((item, index) => (
+              <article key={item.id} className="asset-tile">
+                <h3>{item.title}</h3>
+                <Diagram
+                  id={`diagram-${index}`}
+                  code={item.code}
+                  theme={theme}
+                  renderer={renderer}
+                />
+              </article>
+            ))}
         </div>
       </div>
     </section>

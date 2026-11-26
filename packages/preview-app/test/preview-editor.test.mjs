@@ -450,3 +450,32 @@ test("shared diagrams receive data and renderer props and recover from rendering
   await page.locator("#diagram-grid svg[data-recovered]").waitFor({ state: "attached" });
   assert.equal(await page.locator("#diagram-grid [role=alert]").isVisible(), false);
 });
+
+for (const empty of [true, false]) {
+  test(`missing Mermaid keeps navigation working with ${empty ? "empty" : "populated"} diagrams`, async () => {
+    await page.route("https://cdn.jsdelivr.net/**", (route) =>
+      route.fulfill({ body: "", contentType: "text/javascript" }),
+    );
+    if (empty) {
+      await page.route("**/preview/spec-index.json", (route) =>
+        route.fulfill({ json: { diagrams: [] } }),
+      );
+    }
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#asset-detail-layers .asset-layer-number").first().waitFor();
+    await page.evaluate(() => (window.location.hash = "logos"));
+    await page.locator("#new-project-btn").waitFor();
+    assert.equal(
+      await page.getByRole("heading", { name: "Preview failed", exact: true }).count(),
+      0,
+    );
+    assert.equal(await page.locator("#diagrams [role=alert]").count(), empty ? 0 : 1);
+    if (!empty) assert.match(await page.locator("#diagrams [role=alert]").textContent(), /Mermaid/);
+    await page.locator("#theme-toggle").click();
+    assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+    await page.evaluate(() => (window.location.hash = "diagrams"));
+    await page.locator("#diagrams").waitFor();
+    await page.evaluate(() => (window.location.hash = "asset/fixture"));
+    await page.locator("#asset-detail-layers .asset-layer-number").first().waitFor();
+  });
+}

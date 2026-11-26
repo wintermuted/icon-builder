@@ -86,6 +86,8 @@ entrypoint; Vite consumes its TSX source directly without a separate library bui
 Diagram components receive their data and Mermaid renderer through props rather
 than accessing application state or browser globals. Consumers provide the
 existing `preview/styles.css` classes; the package does not import app styles.
+If the Mermaid CDN is unavailable, navigation and editing remain usable; only
+nonempty diagram sections show an unavailable-renderer alert.
 The entrypoint composes modules under `packages/preview-app/src/`:
 `svg/` owns cached SVG documents and edits, `canvas/` owns gestures and cleanup,
 `editor/` owns layer panels, and `project/` and `views/` own project data and DOM
@@ -133,6 +135,8 @@ dependency so consumers share their React runtime. npm may hoist or nest workspa
 the dependency check resolves Vite from the owning package rather than assuming
 a root-level binary. The theme is bundled by Vite and the SVG editor uses the
 existing Lucide DOM adapter.
+Startup also checks resolution of the UI workspace package so existing installs
+automatically restore its link after updating the checkout.
 
 Nx and `@nx/js` are kept at the same stable version. If `nx migrate` cannot
 retrieve provenance metadata from the configured registry, update the package

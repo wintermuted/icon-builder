@@ -141,7 +141,11 @@ export function PreviewApp() {
           ) : (
             <>
               <Collection onNewProject={() => setNewProject(true)} />
-              <Diagrams theme={theme} diagrams={appState.diagramData} renderer={mermaid} />
+              <Diagrams
+                theme={theme}
+                diagrams={appState.diagramData}
+                renderer={typeof mermaid === "undefined" ? undefined : mermaid}
+              />
             </>
           )}
         </main>
