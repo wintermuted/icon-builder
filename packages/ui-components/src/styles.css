@@ -22,6 +22,44 @@
   display: none;
 }
 
+.wm-timed-toast > .wm-toast {
+  position: static;
+  min-width: 0;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  font: inherit;
+  line-height: inherit;
+  transform: none;
+  transition: none;
+}
+
+.wm-icon-action-button:not(.btn) {
+  min-height: unset;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  background: transparent;
+  border: none;
+}
+
+.wm-icon-action-button.btn,
+.wm-toggle-button.wm-btn-ghost {
+  background: var(--wm-color-surface-strong);
+}
+
+.wm-icon-action-button.btn {
+  border-color: transparent;
+}
+
+.wm-toggle-button.wm-btn-ghost:not([aria-pressed="true"]) {
+  border-color: transparent;
+}
+
 .wm-icon-action,
 .source-material-action {
   display: inline-flex;

@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef } from "react";
+import { Button } from "@wintermuted/ui-react";
 import { Icon, type IconName } from "./icon.js";
 
 export interface IconActionButtonProps extends Omit<
@@ -18,8 +19,15 @@ export function IconActionButton({
   ...props
 }: IconActionButtonProps) {
   return (
-    <button {...props} type={type} className={className} aria-label={label} title={title}>
+    <Button
+      {...props}
+      variant="ghost"
+      type={type}
+      className={`wm-icon-action-button ${className}`}
+      aria-label={label}
+      title={title}
+    >
       <Icon name={icon} />
-    </button>
+    </Button>
   );
 }

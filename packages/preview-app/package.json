@@ -7,7 +7,7 @@
     "dev": "vite --config vite.config.ts --host 127.0.0.1 --port 4178 --strictPort"
   },
   "dependencies": {
-    "@wintermuted/ui-theme": "^0.21.5",
+    "@wintermuted/ui-theme": "https://github.com/wintermuted/wintermuted-ui/releases/download/ui-theme%401.0.4/wintermuted-ui-theme-1.0.4.tgz",
     "@wm-asset-workflows/ui-components": "*",
     "lucide": "^1.75.0",
     "react": "^19.3.1",

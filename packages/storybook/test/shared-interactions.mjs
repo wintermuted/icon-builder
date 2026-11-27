@@ -178,5 +178,12 @@ export async function verifySharedInteractions(page, base) {
   assert.equal(await toast.isVisible(), true, "Notification remains until its full duration");
   await page.clock.runFor(1);
   assert.equal(await toast.isVisible(), false);
+  await show.click();
+  await page.getByRole("button", { name: "Dismiss notification", exact: true }).click();
+  assert.equal(
+    await toast.isVisible(),
+    false,
+    "The central dismiss action clears the local notice",
+  );
   await page.clock.resume();
 }

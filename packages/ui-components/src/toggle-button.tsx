@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef } from "react";
+import { Button } from "@wintermuted/ui-react";
 import { Icon, type IconName } from "./icon.js";
 
 export interface ToggleButtonProps extends Omit<ComponentPropsWithRef<"button">, "aria-pressed"> {
@@ -18,8 +19,9 @@ export function ToggleButton({
   ...props
 }: ToggleButtonProps) {
   return (
-    <button
+    <Button
       {...props}
+      variant="ghost"
       type={type}
       className={`wm-toggle-button ${className}`}
       aria-pressed={pressed}
@@ -34,6 +36,6 @@ export function ToggleButton({
     >
       {icon && <Icon name={icon} />}
       {children}
-    </button>
+    </Button>
   );
 }

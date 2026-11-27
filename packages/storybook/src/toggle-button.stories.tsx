@@ -6,6 +6,14 @@ const meta = {
   id: "shared-togglebutton",
   title: "Shared/Controls/ToggleButton",
   component: ToggleButton,
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "Icon Builder's independent grid toggle adapter around the central Button, not a mutually exclusive ToggleGroup. It preserves aria-pressed, cancelled clicks, and native controller hooks.",
+      },
+    },
+  },
   args: { pressed: false, children: "Show grid", icon: "Grid2x2" },
   render: function Render(args) {
     const [{ pressed }, updateArgs] = useArgs<ToggleButtonProps>();

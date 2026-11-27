@@ -25,6 +25,14 @@ const meta = {
   id: "shared-toast",
   title: "Shared/Feedback/Toast",
   component: Toast,
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "Icon Builder's timed notification adapter around the central Toast. Repeated copy messages restart the local timer; the shared dismiss action can close them immediately.",
+      },
+    },
+  },
   args: { message: "Link copied.", duration: 2400 },
   render: (args) => <ToastExample {...args} />,
 } satisfies Meta<typeof Toast>;
