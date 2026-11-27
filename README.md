@@ -74,6 +74,12 @@ Open input is either `{}`, `{ "project": "Project name" }`, or
 | `create_project` | Create a named project with an explicit kebab-case slug.                                |
 | `create_asset`   | Write and register a new SVG with explicit project, ID, label, and size/theme variants. |
 
+Project discovery includes both manifest metadata and project names derived from
+assets, including unassigned assets. Canvas save/create accepts static SVGs;
+scripting, SMIL animation, and external resource URLs (including presentation
+attributes such as cursors and fills) are rejected. Local fragment references
+and embedded raster image data remain supported.
+
 Agent actions and canvas UI writes use one coordinator. Before a write, every
 open panel must respond to a short editing pause. Unsaved edits, an unreachable
 panel, or a stale revision reject the write without overwriting the SVG.
@@ -91,6 +97,14 @@ block saves; keep the panel open until resolved. Revisions detect external disk
 edits, but arbitrary external tools and separately started preview servers do
 not participate in the canvas's write coordinator.
 
+If the connection drops, editing and writes stop, but **Copy recovery SVG**
+remains keyboard-accessible outside the frozen editor. Copy the in-memory SVG
+before reopening if the latest edits could not be preserved. Saving freezes the
+editor through persistence and save bookkeeping; draft writes skip unchanged
+snapshots and coalesce rapid edits instead of building an unbounded write queue.
+Canvas forms keep their own success/error feedback; only other clean panels
+refresh after a successful UI mutation.
+
 Compact mode retains editing/navigation while omitting redundant branding and
 the standalone footer. It maps documented Copilot theme tokens to the existing
 theme and follows host light/dark changes without changing standalone theme
@@ -101,6 +115,10 @@ using the extension manager, fix the reported prerequisite, then reload
 extensions and reopen the canvas. A stale lock under
 `node_modules/.icon-builder-canvas.lock` is reclaimed only when its recorded
 process is no longer running. Do not delete an active provider's lock.
+Ownership checks are serialized with a separate
+`node_modules/.icon-builder-canvas.lock.recovery` file. If an interrupted check
+leaves this file behind, inspect its recorded PID and confirm the provider has
+exited before removing that recovery file; it is never blindly reclaimed.
 
 Run the focused lifecycle, artifact, and browser suite without a build:
 

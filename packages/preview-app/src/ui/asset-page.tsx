@@ -26,8 +26,8 @@ export function AssetPage({ assetId }: { assetId: string }) {
     let cancelled = false;
     if (isCopilotCanvas) {
       void prepareCanvasAsset(assetId)
-        .then(() => {
-          if (!cancelled) renderAssetDetail(assetId, presentation);
+        .then((prepared) => {
+          if (!cancelled && prepared) renderAssetDetail(assetId, presentation);
         })
         .catch((error) => {
           if (!cancelled) setFailure(error.message);

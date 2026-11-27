@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { mkdtemp, mkdir, writeFile, rm, symlink } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, rm, symlink } from "node:fs/promises";
+import { spawn } from "node:child_process";
 import { join, sep } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import { CanvasProvider } from "../../../.github/extensions/icon-builder/provider.mjs";
+import { acquireWorktreeLock } from "../../../.github/extensions/icon-builder/worktree-lock.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -65,5 +67,66 @@ test("provider isolates worktrees, serializes concurrent startup, and cleans up 
     await Promise.all([first.stop(), second.stop(), duplicate.stop()]);
     await rm(firstRoot, { recursive: true, force: true });
     await rm(secondRoot, { recursive: true, force: true });
+  }
+});
+
+test("concurrent stale-lock recovery admits only one owner", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "canvas-ownership-"));
+  let release;
+  try {
+    await mkdir(join(directory, "node_modules"));
+    const dead = spawn(process.execPath, ["-e", ""]);
+    await new Promise((resolve, reject) => {
+      dead.once("exit", resolve);
+      dead.once("error", reject);
+    });
+    const path = join(directory, "node_modules", ".icon-builder-canvas.lock");
+    await writeFile(path, String(dead.pid));
+    const results = await Promise.allSettled([
+      acquireWorktreeLock(directory),
+      acquireWorktreeLock(directory),
+    ]);
+    assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+    release = results.find((result) => result.status === "fulfilled").value;
+    assert.equal(await readFile(path, "utf8"), String(process.pid));
+    await assert.rejects(
+      acquireWorktreeLock(directory),
+      /already has an Icon Builder canvas provider/,
+    );
+    assert.equal(await readFile(path, "utf8"), String(process.pid));
+  } finally {
+    await release?.();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("panel open/close and explicit stop are serialized through shutdown", async () => {
+  const directory = await fixture();
+  const provider = new CanvasProvider(pathToFileURL(`${directory}${sep}`));
+  try {
+    await provider.request("open", { instanceId: "first" });
+    const [opened] = await Promise.all([
+      provider.request("open", { instanceId: "pending" }),
+      provider.request("close", { instanceId: "first" }),
+    ]);
+    assert.equal(provider.instances, 1);
+    assert.deepEqual(await provider.request("list_projects", {}), { projects: [] });
+    const [, fresh] = await Promise.all([
+      provider.request("close", { instanceId: "pending" }),
+      provider.request("open", { instanceId: "fresh" }),
+    ]);
+    assert.equal(provider.instances, 1);
+    assert.notEqual(new URL(fresh.url).search, new URL(opened.url).search);
+    const oldChild = provider.child;
+    const [, restarted] = await Promise.all([
+      provider.stop(),
+      provider.request("open", { instanceId: "restarted" }),
+    ]);
+    assert.notEqual(provider.child.pid, oldChild.pid);
+    assert.match(restarted.url, /\/preview\/index\.html\?canvas=1/);
+    assert.deepEqual(await provider.request("list_projects", {}), { projects: [] });
+  } finally {
+    await provider.stop();
+    await rm(directory, { recursive: true, force: true });
   }
 });

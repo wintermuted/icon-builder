@@ -18,19 +18,34 @@ let frozen = true;
 let connected = false;
 let draftFailure = "";
 let saving = false;
-let pendingDraft: Promise<void> = Promise.resolve();
+let preparing = false;
+let writingDraft: Promise<void> | undefined;
+type Draft = { id: string; svg: string; revision: string | undefined };
+let queuedDraft: Draft | undefined;
+let lastSnapshot: Draft | undefined;
+let assetVersion = 0;
+let assetQueue: Promise<unknown> = Promise.resolve();
 let notice: HTMLElement;
+let statusText: HTMLElement;
+let recovery: HTMLButtonElement;
 
 function status(message: string, error = false) {
   if (!notice) return;
-  notice.textContent = message;
-  notice.setAttribute("role", error ? "alert" : "status");
+  statusText.textContent = message;
+  statusText.setAttribute("role", error ? "alert" : "status");
+  recovery.hidden = connected || !document.querySelector("#asset-primary-svg svg");
 }
 
 function freeze(value: boolean) {
   frozen = value;
   const root = document.getElementById("root");
   if (root) root.inert = value;
+  for (const dialog of document.querySelectorAll<HTMLElement>("dialog, [role='dialog']"))
+    dialog.inert = value;
+}
+
+function syncFreeze() {
+  freeze(!connected || preparing || saving);
 }
 
 async function request(path: string, input?: object) {
@@ -63,82 +78,134 @@ function snapshot() {
     svg: new XMLSerializer().serializeToString(svg),
     revision: revisions.get(activeId),
   };
-  pendingDraft = pendingDraft
-    .then(async () => {
+  if (
+    lastSnapshot?.id === input.id &&
+    lastSnapshot.svg === input.svg &&
+    lastSnapshot.revision === input.revision
+  )
+    return;
+  lastSnapshot = input;
+  queuedDraft = input;
+  if (!writingDraft) startDraftWrite();
+}
+
+function startDraftWrite() {
+  writingDraft = writeDrafts().finally(() => {
+    writingDraft = undefined;
+    if (queuedDraft) startDraftWrite();
+  });
+}
+
+async function writeDrafts() {
+  while (queuedDraft) {
+    const input = queuedDraft;
+    queuedDraft = undefined;
+    try {
       await request("/~canvas/draft", input);
       draftFailure = "";
       if (activeId === input.id && !saving)
         status("Unsaved changes preserved. Save or discard before agent writes.");
-    })
-    .catch((error) => {
+    } catch (error) {
+      lastSnapshot = undefined;
       draftFailure = error.message;
       status(`Draft could not be preserved: ${error.message}. Keep this panel open.`, true);
-    });
+    }
+  }
+}
+
+async function flushDrafts() {
+  while (writingDraft) await writingDraft;
+}
+
+function queueAsset<T>(work: () => Promise<T>) {
+  const next = assetQueue.then(work);
+  assetQueue = next.catch(() => {});
+  return next;
 }
 
 export async function prepareCanvasAsset(id: string) {
-  if (!isCopilotCanvas) return;
+  if (!isCopilotCanvas) return true;
+  const version = ++assetVersion;
   snapshot();
-  await pendingDraft;
-  if (draftFailure) throw new Error(draftFailure);
-  const data = await request(`/~canvas/asset?id=${encodeURIComponent(id)}`);
-  activeId = id;
-  revisions.set(id, data.draft?.revision ?? data.revision);
-  sources.set(data.asset.source, data.draft?.svg ?? data.svg);
-  assetSvgDataCache.delete(data.asset.source);
-  assetLayerEdits.delete(id);
-  assetViewBoxEdits.delete(id);
-  assetAccessibilityEdits.delete(id);
-  assetSourceSizeEdits.delete(id);
-  assetGroupEdits.delete(id);
-  if (data.draft) {
-    assetModified.add(id);
-    status(
-      data.draft.revision === data.revision
-        ? "Recovered unsaved changes. Save or discard before agent writes."
-        : "Recovered draft conflicts with disk changes. Copy the draft before discarding it.",
-      true,
-    );
-  } else {
-    assetModified.delete(id);
-    status("Connected to Copilot canvas.");
-  }
+  return queueAsset(async () => {
+    await flushDrafts();
+    if (draftFailure) throw new Error(draftFailure);
+    if (version !== assetVersion) return false;
+    const data = await request(`/~canvas/asset?id=${encodeURIComponent(id)}`);
+    if (version !== assetVersion) {
+      await request("/~canvas/release", { id });
+      return false;
+    }
+    activeId = id;
+    lastSnapshot = undefined;
+    revisions.set(id, data.draft?.revision ?? data.revision);
+    sources.set(data.asset.source, data.draft?.svg ?? data.svg);
+    assetSvgDataCache.delete(data.asset.source);
+    assetLayerEdits.delete(id);
+    assetViewBoxEdits.delete(id);
+    assetAccessibilityEdits.delete(id);
+    assetSourceSizeEdits.delete(id);
+    assetGroupEdits.delete(id);
+    if (data.draft) {
+      assetModified.add(id);
+      status(
+        data.draft.revision === data.revision
+          ? "Recovered unsaved changes. Save or discard before agent writes."
+          : "Recovered draft conflicts with disk changes. Copy the draft before discarding it.",
+        true,
+      );
+    } else {
+      assetModified.delete(id);
+      status("Connected to Copilot canvas.");
+    }
+    return true;
+  });
 }
 
 export function releaseCanvasAsset() {
   if (!isCopilotCanvas) return;
   snapshot();
   const id = activeId;
-  if (id)
-    pendingDraft = pendingDraft
-      .then(async () => {
-        await request("/~canvas/release", { id });
-      })
-      .catch((error) => {
-        draftFailure = error.message;
-        status(error.message, true);
-      });
+  ++assetVersion;
   activeId = "";
+  void queueAsset(async () => {
+    await flushDrafts();
+    if (id) await request("/~canvas/release", { id });
+  }).catch((error) => {
+    draftFailure = error.message;
+    status(error.message, true);
+  });
 }
 
-export async function saveCanvasAsset(id: string, svg: string) {
+export async function saveCanvasAsset(
+  id: string,
+  serialize: () => string,
+  onSaved: (result: { source: string; revision: string }) => void,
+) {
+  if (saving || preparing || !connected)
+    throw new Error("Wait for the canvas to reconnect or finish writing.");
+  freeze(true);
   snapshot();
-  await pendingDraft;
-  if (draftFailure) throw new Error(draftFailure);
   saving = true;
   try {
+    const svg = serialize();
+    await flushDrafts();
+    if (draftFailure) throw new Error(draftFailure);
     const result = await request("/~asset", { id, svg, expectedRevision: revisions.get(id) });
     revisions.set(id, result.revision);
     sources.set(appState.assetById.get(id).source, svg);
+    onSaved(result);
+    lastSnapshot = undefined;
     return result;
   } finally {
     saving = false;
+    syncFreeze();
   }
 }
 
 export async function discardCanvasDraft() {
   if (!activeId) return;
-  await pendingDraft;
+  await flushDrafts();
   await request("/~canvas/draft", { id: activeId, discard: true });
   assetModified.delete(activeId);
   location.reload();
@@ -149,6 +216,20 @@ export function initializeCopilotCanvas() {
   document.documentElement.dataset.copilotCanvas = "true";
   notice = document.createElement("aside");
   notice.className = "copilot-canvas-status";
+  statusText = document.createElement("span");
+  recovery = document.createElement("button");
+  recovery.type = "button";
+  recovery.className = "btn btn-sm";
+  recovery.textContent = "Copy recovery SVG";
+  recovery.onclick = () => {
+    const svg = document.querySelector("#asset-primary-svg svg");
+    if (!svg) return status("No SVG is available to copy.", true);
+    void navigator.clipboard
+      .writeText(new XMLSerializer().serializeToString(svg))
+      .then(() => status("Copied the in-memory SVG. Keep it safe before reopening the canvas."))
+      .catch((error) => status(`Could not copy recovery SVG: ${error.message}`, true));
+  };
+  notice.append(statusText, recovery);
   document.body.append(notice);
   status("Connecting to Icon Builder...");
   freeze(true);
@@ -183,7 +264,10 @@ export function initializeCopilotCanvas() {
       snapshot();
     });
   };
-  new MutationObserver(schedule).observe(document.getElementById("root"), {
+  new MutationObserver((records) => {
+    const preview = document.getElementById("asset-primary-svg");
+    if (records.some((record) => preview?.contains(record.target))) schedule();
+  }).observe(document.getElementById("root"), {
     subtree: true,
     childList: true,
     attributes: true,
@@ -200,18 +284,23 @@ export function initializeCopilotCanvas() {
   events.onerror = () => {
     connected = false;
     freeze(true);
-    status("Canvas disconnected. Reopen it from Copilot; saved drafts will be recovered.", true);
+    status(
+      "Canvas disconnected. Copy recovery SVG before reopening if edits were not preserved.",
+      true,
+    );
   };
   events.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.type === "connected") {
       connected = true;
-      freeze(false);
+      preparing = data.preparing === true;
+      syncFreeze();
       status("Connected to Copilot canvas.");
     } else if (data.type === "prepare") {
-      freeze(true);
+      preparing = true;
+      syncFreeze();
       snapshot();
-      void pendingDraft
+      void flushDrafts()
         .then(async () => {
           await request("/~canvas/ack", {
             id: data.id,
@@ -220,16 +309,18 @@ export function initializeCopilotCanvas() {
         })
         .catch((error) => status(error.message, true));
     } else if (data.type === "release") {
-      freeze(!connected);
-      if (data.changed && !data.saving && !assetModified.size) location.reload();
+      preparing = false;
+      syncFreeze();
+      if (data.changed && !data.requesting && !data.saving && !assetModified.size)
+        location.reload();
     }
   };
   document.addEventListener(
     "keydown",
     (event) => {
       if (frozen) {
-        event.preventDefault();
         event.stopImmediatePropagation();
+        if (document.getElementById("root")?.contains(event.target as Node)) event.preventDefault();
       }
     },
     true,

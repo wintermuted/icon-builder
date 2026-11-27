@@ -25,6 +25,10 @@ export function slug(value: string) {
 }
 
 export function validateSvg(svg: string) {
+  const externalResource = (value: string) =>
+    /@import|\\|url\s*\(/i.test(
+      value.replace(/url\(\s*(?:"#[^"]+"|'#[^']+'|#[^)'"\s]+)\s*\)/gi, ""),
+    );
   if (
     typeof svg !== "string" ||
     Buffer.byteLength(svg) > 2 * 1024 * 1024 ||
@@ -49,16 +53,25 @@ export function validateSvg(svg: string) {
   for (const element of Array.from(document.getElementsByTagName("*"))) {
     if (
       element.namespaceURI !== "http://www.w3.org/2000/svg" ||
-      ["script", "foreignobject"].includes(element.localName.toLowerCase())
+      [
+        "script",
+        "foreignobject",
+        "animate",
+        "animatemotion",
+        "animatetransform",
+        "set",
+        "discard",
+      ].includes(element.localName.toLowerCase())
     )
       throw new CanvasFault(
         "invalid_svg",
-        "Only SVG elements without scripting or embedded HTML are supported.",
+        "Only static SVG elements without scripting or embedded HTML are supported.",
       );
     for (const attribute of Array.from(element.attributes)) {
       if (
         /^on/i.test(attribute.localName) ||
         /(?:javascript|vbscript)\s*:/i.test(attribute.value) ||
+        externalResource(attribute.value) ||
         (attribute.localName === "href" &&
           !/^(?:#|data:image\/(?:png|jpeg|gif|webp);base64,)/i.test(attribute.value))
       )
@@ -67,8 +80,7 @@ export function validateSvg(svg: string) {
           "SVG attributes cannot execute code or load external resources.",
         );
     }
-    const styles = `${element.getAttribute("style") || ""} ${element.localName === "style" ? element.textContent : ""}`;
-    if (/@import|\\|url\(\s*['"]?(?!#)/i.test(styles.replace(/url\((['"])#/gi, "url(#")))
+    if (element.localName === "style" && externalResource(element.textContent || ""))
       throw new CanvasFault("invalid_svg", "SVG styles cannot import or load external resources.");
   }
 }

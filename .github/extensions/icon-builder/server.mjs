@@ -1,15 +1,14 @@
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
-import { open, readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
+import { acquireWorktreeLock } from "./worktree-lock.mjs";
 
 const protocolWrite = process.stdout.write.bind(process.stdout);
 const send = (message) => protocolWrite(`${JSON.stringify(message)}\n`);
 process.stdout.write = process.stderr.write.bind(process.stderr);
 
 const root = process.env.ICON_BUILDER_ROOT;
-const lockPath = join(root, "node_modules", ".icon-builder-canvas.lock");
 let server;
 let service;
 let lock;
@@ -21,10 +20,7 @@ async function shutdown() {
   for (const panel of service?.panels.values() || []) panel.stream?.end();
   server?.httpServer?.closeAllConnections();
   await server?.close();
-  if (lock) {
-    await lock.close();
-    await unlink(lockPath);
-  }
+  if (lock) await lock();
 }
 
 process.stdin.once("end", () => {
@@ -48,25 +44,7 @@ try {
   const [major, minor, patch] = process.versions.node.split(".").map(Number);
   if (major < 26 || (major === 26 && (minor < 13 || (minor === 13 && patch < 1))))
     throw new Error("Icon Builder requires Node.js 26.13.1 or later.");
-  try {
-    lock = await open(lockPath, "wx");
-  } catch (error) {
-    if (error.code !== "EEXIST") throw error;
-    const pid = Number(await readFile(lockPath, "utf8"));
-    if (!Number.isSafeInteger(pid) || pid <= 0)
-      throw new Error("Invalid canvas lock; inspect node_modules/.icon-builder-canvas.lock.");
-    try {
-      process.kill(pid, 0);
-      throw new Error(
-        "This worktree already has an Icon Builder canvas provider. Close it before opening another.",
-      );
-    } catch (probe) {
-      if (probe.code !== "ESRCH") throw probe;
-    }
-    await unlink(lockPath);
-    lock = await open(lockPath, "wx");
-  }
-  await lock.writeFile(String(process.pid));
+  lock = await acquireWorktreeLock(root);
   const require = createRequire(join(root, "packages", "preview-app", "package.json"));
   const { createServer } = await import(pathToFileURL(require.resolve("vite")).href);
   server = await createServer({

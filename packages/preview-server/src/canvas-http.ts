@@ -3,6 +3,7 @@ import type { CanvasService } from "./canvas-service.js";
 import { CanvasFault } from "./canvas-files.js";
 
 async function body(req: IncomingMessage) {
+  req.setEncoding("utf8");
   let text = "";
   for await (const chunk of req) {
     text += chunk;
@@ -33,6 +34,7 @@ export function canvasHttp(
         req.headers["x-icon-canvas-token"] || url.searchParams.get("panel") || "",
       );
       service.panel(token);
+      if (req.method === "POST") req.setEncoding("utf8");
       if (url.pathname === "/~canvas/events" && req.method === "GET") {
         service.connect(token, res);
         return true;
@@ -40,8 +42,8 @@ export function canvasHttp(
       let result: unknown;
       if (url.pathname === "/~canvas/asset" && req.method === "GET") {
         const id = url.searchParams.get("id") || "";
-        service.claim(token, id);
         result = { ...(await service.files.read(id)), draft: await service.readDraft(id) };
+        service.claim(token, id);
       } else if (req.method === "POST") {
         if (!req.headers["x-icon-canvas-token"])
           throw new CanvasFault("missing_token", "Canvas write token required.", 403);
@@ -55,13 +57,34 @@ export function canvasHttp(
           result = await service.draft(await body(req), token);
         else if (url.pathname === "/~asset") {
           const input = await body(req);
-          result = await service.guarded(async () => {
-            const saved = await service.files.save(input);
-            await service.draft({ id: input.id, discard: true });
-            return { ok: true, ...saved };
-          }, token);
+          result = await service.guarded(
+            async () => {
+              const saved = await service.files.save(input);
+              await service.draft({ id: input.id, discard: true });
+              return { ok: true, ...saved };
+            },
+            { savingToken: token, requesterToken: token },
+          );
+        } else if (url.pathname === "/~scaffold") {
+          const input = await body(req);
+          result = await service.guarded(
+            async () => {
+              const created = await service.files.createProject(input);
+              return {
+                ok: true,
+                ...created,
+                svgDir: `assets/svg/${created.slug}/`,
+                groundingDir: `assets/svg/${created.slug}/grounding/`,
+                documentation: `assets/svg/${created.slug}/README.md`,
+              };
+            },
+            { requesterToken: token },
+          );
         } else {
-          await service.guarded(() => legacy(req, res));
+          await service.guarded(() => legacy(req, res), {
+            requesterToken: token,
+            changed: () => res.statusCode >= 200 && res.statusCode < 300,
+          });
           return true;
         }
       } else {

@@ -8,6 +8,13 @@ export class CanvasProvider {
     this.instances = 0;
     this.sequence = 0;
     this.pending = new Map();
+    this.queue = Promise.resolve();
+  }
+
+  serial(work) {
+    const next = this.queue.then(work);
+    this.queue = next.catch(() => {});
+    return next;
   }
 
   async start() {
@@ -33,6 +40,7 @@ export class CanvasProvider {
         reject(new Error(`Icon Builder startup timed out. ${diagnostics}`));
       }, 45000);
       const fail = (error) => {
+        if (this.child !== child) return;
         clearTimeout(timeout);
         reject(error);
         this.starting = null;
@@ -77,7 +85,15 @@ export class CanvasProvider {
     return this.starting;
   }
 
-  async request(method, input) {
+  request(method, input) {
+    return this.serial(async () => {
+      const result = await this.send(method, input);
+      if (method === "close" && !this.instances) await this.shutdown();
+      return result;
+    });
+  }
+
+  async send(method, input) {
     await this.start();
     const id = ++this.sequence;
     return new Promise((resolve, reject) => {
@@ -92,7 +108,11 @@ export class CanvasProvider {
     });
   }
 
-  async stop() {
+  stop() {
+    return this.serial(() => this.shutdown());
+  }
+
+  async shutdown() {
     const child = this.child;
     if (!child) return;
     await new Promise((resolve) => {

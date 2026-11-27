@@ -29,6 +29,7 @@ before(async () => {
   await mkdir(join(fixture, "preview"));
   await writeFile(join(fixture, "preview", "spec-index.json"), '{"diagrams":[]}');
   await writeFile(join(fixture, "assets", "svg", "fixture", "mark.svg"), svg);
+  await writeFile(join(fixture, "assets", "svg", "fixture", "other.svg"), svg);
   await writeFile(
     join(fixture, "manifests", "assets.json"),
     JSON.stringify({
@@ -39,6 +40,13 @@ before(async () => {
           label: "Canvas fixture",
           project: "Fixture",
           source: "assets/svg/fixture/mark.svg",
+          variants: [{ size: 64, theme: "light" }],
+        },
+        {
+          id: "other",
+          label: "Other fixture",
+          project: "Fixture",
+          source: "assets/svg/fixture/other.svg",
           variants: [{ size: 64, theme: "light" }],
         },
       ],
@@ -91,6 +99,10 @@ after(async () => {
   if (fixture) await rm(fixture, { recursive: true, force: true });
 });
 beforeEach(async () => {
+  for (const id of ["mark", "other"]) {
+    await writeFile(join(fixture, "assets", "svg", "fixture", `${id}.svg`), svg);
+    await service.draft({ id, discard: true });
+  }
   context = await browser.newContext({ viewport: { width: 1100, height: 900 } });
   page = await context.newPage();
   errors = [];
@@ -221,4 +233,187 @@ test("canvas HTTP mutations require the panel token and matching origin", async 
     body: "{}",
   });
   assert.equal(crossOrigin.status, 403);
+});
+
+test("UI saves freeze before flushing drafts and stay frozen through release and bookkeeping", async () => {
+  await open("mark");
+  await changedDraft();
+  const draftStarted = Promise.withResolvers();
+  const draftGate = Promise.withResolvers();
+  const saved = Promise.withResolvers();
+  const saveGate = Promise.withResolvers();
+  await page.route("**/~canvas/draft", async (route) => {
+    draftStarted.resolve();
+    await draftGate.promise;
+    await route.continue();
+  });
+  await page.route("**/~asset", async (route) => {
+    const response = await route.fetch();
+    saved.resolve();
+    await saveGate.promise;
+    await route.fulfill({ response });
+  });
+  try {
+    await page.keyboard.press("ArrowRight");
+    await draftStarted.promise;
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    assert.equal(await page.locator("#root").evaluate((root) => root.inert), true);
+    const captured = await page
+      .locator("#asset-primary-svg svg")
+      .evaluate((svg) => new XMLSerializer().serializeToString(svg));
+    await page.keyboard.press("ArrowRight");
+    assert.equal(
+      await page
+        .locator("#asset-primary-svg svg")
+        .evaluate((svg) => new XMLSerializer().serializeToString(svg)),
+      captured,
+    );
+    draftGate.resolve();
+    await saved.promise;
+    assert.equal(await page.locator("#root").evaluate((root) => root.inert), true);
+    saveGate.resolve();
+    await page.waitForFunction(() => !document.getElementById("root").inert);
+    assert.equal(await page.locator("#asset-save-button").isDisabled(), true);
+    assert.equal((await service.files.read("mark")).svg.trim(), captured);
+    assert.equal(await service.readDraft("mark"), null);
+  } finally {
+    draftGate.resolve();
+    saveGate.resolve();
+  }
+});
+
+test("draft persistence coalesces rapid edits and skips unchanged snapshots before prepare", async () => {
+  await open("mark");
+  await changedDraft();
+  const started = Promise.withResolvers();
+  const gate = Promise.withResolvers();
+  let writes = 0;
+  await page.route("**/~canvas/draft", async (route) => {
+    if (++writes === 1) {
+      started.resolve();
+      await gate.promise;
+    }
+    await route.continue();
+  });
+  try {
+    await page.keyboard.press("ArrowRight");
+    await started.promise;
+    for (let index = 0; index < 12; index++) await page.keyboard.press("ArrowRight");
+    await page.evaluate(() => {
+      for (let index = 0; index < 20; index++) window.dispatchEvent(new Event("canvas-dirty"));
+    });
+    assert.equal(writes, 1);
+    const latest = await page
+      .locator("#asset-primary-svg svg")
+      .evaluate((svg) => new XMLSerializer().serializeToString(svg));
+    const blocked = assert.rejects(
+      service.invoke("create_project", { name: "Blocked", slug: "blocked" }),
+      { code: "editor_busy" },
+    );
+    gate.resolve();
+    await blocked;
+    assert.equal(writes, 2);
+    assert.equal((await service.readDraft("mark")).svg, latest);
+  } finally {
+    gate.resolve();
+  }
+});
+
+for (const destination of ["#logos", "#asset/other"]) {
+  test(`obsolete asset preparation releases its claim before navigating to ${destination}`, async () => {
+    await open();
+    const started = Promise.withResolvers();
+    const gate = Promise.withResolvers();
+    await page.route(/\/~canvas\/asset\?id=mark$/, async (route) => {
+      const response = await route.fetch();
+      started.resolve();
+      await gate.promise;
+      await route.fulfill({ response });
+    });
+    try {
+      await page.evaluate(() => {
+        location.hash = "#asset/mark";
+      });
+      await started.promise;
+      await page.evaluate((hash) => {
+        location.hash = hash;
+      }, destination);
+      const released = page.waitForResponse((response) =>
+        response.url().endsWith("/~canvas/release"),
+      );
+      gate.resolve();
+      await released;
+      const token = new URL(page.url()).searchParams.get("panel");
+      if (destination === "#logos") {
+        assert.equal(service.panel(token).assetId, undefined);
+        assert.equal(await page.locator("#asset-primary-svg").count(), 0);
+      } else {
+        await page.locator('#asset-primary-svg[data-asset-id="other"] svg').waitFor();
+        assert.equal(service.panel(token).assetId, "other");
+        await page.getByLabel("Select element 1", { exact: true }).click();
+        const preserved = page.waitForResponse((response) =>
+          response.url().endsWith("/~canvas/draft"),
+        );
+        await page.keyboard.press("ArrowRight");
+        await preserved;
+        assert.match((await service.readDraft("other")).svg, /translate/);
+        assert.equal(await service.readDraft("mark"), null);
+      }
+    } finally {
+      gate.resolve();
+    }
+  });
+}
+
+test("disconnection keeps keyboard-accessible SVG recovery outside the inert editor", async () => {
+  await open("mark");
+  await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: service.origin });
+  await page.route("**/~canvas/draft", (route) => route.abort());
+  await page.getByLabel("Select element 1", { exact: true }).click();
+  await page.keyboard.press("ArrowRight");
+  await page.getByText("Draft could not be preserved:", { exact: false }).waitFor();
+  const expected = await page
+    .locator("#asset-primary-svg svg")
+    .evaluate((svg) => new XMLSerializer().serializeToString(svg));
+  await page.screenshot({
+    path: join(root, "outputs", "screenshots", "canvas-recovery-before.png"),
+  });
+  await page.route("**/~canvas/events?*", (route) => route.abort());
+  service.panel(new URL(page.url()).searchParams.get("panel")).stream.end();
+  const recovery = page.getByRole("button", { name: "Copy recovery SVG", exact: true });
+  await recovery.waitFor();
+  assert.equal(await page.locator("#root").evaluate((root) => root.inert), true);
+  await recovery.focus();
+  await page.keyboard.press("Enter");
+  await page.getByText("Copied the in-memory SVG.", { exact: false }).waitFor();
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), expected);
+  assert.equal(await service.readDraft("mark"), null);
+  await page.screenshot({
+    path: join(root, "outputs", "screenshots", "canvas-recovery-after.png"),
+  });
+});
+
+test("canvas scaffolding retains its success prompt and failed renames retain their error", async () => {
+  await open();
+  await page.getByRole("button", { name: "New Project", exact: true }).click();
+  await page.locator("#np-name").fill("Created by canvas");
+  await page.getByRole("button", { name: "Create Project", exact: true }).click();
+  await page.locator("#np-success-view").waitFor();
+  assert.match(
+    await page.locator("#np-prompt-snippet").textContent(),
+    /Project: Created by canvas/,
+  );
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await page.locator("#project-detail-title").waitFor();
+  await page.evaluate(() => {
+    location.hash = "#project/Fixture";
+  });
+  await page.getByRole("heading", { name: "Fixture", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Rename project", exact: true }).click();
+  await page.locator("#project-rename-input").fill("Created by canvas");
+  await page.locator("#project-rename-form").evaluate((form) => form.requestSubmit());
+  await page
+    .getByText("A project named Created by canvas already exists", { exact: true })
+    .waitFor();
+  assert.equal(await page.locator("#project-rename-input").inputValue(), "Created by canvas");
 });

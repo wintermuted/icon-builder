@@ -29,7 +29,6 @@ await joinSession({
         },
         onClose: async (ctx) => {
           await invoke("close", { instanceId: ctx.instanceId });
-          if (!provider.instances) await provider.stop();
         },
       }),
     ],

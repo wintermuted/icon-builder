@@ -12,6 +12,17 @@ interface Panel {
   pending?: { id: string; accept: (clean: boolean) => void };
 }
 
+function catalogProjects(manifest) {
+  const projects = new Map<string, { name: string }>(
+    manifest.projects.map((project) => [project.name, project]),
+  );
+  for (const asset of manifest.assets) {
+    const name = String(asset.project ?? "").trim() || "Unassigned Project";
+    if (!projects.has(name)) projects.set(name, { name });
+  }
+  return [...projects.values()];
+}
+
 export class CanvasService {
   panels = new Map<string, Panel>();
   files: CanvasFiles;
@@ -48,7 +59,11 @@ export class CanvasService {
       Connection: "keep-alive",
     });
     panel.stream = response;
-    this.event(panel, { type: "connected", generation: this.generation });
+    this.event(panel, {
+      type: "connected",
+      generation: this.generation,
+      preparing: Boolean(panel.pending),
+    });
     const timer = setInterval(() => response.write(": heartbeat\n\n"), 10000);
     response.on("close", () => {
       clearInterval(timer);
@@ -59,7 +74,10 @@ export class CanvasService {
     });
   }
 
-  async guarded<T>(work: () => Promise<T>, savingToken?: string) {
+  async guarded<T>(
+    work: () => Promise<T>,
+    options: { savingToken?: string; requesterToken?: string; changed?: () => boolean } = {},
+  ) {
     return this.serial(async () => {
       let changed = false;
       try {
@@ -76,7 +94,11 @@ export class CanvasService {
                   accept(clean);
                 },
               };
-              this.event(panel, { type: "prepare", id, saving: panel.token === savingToken });
+              this.event(panel, {
+                type: "prepare",
+                id,
+                saving: panel.token === options.savingToken,
+              });
             }),
         );
         if ((await Promise.all(checks)).some((clean) => !clean))
@@ -86,12 +108,17 @@ export class CanvasService {
             409,
           );
         const result = await work();
-        changed = true;
+        changed = options.changed?.() ?? true;
         return result;
       } finally {
         for (const panel of this.panels.values()) {
           panel.pending = undefined;
-          this.event(panel, { type: "release", changed, saving: panel.token === savingToken });
+          this.event(panel, {
+            type: "release",
+            changed,
+            saving: panel.token === options.savingToken,
+            requesting: panel.token === options.requesterToken,
+          });
         }
       }
     });
@@ -190,7 +217,7 @@ export class CanvasService {
             throw new CanvasFault("asset_not_found", `Unknown asset: ${input.assetId}`, 404);
           hash = `#asset/${encodeURIComponent(input.assetId)}`;
         } else if (input.project) {
-          if (!manifest.projects.some((project) => project.name === input.project))
+          if (!catalogProjects(manifest).some((project) => project.name === input.project))
             throw new CanvasFault("project_not_found", `Unknown project: ${input.project}`, 404);
           hash = `#project/${encodeURIComponent(input.project)}`;
         }
@@ -208,11 +235,16 @@ export class CanvasService {
       this.panels.delete(input.instanceId);
       return {};
     }
-    if (method === "list_projects") return { projects: (await readManifest(this.root)).projects };
+    if (method === "list_projects")
+      return { projects: catalogProjects(await readManifest(this.root)) };
     if (method === "list_assets") {
       const { assets } = await readManifest(this.root);
       return {
-        assets: assets.filter((asset) => !input.project || asset.project === input.project),
+        assets: assets.filter(
+          (asset) =>
+            !input.project ||
+            (String(asset.project ?? "").trim() || "Unassigned Project") === input.project,
+        ),
       };
     }
     if (method === "read_asset") return this.files.read(input.id);

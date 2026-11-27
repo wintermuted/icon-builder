@@ -57,6 +57,11 @@
 }
 
 .copilot-canvas-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   position: fixed;
   bottom: 0;
   inset-inline: 0;
@@ -68,7 +73,7 @@
   font-size: var(--text-body-small, 12px);
 }
 
-.copilot-canvas-status[role="alert"] {
+.copilot-canvas-status [role="alert"] {
   color: var(--wm-color-text);
 }
 
