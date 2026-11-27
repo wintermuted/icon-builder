@@ -42,6 +42,77 @@ python3 -m pip install -r requirements.txt
 npx playwright install chromium   # one-time browser install
 ```
 
+### GitHub Copilot canvas
+
+The repository includes an experimental **Icon Builder** canvas extension in
+`.github/extensions/icon-builder/`. Open a trusted checkout in the Copilot app,
+install the normal Node dependencies, and reload extensions. Ask Copilot to open
+Icon Builder, a named project, or a registered asset. Registration is through
+the extension SDK, not `.github/github-app.yml`.
+
+The extension starts its own loopback-only Vite server on an available port;
+there is no need to run `npm run preview` first. Each worktree has an isolated
+server. Panels share the provider's server, which stops when the last panel
+closes or the provider exits. Another provider cannot own the same worktree
+concurrently. Existing standalone preview commands and URLs remain unchanged.
+
+Node **26.13.1 or later** must be available to the extension as `node`. Volta
+users use the repository pin. If your app inherits a different PATH, set
+`ICON_BUILDER_NODE` to an absolute compatible Node executable before launching
+Copilot. The extension never installs dependencies, invokes builds, or asks for
+GitHub credentials. A missing runtime or dependency is a startup error.
+
+Open input is either `{}`, `{ "project": "Project name" }`, or
+`{ "assetId": "registered-id" }`. The canvas exposes these agent actions:
+
+| Action           | Purpose                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `list_projects`  | Read project metadata.                                                                  |
+| `list_assets`    | Read assets, optionally filtered by project.                                            |
+| `read_asset`     | Read SVG source and its content revision.                                               |
+| `save_asset`     | Replace a registered SVG with an `expectedRevision` from a read.                        |
+| `create_project` | Create a named project with an explicit kebab-case slug.                                |
+| `create_asset`   | Write and register a new SVG with explicit project, ID, label, and size/theme variants. |
+
+Agent actions and canvas UI writes use one coordinator. Before a write, every
+open panel must respond to a short editing pause. Unsaved edits, an unreachable
+panel, or a stale revision reject the write without overwriting the SVG.
+Save or discard drafts in the affected panels, or reconnect/close an unreachable
+panel, before retrying. Only one panel can edit a particular asset at once;
+different assets may be open in separate panels. Clean panels refresh after
+successful writes.
+
+Canvas drafts are saved under the worktree's ignored `outputs/canvas/drafts/`,
+keyed by asset ID rather than panel or port. Reopening an asset restores its
+draft and original revision. **Copy SVG** lets you preserve conflicting content;
+**Discard draft** explicitly abandons it. Do not remove the worktree or this
+directory if you need its drafts. Draft-persistence errors remain visible and
+block saves; keep the panel open until resolved. Revisions detect external disk
+edits, but arbitrary external tools and separately started preview servers do
+not participate in the canvas's write coordinator.
+
+Compact mode retains editing/navigation while omitting redundant branding and
+the standalone footer. It maps documented Copilot theme tokens to the existing
+theme and follows host light/dark changes without changing standalone theme
+preferences. SVG artwork colors are not recolored.
+
+For startup or reconnect failures, inspect the `icon-builder` extension log
+using the extension manager, fix the reported prerequisite, then reload
+extensions and reopen the canvas. A stale lock under
+`node_modules/.icon-builder-canvas.lock` is reclaimed only when its recorded
+process is no longer running. Do not delete an active provider's lock.
+
+Run the focused lifecycle, artifact, and browser suite without a build:
+
+```powershell
+npm run test:canvas
+```
+
+CI runs the same suite. Browser tests use temporary asset fixtures, separate
+headless browser contexts, and write before/after screenshots under
+`outputs/screenshots/canvas-*.png`. They simulate documented host theme tokens;
+native host rendering still needs a live Copilot canvas check.
+
 ## Commands
 
 ```bash

@@ -1,10 +1,14 @@
 import type { Plugin } from "vite";
 import { createRequestHandler } from "../preview-server/src/routes.js";
 import { buildSpecIndex } from "../workflows/src/build-spec-index.js";
+import { CanvasService } from "../preview-server/src/canvas-service.js";
+import { canvasHttp } from "../preview-server/src/canvas-http.js";
 
-export function createPreviewBackend(root: string): Plugin {
+export function createPreviewBackend(root: string, canvasMode = false): Plugin {
+  const canvas = canvasMode ? new CanvasService(root) : undefined;
   return {
     name: "preview-backend",
+    api: { canvas },
     async configureServer(server) {
       await buildSpecIndex(root);
       let suppressUntil = 0;
@@ -19,6 +23,7 @@ export function createPreviewBackend(root: string): Plugin {
           },
         },
       });
+      const embeddedHandler = canvas && canvasHttp(canvas, handler);
       server.middlewares.use((req, res, next) => {
         if (req.url === "/" || req.url?.startsWith("/?")) {
           const query = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
@@ -30,10 +35,12 @@ export function createPreviewBackend(root: string): Plugin {
             res.writeHead(404).end();
             return;
           }
-          void handler(req, res);
+          if (embeddedHandler) void embeddedHandler(req, res);
+          else void handler(req, res);
         } else next();
       });
       const onChange = async (path: string) => {
+        if (canvasMode) return;
         if (
           path.startsWith(`${root}specs`) ||
           path.includes("/specs/") ||

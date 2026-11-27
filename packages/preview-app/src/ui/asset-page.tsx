@@ -2,6 +2,13 @@ import { useLayoutEffect, useState } from "react";
 import { EditorPortals, EditorPresentation } from "../editor/presentation.js";
 import { appState } from "../app-state.js";
 import { renderAssetDetail } from "../views/asset-detail.js";
+import {
+  isCopilotCanvas,
+  prepareCanvasAsset,
+  releaseCanvasAsset,
+  discardCanvasDraft,
+} from "../copilot-canvas.js";
+import { showToast } from "../app-shell.js";
 import { AnalysisPanel, LayerPanel } from "./editor-panels.js";
 import {
   ActionGroup,
@@ -14,14 +21,33 @@ import {
 
 export function AssetPage({ assetId }: { assetId: string }) {
   const [presentation] = useState(() => new EditorPresentation());
+  const [failure, setFailure] = useState("");
   useLayoutEffect(() => {
-    renderAssetDetail(assetId, presentation);
+    let cancelled = false;
+    if (isCopilotCanvas) {
+      void prepareCanvasAsset(assetId)
+        .then(() => {
+          if (!cancelled) renderAssetDetail(assetId, presentation);
+        })
+        .catch((error) => {
+          if (!cancelled) setFailure(error.message);
+        });
+    } else renderAssetDetail(assetId, presentation);
     return () => {
+      cancelled = true;
+      releaseCanvasAsset();
       appState.activePrimaryLayerInteractionCleanup?.();
       appState.activePrimaryLayerInteractionCleanup = null;
       presentation.dispose();
     };
   }, [assetId, presentation]);
+  if (failure)
+    return (
+      <section role="alert">
+        <p>{failure}</p>
+        <a href="#logos">Back to projects</a>
+      </section>
+    );
   return (
     <section id="asset-detail" className="asset-detail-page">
       <EditorPortals presentation={presentation} />
@@ -43,6 +69,33 @@ export function AssetPage({ assetId }: { assetId: string }) {
         }
         actions={
           <>
+            {isCopilotCanvas && (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => {
+                    const svg = document.querySelector("#asset-primary-svg svg");
+                    if (svg)
+                      void navigator.clipboard
+                        .writeText(new XMLSerializer().serializeToString(svg))
+                        .then(() => showToast("Copied current SVG."))
+                        .catch((error) => showToast(error.message));
+                  }}
+                >
+                  Copy SVG
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => {
+                    void discardCanvasDraft().catch((error) => showToast(error.message));
+                  }}
+                >
+                  Discard draft
+                </button>
+              </>
+            )}
             <a
               id="asset-deep-link"
               className="project-deep-link"

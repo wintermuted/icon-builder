@@ -6,6 +6,7 @@ packages/storybook/debug-storybook.log
 
 outputs/png/*
 outputs/screenshots/*
+outputs/canvas/
 !outputs/png/.gitkeep
 !outputs/screenshots/.gitkeep
 

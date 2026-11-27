@@ -33,6 +33,7 @@ import { enablePrimaryLayerInteraction } from "../canvas/interactions.js";
 import { renderAssetColorList, renderStaticAssetColorList } from "../editor/colors.js";
 import { renderAssetDiagnostics } from "../editor/diagnostics.js";
 import type { EditorPresentation } from "../editor/presentation.js";
+import { isCopilotCanvas, saveCanvasAsset } from "../copilot-canvas.js";
 
 export function renderAssetDetail(assetId, presentation: EditorPresentation) {
   presentation.clear();
@@ -152,16 +153,18 @@ export function renderAssetDetail(assetId, presentation: EditorPresentation) {
     if (!svg || !assetModified.has(asset.id)) return;
     saveButton.disabled = true;
     try {
-      const response = await fetch("/~asset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: asset.id,
-          svg: new XMLSerializer().serializeToString(svg),
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok || result.error) throw new Error(result.error || "Asset save failed");
+      const svgText = new XMLSerializer().serializeToString(svg);
+      const result = isCopilotCanvas
+        ? await saveCanvasAsset(asset.id, svgText)
+        : await fetch("/~asset", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: asset.id,
+              svg: svgText,
+            }),
+          }).then(async (response) => ({ ...(await response.json()), failure: !response.ok }));
+      if (result.failure || result.error) throw new Error(result.error || "Asset save failed");
       assetSvgDataCache.delete(asset.source);
       assetLayerEdits.delete(asset.id);
       assetViewBoxEdits.delete(asset.id);
