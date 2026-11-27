@@ -1,6 +1,7 @@
 import { SVG_ELEMENT_GEOMETRY_ATTRIBUTES } from "./geometry.js";
 import { assetSvgDataCache } from "./editor-state.js";
 import type { ElementTree, PaintLayer, SvgData } from "../types.js";
+import { canvasSource } from "../copilot-canvas.js";
 
 export const SVG_PAINT_PROPERTIES = [
   "fill",
@@ -134,9 +135,12 @@ export function loadAssetSvgData(source: string): Promise<SvgData> {
     assetSvgDataCache.set(
       source,
       (async () => {
-        const response = await fetch(`../${source}`);
-        if (!response.ok) throw new Error(`Failed to load ${source}`);
-        const sourceText = await response.text();
+        let sourceText = canvasSource(source);
+        if (sourceText === undefined) {
+          const response = await fetch(`../${source}`);
+          if (!response.ok) throw new Error(`Failed to load ${source}`);
+          sourceText = await response.text();
+        }
         const documentRoot = new DOMParser().parseFromString(sourceText, "image/svg+xml");
         if (documentRoot.querySelector("parsererror")) throw new Error(`Failed to parse ${source}`);
 

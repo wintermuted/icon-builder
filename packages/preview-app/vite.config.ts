@@ -6,15 +6,15 @@ import { createPreviewBackend } from "./vite-backend.js";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root,
   base: "./",
   publicDir: false,
-  plugins: [react(), createPreviewBackend(root)],
+  plugins: [react(), createPreviewBackend(root, mode === "copilot-canvas")],
   build: {
     outDir: resolve(root, "dist/preview-app"),
     emptyOutDir: true,
     assetsDir: "preview/assets",
     rollupOptions: { input: resolve(root, "preview/index.html") },
   },
-});
+}));

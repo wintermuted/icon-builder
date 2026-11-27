@@ -54,6 +54,16 @@ The manifest is the central catalog consumed by:
 - `source` paths must start with `assets/svg/` — never point outside the `assets/` directory
 - Add all intended sizes/themes as separate variant objects
 
+### Canvas authoring
+
+The repository's Copilot canvas can create projects and register SVGs through
+`create_project` and `create_asset`. Supply an existing project name, a unique
+kebab-case ID, a label, complete SVG source, and explicit size/theme variants.
+The source path is derived from the project directory and asset ID, not supplied
+by the agent. Existing files and duplicate IDs are never overwritten.
+Use `read_asset` followed by `save_asset` with its returned revision to update
+an existing SVG. Save or discard unsaved canvas edits before agent writes.
+
 ### Example
 
 ```json

@@ -24,6 +24,10 @@ import { loadJson } from "./app-shell.js";
 import "@wintermuted/ui-theme/index.css";
 import "@wm-asset-workflows/ui-components/styles.css";
 import "../../../preview/styles.css";
+import "../../../preview/canvas.css";
+import { initializeCopilotCanvas } from "./copilot-canvas.js";
+
+initializeCopilotCanvas();
 
 // Only the SVG editor's imperative controls use Lucide's DOM adapter.
 Object.assign(window, {

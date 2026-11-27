@@ -1,4 +1,5 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, rename, unlink } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 
 export function manifestPath(root) {
@@ -10,7 +11,19 @@ export async function readManifest(root) {
 }
 
 export async function writeManifest(root, manifest) {
-  await writeFile(manifestPath(root), JSON.stringify(manifest, null, 2) + "\n", "utf-8");
+  await replaceFile(manifestPath(root), JSON.stringify(manifest, null, 2) + "\n");
+}
+
+export async function replaceFile(path: string, content: string) {
+  const temporary = `${path}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporary, content, { flag: "wx" });
+    await rename(temporary, path);
+  } finally {
+    await unlink(temporary).catch((error) => {
+      if (error.code !== "ENOENT") throw error;
+    });
+  }
 }
 
 export function findProject(manifest, name) {

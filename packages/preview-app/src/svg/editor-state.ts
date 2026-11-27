@@ -14,7 +14,15 @@ export const assetSourceSizeEdits = new Map<string, { width: number; height: num
 
 export const assetGroupEdits = new Map<string, Map<number, { opacity: number }>>();
 
-export const assetModified = new Set<string>();
+class ModifiedAssets extends Set<string> {
+  add(id: string) {
+    super.add(id);
+    window.dispatchEvent(new Event("canvas-dirty"));
+    return this;
+  }
+}
+
+export const assetModified = new ModifiedAssets();
 
 export const assetLayerSelections = new Map<string, Set<number>>();
 

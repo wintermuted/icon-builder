@@ -3,9 +3,11 @@ node_modules/
 dist/
 packages/storybook/debug-storybook.log
 .DS_Store
+.github/extensions/**/.source-write.lock
 
 outputs/png/*
 outputs/screenshots/*
+outputs/canvas/
 !outputs/png/.gitkeep
 !outputs/screenshots/.gitkeep
 
