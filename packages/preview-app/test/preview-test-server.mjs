@@ -50,16 +50,7 @@ const contentTypes = {
 export async function startPreviewTestServer({ bundle = false } = {}) {
   const prefix = bundle ? "/previews/pr-14" : "";
   const requests = [];
-  const vite = bundle
-    ? null
-    : await createViteServer({
-        root,
-        configFile: false,
-        plugins: [react()],
-        publicDir: false,
-        server: { middlewareMode: true, hmr: false },
-        appType: "mpa",
-      });
+  let vite;
   const server = createServer(async (request, response) => {
     const rawPath = new URL(request.url, "http://localhost").pathname;
     const pathname =
@@ -134,6 +125,16 @@ export async function startPreviewTestServer({ bundle = false } = {}) {
       }
     }
   });
+  vite = bundle
+    ? null
+    : await createViteServer({
+        root,
+        configFile: false,
+        plugins: [react()],
+        publicDir: false,
+        server: { middlewareMode: true, hmr: false, ws: { server } },
+        appType: "mpa",
+      });
   await new Promise((accept, reject) => {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", accept);

@@ -199,6 +199,41 @@ application asset model. `Dialog` owns focus trapping/restoration and dismissal.
 its timer when repeating the same message. `PromptCarousel` handles navigation and
 clipboard feedback; its optional `idPrefix` preserves application DOM hooks.
 
+### Shared control adoption
+
+`IconActionButton` and `ToggleButton` are product adapters around the published
+`@wintermuted/ui-react` Button. They retain the local Lucide mapping, accessible
+names, native attributes/refs, cancelled-click handling, and imperative editor
+hooks. `Toast` composes the central controlled Toast while retaining the local
+duration/resetKey timer and top-of-page placement. It also exposes the central
+accessible dismiss action. Their local stories describe these adapter contracts;
+canonical primitive APIs and generic stories remain in Wintermuted UI.
+
+The manifests and lockfile pin official React `1.3.0` and theme `1.0.4` GitHub
+release tarballs because the configured registry did not provide these versions.
+The root theme override keeps the central React dependency and both local
+catalog/app consumers on the same stylesheet release. These are compiled package
+exports, not central repository source imports.
+
+`Dialog` composes the published native Dialog using `titleId` and `closeAction`.
+The product adapter retains conditional mounting, caller-selected initial focus,
+backdrop dismissal, X close action and modal sizing; the central component owns
+keyboard trapping and focus restoration. `FormField` composes FieldGroup's
+label/control associations and simultaneous hint/error descriptions, with explicit
+`hintId`/`errorId` support. Its adapter retains required markers, inline layout,
+existing descriptions and error alert semantics. Their product stories remain.
+`StatusMessage` stays a
+paragraph with explicit live-region urgency: central Alert's div/status default
+is not an equivalent replacement. No duplicate generic feedback is introduced.
+
+The native editable `NumberStepper`, domain controllers/portals, routing, layouts,
+and headers are not part of this adoption. Run the focused adapter browser checks
+without a production build:
+
+```powershell
+node --test packages\preview-app\test\control-adapters.test.mjs
+```
+
 `NumberStepper` supports controlled values or native uncontrolled inputs, forwards
 input refs/handlers, and bounds button increments with fractional steps.
 `PropertyList` renders semantic definition lists with caller-owned value controls.

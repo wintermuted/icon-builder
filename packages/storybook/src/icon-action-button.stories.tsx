@@ -5,6 +5,14 @@ const meta = {
   id: "shared-iconactionbutton",
   title: "Shared/Controls/IconActionButton",
   component: IconActionButton,
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "Icon Builder's Lucide-name and accessible-label adapter around the central Button. Native button attributes and refs pass through.",
+      },
+    },
+  },
   args: { icon: "Pencil", label: "Rename item" },
 } satisfies Meta<typeof IconActionButton>;
 

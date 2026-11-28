@@ -55,7 +55,7 @@ export async function verifySharedInteractions(page, base) {
   await open.click();
   await dialogName.click();
   assert.equal(await page.getByRole("dialog").isVisible(), true);
-  await page.locator(".np-backdrop").click({ position: { x: 1, y: 1 } });
+  await page.mouse.click(1, 1);
   assert.equal(await page.getByRole("dialog").count(), 0);
   assert.equal(await focused(open), true);
 
@@ -178,5 +178,12 @@ export async function verifySharedInteractions(page, base) {
   assert.equal(await toast.isVisible(), true, "Notification remains until its full duration");
   await page.clock.runFor(1);
   assert.equal(await toast.isVisible(), false);
+  await show.click();
+  await page.getByRole("button", { name: "Dismiss notification", exact: true }).click();
+  assert.equal(
+    await toast.isVisible(),
+    false,
+    "The central dismiss action clears the local notice",
+  );
   await page.clock.resume();
 }

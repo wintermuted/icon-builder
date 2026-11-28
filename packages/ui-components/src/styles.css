@@ -22,6 +22,47 @@
   display: none;
 }
 
+.wm-timed-toast > .wm-toast {
+  position: static;
+  min-width: 0;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  font: inherit;
+  line-height: inherit;
+  transform: none;
+  transition: none;
+}
+
+.wm-icon-action-button:not(.btn) {
+  min-height: unset;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.wm-icon-action-button:where(:not(.btn)) {
+  background: transparent;
+  border: none;
+}
+
+.wm-icon-action-button.btn,
+.wm-toggle-button.wm-btn-ghost {
+  background: var(--wm-color-surface-strong);
+}
+
+.wm-icon-action-button.btn {
+  border-color: transparent;
+}
+
+.wm-toggle-button.wm-btn-ghost:not([aria-pressed="true"]) {
+  border-color: transparent;
+}
+
 .wm-icon-action,
 .source-material-action {
   display: inline-flex;
@@ -268,19 +309,16 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1000;
-  padding: 1rem;
 }
 
-.np-backdrop[hidden] {
-  display: none;
+.np-modal::backdrop {
+  background: transparent;
 }
 
 .np-modal {
-  width: 100%;
+  background: var(--wm-color-surface);
+  width: calc(100% - 2rem);
   max-width: 520px;
   max-height: 90dvh;
   overflow-y: auto;
@@ -290,15 +328,21 @@
   padding: 1.25rem;
 }
 
-.np-modal-header {
+.np-modal > .wm-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  padding: 0;
+  border: 0;
 }
 
-.np-modal-header h3 {
+.np-modal > .wm-dialog-header h3 {
   margin: 0;
+}
+
+.np-modal > .wm-dialog-body {
+  display: contents;
 }
 
 .np-close {
