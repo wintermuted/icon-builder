@@ -1,6 +1,0 @@
-import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t}from"./iframe-BGSHCO9R.js";import{f as n,t as r}from"./src-Ceb_fqRb.js";var i,a,o,s,c,l;function u(){return(u=e((()=>{r(),i=t(),a=`data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22240%22%20height%3D%22240%22%20viewBox%3D%220%200%20240%20240%22%3E%3Crect%20x%3D%2230%22%20y%3D%2230%22%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2232%22%20fill%3D%22%236b5cff%22%2F%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%2248%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E`,o={id:`shared-previewsurface`,title:`Shared/Display/PreviewSurface`,component:n,args:{children:(0,i.jsx)(`img`,{src:a,alt:`Geometric mark`})},argTypes:{children:{control:!1}}},s={},c={args:{maxImageHeight:`360px`,imageWidth:`100%`}},l=[`Icon`,`LargeImage`],s.parameters={...s.parameters,docs:{...s.parameters?.docs,source:{originalSource:`{}`,...s.parameters?.docs?.source}}},c.parameters={...c.parameters,docs:{...c.parameters?.docs,source:{originalSource:`{
-  args: {
-    maxImageHeight: "360px",
-    imageWidth: "100%"
-  }
-}`,...c.parameters?.docs?.source}}}})))()}u();export{s as Icon,c as LargeImage,l as __namedExportsOrder,o as default};
