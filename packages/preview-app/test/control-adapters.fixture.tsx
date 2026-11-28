@@ -18,6 +18,7 @@ function Controls() {
   const [notice, setNotice] = useState({ message: "", revision: 0 });
   const [dismissals, setDismissals] = useState(0);
   const [open, setOpen] = useState(false);
+  const [defaultFocus, setDefaultFocus] = useState(false);
   const [name, setName] = useState("");
   const first = useRef<HTMLInputElement>(null);
   const action = useRef<HTMLButtonElement>(null);
@@ -89,11 +90,19 @@ function Controls() {
       <button type="button" onClick={() => setOpen(true)}>
         New project
       </button>
+      <label>
+        <input
+          type="checkbox"
+          checked={defaultFocus}
+          onChange={(event) => setDefaultFocus(event.target.checked)}
+        />
+        Use default dialog focus
+      </label>
       {open && (
         <Dialog
           title="New project"
           titleId="project-heading"
-          initialFocus={first}
+          initialFocus={defaultFocus ? undefined : first}
           onClose={() => setOpen(false)}
         >
           <FormField
@@ -102,6 +111,7 @@ function Controls() {
             required
             hint="Choose a recognizable name."
             hintId="project-hint"
+            errorId="project-error"
             error={name.length < 3 ? "Use at least three characters." : undefined}
           >
             <input
@@ -119,6 +129,18 @@ function Controls() {
       )}
       <FormField label="Grid spacing" inline controlId="spacing">
         <input type="number" defaultValue="8" />
+      </FormField>
+      <FormField label="Inherited control" hint="Existing control ID and required state.">
+        <input
+          id="inherited-control"
+          required
+          aria-describedby="external-control-help"
+          aria-invalid="true"
+        />
+      </FormField>
+      <p id="external-control-help">External control description.</p>
+      <FormField label="Generated control" hint="Generated description.">
+        <input />
       </FormField>
       <StatusMessage>Saving source.</StatusMessage>
       <StatusMessage tone="error">Source could not be saved.</StatusMessage>

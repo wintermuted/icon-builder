@@ -1,5 +1,6 @@
 import { cloneElement, useId } from "react";
 import type { AriaAttributes, ComponentPropsWithRef, ReactElement, ReactNode } from "react";
+import { FieldGroup } from "@wintermuted/ui-react";
 import { StatusMessage } from "./status-message.js";
 
 type ControlProps = Pick<AriaAttributes, "aria-describedby" | "aria-invalid"> & {
@@ -14,6 +15,7 @@ export interface FormFieldProps extends Omit<ComponentPropsWithRef<"div">, "chil
   inline?: boolean;
   hint?: ReactNode;
   hintId?: string;
+  errorId?: string;
   error?: string;
   children: ReactElement<ControlProps>;
 }
@@ -25,6 +27,7 @@ export function FormField({
   inline = false,
   hint,
   hintId,
+  errorId,
   error,
   children,
   className = "",
@@ -34,36 +37,25 @@ export function FormField({
   const id = controlId ?? children.props.id ?? generatedId;
   const isRequired = required || children.props.required;
   const helpId = hintId ?? `${id}-hint`;
-  const errorId = `${id}-error`;
-  const describedBy =
-    [children.props["aria-describedby"], hint ? helpId : "", error ? errorId : ""]
-      .filter(Boolean)
-      .join(" ") || undefined;
   return (
-    <div
+    <FieldGroup
       {...props}
       className={`wm-form-field${inline ? " wm-form-field--inline" : ""} ${className}`}
+      htmlFor={id}
+      label={
+        <>
+          {label}
+          {isRequired && <span aria-hidden="true"> *</span>}
+        </>
+      }
+      hintId={helpId}
+      errorId={errorId ?? `${id}-error`}
+      hint={hint && <p className="wm-form-field-hint">{hint}</p>}
+      error={error && <StatusMessage tone="error">{error}</StatusMessage>}
     >
-      <label htmlFor={id}>
-        {label}
-        {isRequired && <span aria-hidden="true"> *</span>}
-      </label>
       {cloneElement(children, {
-        id,
         required: isRequired,
-        "aria-describedby": describedBy,
-        "aria-invalid": error ? true : children.props["aria-invalid"],
       })}
-      {hint && (
-        <p id={helpId} className="wm-form-field-hint">
-          {hint}
-        </p>
-      )}
-      {error && (
-        <StatusMessage id={errorId} tone="error">
-          {error}
-        </StatusMessage>
-      )}
-    </div>
+    </FieldGroup>
   );
 }

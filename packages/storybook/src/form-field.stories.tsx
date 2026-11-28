@@ -26,6 +26,14 @@ const meta = {
   id: "shared-formfield",
   title: "Shared/Controls/FormField",
   component: FormField,
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "Product adapter over the published FieldGroup: required markers, inline layout, explicit description IDs and alert semantics. The central component owns label/control associations and simultaneous hint/error descriptions.",
+      },
+    },
+  },
   args: {
     label: "Project name",
     required: true,
@@ -38,7 +46,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const WithHint: Story = {};
 export const WithError: Story = {
-  args: { error: "Use at least three characters." },
+  args: {
+    hintId: "project-hint",
+    errorId: "project-error",
+    error: "Use at least three characters.",
+  },
   render: (args) => <ValidatedField {...args} />,
 };
 export const Inline: Story = {

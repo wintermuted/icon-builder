@@ -17,9 +17,11 @@ export function Toast({
   className = "app-toast",
   ...props
 }: ToastProps) {
-  const [dismissed, setDismissed] = useState(false);
-  useEffect(() => setDismissed(false), [message, resetKey]);
-  const open = Boolean(message) && !dismissed;
+  const [notice, setNotice] = useState({ message, resetKey, dismissed: false });
+  if (notice.message !== message || notice.resetKey !== resetKey) {
+    setNotice({ message, resetKey, dismissed: false });
+  }
+  const open = Boolean(message) && !notice.dismissed;
   useEffect(() => {
     if (!open || !onDismiss) return;
     const timeout = window.setTimeout(onDismiss, duration);
@@ -33,7 +35,7 @@ export function Toast({
         tone="info"
         dismissLabel="Dismiss notification"
         onDismiss={() => {
-          setDismissed(true);
+          setNotice({ message, resetKey, dismissed: true });
           onDismiss?.();
         }}
       />

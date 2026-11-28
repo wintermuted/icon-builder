@@ -55,7 +55,7 @@ export async function verifySharedInteractions(page, base) {
   await open.click();
   await dialogName.click();
   assert.equal(await page.getByRole("dialog").isVisible(), true);
-  await page.locator(".np-backdrop").click({ position: { x: 1, y: 1 } });
+  await page.mouse.click(1, 1);
   assert.equal(await page.getByRole("dialog").count(), 0);
   assert.equal(await focused(open), true);
 

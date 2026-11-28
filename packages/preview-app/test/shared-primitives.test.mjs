@@ -49,6 +49,40 @@ afterEach(async () => {
   assert.deepEqual(errors, [], "No runtime errors or React lifecycle warnings");
 });
 
+test("icon adapters retain caller-owned ViewBox and palette borders and surfaces", async () => {
+  for (const selector of ["#asset-viewbox-edit", "#asset-custom-color-add"]) {
+    const button = page.locator(selector);
+    const styles = await button.evaluate((node) => {
+      const style = getComputedStyle(node);
+      const probe = document.createElement("span");
+      probe.style.backgroundColor = "var(--wm-color-surface-solid)";
+      node.append(probe);
+      const background = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return {
+        borderStyle: style.borderTopStyle,
+        borderWidth: style.borderTopWidth,
+        background: style.backgroundColor,
+        expectedBackground: background,
+      };
+    });
+    assert.equal(styles.borderStyle, "solid");
+    assert.equal(styles.borderWidth, "1px");
+    assert.equal(styles.background, styles.expectedBackground);
+  }
+  const viewbox = page.locator("#asset-viewbox-edit");
+  await viewbox.focus();
+  await page.waitForFunction(() => {
+    const button = document.querySelector("#asset-viewbox-edit");
+    const probe = document.createElement("span");
+    probe.style.color = "var(--wm-color-accent)";
+    button.append(probe);
+    const expected = getComputedStyle(probe).color;
+    probe.remove();
+    return getComputedStyle(button).borderTopColor === expected;
+  });
+});
+
 test("portal steppers preserve fractional edits, focus, selection, and theme updates", async () => {
   await page.getByLabel("Edit element 1", { exact: true }).click();
   const x = page.getByRole("spinbutton", { name: "Element 1 x", exact: true });

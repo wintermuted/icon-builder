@@ -35,6 +35,14 @@ const meta = {
   id: "shared-dialog",
   title: "Shared/Overlays/Dialog",
   component: Dialog,
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "Product adapter over the published Dialog: conditional mounting, caller-owned initial focus, X close action, backdrop dismissal and Icon Builder sizing. The central component owns native modality, keyboard trapping and focus restoration.",
+      },
+    },
+  },
   args: { title: "New item", children: null, onClose: () => {} },
   render: (args) => <DialogExample {...args} />,
 } satisfies Meta<typeof Dialog>;

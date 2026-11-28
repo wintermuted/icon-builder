@@ -120,19 +120,20 @@ duration/resetKey timer and top-of-page placement. It also exposes the central
 accessible dismiss action. Their local stories describe these adapter contracts;
 canonical primitive APIs and generic stories remain in Wintermuted UI.
 
-The manifests and lockfile pin official React `1.2.1` and theme `1.0.4` GitHub
+The manifests and lockfile pin official React `1.3.0` and theme `1.0.4` GitHub
 release tarballs because the configured registry did not provide these versions.
 The root theme override keeps the central React dependency and both local
 catalog/app consumers on the same stylesheet release. These are compiled package
 exports, not central repository source imports.
 
-`Dialog` and `FormField` intentionally remain local until a compatible central
-release is installable. FieldGroup needs independent simultaneous hint/error
-rendering and explicit hintId/errorId associations. Dialog needs titleId and
-closeAction composition to preserve the existing named heading and X close
-action. Once released, preserve conditional mounting, initial focus, focus
-restoration, backdrop dismissal, required markers, inline layout, and existing
-description IDs before removing their local engines. `StatusMessage` stays a
+`Dialog` composes the published native Dialog using `titleId` and `closeAction`.
+The product adapter retains conditional mounting, caller-selected initial focus,
+backdrop dismissal, X close action and modal sizing; the central component owns
+keyboard trapping and focus restoration. `FormField` composes FieldGroup's
+label/control associations and simultaneous hint/error descriptions, with explicit
+`hintId`/`errorId` support. Its adapter retains required markers, inline layout,
+existing descriptions and error alert semantics. Their product stories remain.
+`StatusMessage` stays a
 paragraph with explicit live-region urgency: central Alert's div/status default
 is not an equivalent replacement. No duplicate generic feedback is introduced.
 

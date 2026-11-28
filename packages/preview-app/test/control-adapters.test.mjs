@@ -97,12 +97,15 @@ test("dialog and form compatibility preserves mounting, focus, hints, errors, an
   assert.deepEqual((await name.getAttribute("aria-describedby")).split(" "), [
     "external-help",
     "project-hint",
-    "project-name-error",
+    "project-error",
   ]);
   assert.match(await dialog.getByRole("alert").textContent(), /three characters/);
+  assert.equal(await page.locator("#project-hint").textContent(), "Choose a recognizable name.");
+  assert.match(await page.locator("#project-error").textContent(), /three characters/);
   await name.fill("Marks");
   assert.equal(await name.evaluate((node) => node === document.activeElement), true);
   assert.equal(await name.getAttribute("aria-invalid"), null);
+  assert.equal(await name.getAttribute("aria-describedby"), "external-help project-hint");
   await page.keyboard.press("Shift+Tab");
   assert.equal(
     await dialog
@@ -123,7 +126,7 @@ test("dialog and form compatibility preserves mounting, focus, hints, errors, an
   await open.click();
   await name.click();
   assert.equal(await dialog.isVisible(), true);
-  await page.locator(".np-backdrop").click({ position: { x: 1, y: 1 } });
+  await page.mouse.click(1, 1);
   assert.equal(await page.getByRole("dialog").count(), 0);
   assert.equal(await open.evaluate((node) => node === document.activeElement), true);
   assert.equal(
@@ -138,3 +141,53 @@ test("dialog and form compatibility preserves mounting, focus, hints, errors, an
   );
   assert.equal(await page.getByRole("alert").getAttribute("aria-live"), "assertive");
 });
+
+test("field adapter preserves inherited and generated IDs, required state and existing invalid state", async () => {
+  const inherited = page.getByRole("textbox", { name: "Inherited control", exact: true });
+  assert.equal(await inherited.getAttribute("id"), "inherited-control");
+  assert.equal(await inherited.getAttribute("required"), "");
+  assert.equal(await inherited.getAttribute("aria-invalid"), "true");
+  assert.equal(
+    await inherited.getAttribute("aria-describedby"),
+    "external-control-help inherited-control-hint",
+  );
+  assert.equal(
+    await page.locator('label[for="inherited-control"]').textContent(),
+    "Inherited control *",
+  );
+  const generated = page.getByRole("textbox", { name: "Generated control", exact: true });
+  const id = await generated.getAttribute("id");
+  assert.ok(id);
+  assert.equal(await generated.getAttribute("aria-describedby"), `${id}-hint`);
+  assert.equal(await page.locator(`[id="${id}-hint"]`).textContent(), "Generated description.");
+});
+
+for (const viewport of [
+  { width: 1440, height: 1024 },
+  { width: 390, height: 844 },
+]) {
+  test(`native dialog preserves default focus, modality and close restoration at ${viewport.width}px`, async () => {
+    await page.setViewportSize(viewport);
+    await page.getByLabel("Use default dialog focus").check();
+    const open = page.getByRole("button", { name: "New project", exact: true });
+    await open.click();
+    const dialog = page.getByRole("dialog", { name: "New project", exact: true });
+    assert.equal(await dialog.evaluate((node) => node.matches("dialog:modal")), true);
+    const close = dialog.getByRole("button", { name: "Close", exact: true });
+    assert.equal(await close.evaluate((node) => node === document.activeElement), true);
+    await page.keyboard.press("Shift+Tab");
+    assert.equal(
+      await dialog
+        .getByRole("button", { name: "Done" })
+        .evaluate((node) => node === document.activeElement),
+      true,
+    );
+    await page.keyboard.press("Tab");
+    assert.equal(await close.evaluate((node) => node === document.activeElement), true);
+    const bounds = await dialog.boundingBox();
+    assert.ok(bounds.x >= 16 && bounds.x + bounds.width <= viewport.width - 16);
+    await close.click();
+    assert.equal(await page.getByRole("dialog").count(), 0);
+    assert.equal(await open.evaluate((node) => node === document.activeElement), true);
+  });
+}
