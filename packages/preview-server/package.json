@@ -3,5 +3,8 @@
   "private": true,
   "type": "module",
   "main": "../../dist/packages/preview-server/src/index.js",
-  "types": "../../dist/packages/preview-server/src/index.d.ts"
+  "types": "../../dist/packages/preview-server/src/index.d.ts",
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.8"
+  }
 }

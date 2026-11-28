@@ -41,7 +41,9 @@ test("the compatibility spec-index entrypoint rebuilds and reports errors", asyn
 });
 
 test("Vite serves the preview URL, repository data, and existing backend API", async () => {
+  const cache = await mkdtemp(join(tmpdir(), "icon-builder-vite-cache-"));
   const server = await createServer({
+    cacheDir: cache,
     configFile: fileURLToPath(new URL("../vite.config.ts", import.meta.url)),
     server: { host: "127.0.0.1", port: 0, strictPort: true },
     optimizeDeps: { noDiscovery: true },
@@ -109,5 +111,6 @@ test("Vite serves the preview URL, repository data, and existing backend API", a
     }
   } finally {
     await server.close();
+    await rm(cache, { recursive: true, force: true });
   }
 });

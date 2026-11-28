@@ -29,6 +29,7 @@ export function getRouteFromHash(): Route {
 }
 
 export function applyThemeFromQuery() {
+  if (new URLSearchParams(location.search).get("canvas") === "1") return;
   const theme =
     new URLSearchParams(window.location.search).get("theme") ||
     localStorage.getItem("wm-assets-theme");

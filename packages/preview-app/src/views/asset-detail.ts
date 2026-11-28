@@ -33,6 +33,7 @@ import { enablePrimaryLayerInteraction } from "../canvas/interactions.js";
 import { renderAssetColorList, renderStaticAssetColorList } from "../editor/colors.js";
 import { renderAssetDiagnostics } from "../editor/diagnostics.js";
 import type { EditorPresentation } from "../editor/presentation.js";
+import { isCopilotCanvas, saveCanvasAsset } from "../copilot-canvas.js";
 
 export function renderAssetDetail(assetId, presentation: EditorPresentation) {
   presentation.clear();
@@ -152,24 +153,30 @@ export function renderAssetDetail(assetId, presentation: EditorPresentation) {
     if (!svg || !assetModified.has(asset.id)) return;
     saveButton.disabled = true;
     try {
-      const response = await fetch("/~asset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: asset.id,
-          svg: new XMLSerializer().serializeToString(svg),
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok || result.error) throw new Error(result.error || "Asset save failed");
-      assetSvgDataCache.delete(asset.source);
-      assetLayerEdits.delete(asset.id);
-      assetViewBoxEdits.delete(asset.id);
-      assetAccessibilityEdits.delete(asset.id);
-      assetSourceSizeEdits.delete(asset.id);
-      assetGroupEdits.delete(asset.id);
-      assetModified.delete(asset.id);
-      showToast(`Saved ${result.source}.`);
+      const onSaved = (result) => {
+        if (result.failure || result.error) throw new Error(result.error || "Asset save failed");
+        assetSvgDataCache.delete(asset.source);
+        assetLayerEdits.delete(asset.id);
+        assetViewBoxEdits.delete(asset.id);
+        assetAccessibilityEdits.delete(asset.id);
+        assetSourceSizeEdits.delete(asset.id);
+        assetGroupEdits.delete(asset.id);
+        assetModified.delete(asset.id);
+        showToast(`Saved ${result.source}.`);
+      };
+      const serialize = () => new XMLSerializer().serializeToString(svg);
+      if (isCopilotCanvas) await saveCanvasAsset(asset.id, serialize, onSaved);
+      else {
+        const result = await fetch("/~asset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: asset.id,
+            svg: serialize(),
+          }),
+        }).then(async (response) => ({ ...(await response.json()), failure: !response.ok }));
+        onSaved(result);
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Asset save failed");
     } finally {

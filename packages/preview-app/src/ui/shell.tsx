@@ -7,6 +7,7 @@ import { AssetPage } from "./asset-page.js";
 import { ProjectPage } from "./project-page.js";
 import { SourcePage } from "./source-page.js";
 import { NewProject } from "./new-project.js";
+import { isCopilotCanvas } from "../copilot-canvas.js";
 
 function AppToast() {
   const [notice, setNotice] = useState({ message: "", revision: 0 });
@@ -37,6 +38,12 @@ export function PreviewApp() {
     window.addEventListener("hashchange", update);
     if (!window.location.hash) window.location.hash = "#logos";
     return () => window.removeEventListener("hashchange", update);
+  }, []);
+  useEffect(() => {
+    if (!isCopilotCanvas) return;
+    const update = () => setTheme(document.documentElement.dataset.theme || "light");
+    window.addEventListener("canvas-theme", update);
+    return () => window.removeEventListener("canvas-theme", update);
   }, []);
   useEffect(() => {
     const topbar = document.querySelector(".docs-topbar");
@@ -86,12 +93,14 @@ export function PreviewApp() {
           <div className="docs-topbar-inner">
             <div className="docs-topbar-brand">
               <h1 className="preview-brand-title">
-                <img
-                  className="preview-brand-icon"
-                  src="../assets/svg/wintermuted-brand/wm-wintermuted-mark-cube-outline-white.svg"
-                  alt="Wintermuted mark"
-                />
-                <span>Agentic Icon Builder</span>
+                {!isCopilotCanvas && (
+                  <img
+                    className="preview-brand-icon"
+                    src="../assets/svg/wintermuted-brand/wm-wintermuted-mark-cube-outline-white.svg"
+                    alt="Wintermuted mark"
+                  />
+                )}
+                <span>{isCopilotCanvas ? "Icon Builder" : "Agentic Icon Builder"}</span>
               </h1>
             </div>
             <nav className="docs-topbar-nav wm-app-nav-nowrap" aria-label="Primary navigation">
@@ -122,32 +131,34 @@ export function PreviewApp() {
         </>
       }
       footer={
-        <footer className="app-footer">
-          <div className="app-footer-inner">
-            <a
-              className="docs-topbar-github app-footer-github"
-              href="https://github.com/wintermuted/wm-asset-workflows"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="View source on GitHub"
-            >
-              <Icon name="Github" />
-              <span>wintermuted/wm-asset-workflows</span>
-            </a>
-            <div className="docs-topbar-actions app-footer-actions">
-              <button
-                id="theme-toggle"
-                type="button"
-                className="docs-topbar-toggle"
-                aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-                onClick={toggleTheme}
+        !isCopilotCanvas && (
+          <footer className="app-footer">
+            <div className="app-footer-inner">
+              <a
+                className="docs-topbar-github app-footer-github"
+                href="https://github.com/wintermuted/wm-asset-workflows"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View source on GitHub"
               >
-                <Icon name={theme === "dark" ? "Sun" : "Moon"} />
-                <span>{theme === "dark" ? "Light" : "Dark"}</span>
-              </button>
+                <Icon name="Github" />
+                <span>wintermuted/wm-asset-workflows</span>
+              </a>
+              <div className="docs-topbar-actions app-footer-actions">
+                <button
+                  id="theme-toggle"
+                  type="button"
+                  className="docs-topbar-toggle"
+                  aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+                  onClick={toggleTheme}
+                >
+                  <Icon name={theme === "dark" ? "Sun" : "Moon"} />
+                  <span>{theme === "dark" ? "Light" : "Dark"}</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        )
       }
     >
       {route.page === "asset" ? (

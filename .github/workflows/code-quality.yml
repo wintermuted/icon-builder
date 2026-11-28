@@ -47,3 +47,6 @@ jobs:
         run: npm run test:preview
         env:
           PREVIEW_TEST_BUNDLE: "1"
+
+      - name: Verify canvas lifecycle and collaborative editing
+        run: npm run test:canvas
